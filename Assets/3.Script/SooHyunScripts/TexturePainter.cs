@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
@@ -12,13 +12,13 @@ public class TexturePainter : MonoBehaviour
     public Color brushColor = Color.black;
     [Range(1, 50)] public int brushSize = 5;
 
-    [Header("UI")]
+    [Header("Slider UI")]
     public Slider brushSizeSlider;
 
     public float applyInterval = 0.02f;
 
     private Texture2D texture;
-    private Color32[] colorBuffer;
+    private Color32[] fullColorBuffer;
     private Dictionary<Vector2Int, Color32> pixelBuffer = new();
 
     private SpriteRenderer spriteRenderer;
@@ -27,12 +27,18 @@ public class TexturePainter : MonoBehaviour
     private Vector2Int? lastDrawPixelPos;
     private float lastApplyTime;
 
+    private int minX, minY, maxX, maxY;
+
     void Start()
     {
-        texture = new(textureWidth, textureHeight, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
-        colorBuffer = new Color32[textureWidth * textureHeight];
+        texture = new Texture2D(textureWidth, textureHeight, TextureFormat.RGBA32, false)
+        {
+            filterMode = FilterMode.Point
+        };
+
+        fullColorBuffer = new Color32[textureWidth * textureHeight];
         ClearTextureInternal(false);
-        texture.SetPixels32(colorBuffer);
+        texture.SetPixels32(fullColorBuffer);
         texture.Apply(false);
 
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -41,16 +47,25 @@ public class TexturePainter : MonoBehaviour
         drawAreaCollider = GetComponent<BoxCollider2D>();
         drawAreaCollider.size = spriteRenderer.bounds.size;
 
-        brushSizeSlider?.onValueChanged.AddListener(val => SetBrushSize(Mathf.RoundToInt(val)));
-        if (brushSizeSlider != null) brushSizeSlider.value = brushSize;
+        if (brushSizeSlider != null)
+        {
+            brushSizeSlider.onValueChanged.AddListener(val => SetBrushSize(Mathf.RoundToInt(val)));
+            brushSizeSlider.value = brushSize;
+        }
     }
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0)) lastDrawPixelPos = null;
+        if (Input.GetMouseButtonDown(0))
+        {
+            lastDrawPixelPos = null;
+            ResetMinMax();
+        }
 
         if (Input.GetMouseButton(0))
+        {
             TryDrawAtMousePosition();
+        }
 
         if (Input.GetMouseButtonUp(0))
         {
@@ -92,54 +107,94 @@ public class TexturePainter : MonoBehaviour
             {
                 if (dx * dx + dy * dy > rSquared) continue;
 
-                int x = center.x + dx, y = center.y + dy;
-                if (x < 0 || x >= textureWidth || y < 0 || y >= textureHeight) continue;
+                int x = center.x + dx;
+                int y = center.y + dy;
+                if (!IsValidPixel(x, y)) continue;
 
-                pixelBuffer[new(x, y)] = brushColor;
+                Vector2Int pos = new(x, y);
+                int idx = y * textureWidth + x;
+
+                if (fullColorBuffer[idx].Equals(brushColor)) continue;
+
+                pixelBuffer[pos] = brushColor;
+
+                // 브러시 영역 갱신
+                minX = Mathf.Min(minX, x);
+                minY = Mathf.Min(minY, y);
+                maxX = Mathf.Max(maxX, x);
+                maxY = Mathf.Max(maxY, y);
             }
         }
     }
 
     void DrawLineBuffered(Vector2Int from, Vector2Int to)
     {
-        int x0 = from.x, y0 = from.y, x1 = to.x, y1 = to.y;
-        int dx = Mathf.Abs(x1 - x0), dy = Mathf.Abs(y1 - y0);
-        int sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, err = dx - dy;
+        float distance = Vector2Int.Distance(from, to);
+        int steps = Mathf.CeilToInt(distance * 1.5f);
 
-        while (true)
+        for (int i = 0; i <= steps; i++)
         {
-            DrawCircleBuffered(new(x0, y0));
-            if (x0 == x1 && y0 == y1) break;
-
-            int e2 = 2 * err;
-            if (e2 > -dy) { err -= dy; x0 += sx; }
-            if (e2 < dx)  { err += dx; y0 += sy; }
+            float t = (float)i / steps;
+            Vector2 lerp = Vector2.Lerp(from, to, t);
+            DrawCircleBuffered(Vector2Int.RoundToInt(lerp));
         }
     }
 
     void ApplyBufferedPixels()
     {
-        foreach (var kvp in pixelBuffer)
+        if (pixelBuffer.Count == 0) return;
+
+        int width = maxX - minX + 1;
+        int height = maxY - minY + 1;
+        Color32[] partialBuffer = new Color32[width * height];
+
+        for (int y = minY; y <= maxY; y++)
         {
-            int idx = kvp.Key.y * textureWidth + kvp.Key.x;
-            if (idx >= 0 && idx < colorBuffer.Length)
-                colorBuffer[idx] = kvp.Value;
+            for (int x = minX; x <= maxX; x++)
+            {
+                Vector2Int pos = new(x, y);
+                int localIdx = (y - minY) * width + (x - minX);
+                int fullIdx = y * textureWidth + x;
+
+                if (pixelBuffer.TryGetValue(pos, out var col))
+                {
+                    partialBuffer[localIdx] = col;
+                    fullColorBuffer[fullIdx] = col;
+                }
+                else
+                {
+                    partialBuffer[localIdx] = fullColorBuffer[fullIdx];
+                }
+            }
         }
 
-        texture.SetPixels32(colorBuffer);
+        texture.SetPixels32(minX, minY, width, height, partialBuffer);
         texture.Apply(false);
         pixelBuffer.Clear();
+        ResetMinMax();
+    }
+
+    void ResetMinMax()
+    {
+        minX = textureWidth;
+        minY = textureHeight;
+        maxX = 0;
+        maxY = 0;
     }
 
     public void ClearTexture() => ClearTextureInternal(true);
 
     void ClearTextureInternal(bool apply)
     {
-        for (int i = 0; i < colorBuffer.Length; i++) colorBuffer[i] = Color.white;
+        Color32 white = Color.white;
+        for (int i = 0; i < fullColorBuffer.Length; i++) fullColorBuffer[i] = white;
+
         pixelBuffer.Clear();
+        ResetMinMax();
+
         if (apply)
         {
-            texture.SetPixels32(colorBuffer);
+            texture.SetPixels32(fullColorBuffer);
             texture.Apply();
         }
     }
@@ -149,12 +204,13 @@ public class TexturePainter : MonoBehaviour
         string folder = Application.persistentDataPath + "/Drawings";
         if (!System.IO.Directory.Exists(folder)) System.IO.Directory.CreateDirectory(folder);
 
-        string fileName = $"drawing_{System.DateTime.Now:yyyyMMdd_HHmmss}.png";
-        System.IO.File.WriteAllBytes(System.IO.Path.Combine(folder, fileName), texture.EncodeToPNG());
-        Debug.Log("Saved to: " + folder);
+        string path = System.IO.Path.Combine(folder, $"drawing_{System.DateTime.Now:yyyyMMdd_HHmmss}.png");
+        System.IO.File.WriteAllBytes(path, texture.EncodeToPNG());
+        Debug.Log("Saved to: " + path);
     }
 
     public void SetBrushColor(Color color) => brushColor = color;
-    public void SetBrushSize(int size) => brushSize = Mathf.Clamp(size, 1, 15);
+    public void SetBrushSize(int size) => brushSize = Mathf.Clamp(size, 1, 50);
     public void UseEraser() => brushColor = Color.white;
+    bool IsValidPixel(int x, int y) => x >= 0 && x < textureWidth && y >= 0 && y < textureHeight;
 }
