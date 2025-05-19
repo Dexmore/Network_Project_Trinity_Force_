@@ -1,43 +1,62 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class CustomBrushController : MonoBehaviour
 {
     public CustomTexturePainter paint;
 
-    // 🔴 빨강
+    [Header("UI 표시용")]
+    public Image colorPreview;               // 선택한 색상 미리보기용 이미지
+    public TextMeshProUGUI modeText;         // 현재 모드 표시 텍스트
+
     public void SetRed()
     {
         paint.SetBrushColor(Color.red);
+        UpdateColor(Color.red);
     }
 
-    // 🔵 파랑
     public void SetBlue()
     {
         paint.SetBrushColor(Color.blue);
+        UpdateColor(Color.blue);
     }
 
-    // ⚫ 검정
     public void SetBlack()
     {
         paint.SetBrushColor(Color.black);
+        UpdateColor(Color.black);
     }
 
-    // 🧽 지우개 (흰색으로 칠함 + 강제 브러시 모드 전환)
     public void SetEraser()
     {
         paint.SetBrushColor(Color.white);
-        paint.SetBrushMode(); // Fill 모드에서 강제로 Brush 모드로 전환
+        paint.SetBrushMode();                // 지우개는 Brush 모드로 강제 전환
+        UpdateColor(Color.white);
+        UpdateMode("Brush");
     }
 
-    // ✏️ 브러시 모드
     public void UseBrush()
     {
         paint.SetBrushMode();
+        UpdateMode("Brush");
     }
 
-    // 🪣 채우기 모드
     public void UseFill()
     {
         paint.SetFillMode();
+        UpdateMode("Fill");
+    }
+
+    void UpdateColor(Color color)
+    {
+        if (colorPreview != null)
+            colorPreview.color = color;
+    }
+
+    void UpdateMode(string mode)
+    {
+        if (modeText != null)
+            modeText.text = "Mode: " + mode;
     }
 }
