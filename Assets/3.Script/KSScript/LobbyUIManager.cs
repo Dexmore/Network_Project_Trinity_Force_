@@ -1,6 +1,7 @@
 using UnityEngine;
-using TMPro;
-using System.Collections;
+using UnityEngine.SceneManagement;  // ← 씬 전환용
+using TMPro;                        // ← TextMeshPro 사용 시
+using System.Collections;          // ← IEnumerator 사용 시
 
 public class LobbyUIManager : MonoBehaviour
 {
@@ -20,6 +21,9 @@ public class LobbyUIManager : MonoBehaviour
 
     [Tooltip("NotificationText 컴포넌트")]
     public TMP_Text notificationText;
+    [Header("Scene Settings")]
+    [Tooltip("나간 뒤 돌아갈 씬 이름")]
+    public string menuSceneName = "MainMenu";
 
     [Tooltip("팝업 표시 시간(초)")]
     public float notificationDuration = 2f;
@@ -39,8 +43,8 @@ public class LobbyUIManager : MonoBehaviour
         }
 
         testUserCount++;
-        string nick    = $"TestUser_{testUserCount}";
-        bool   isReady = Random.value > 0.5f;
+        string nick = $"TestUser_{testUserCount}";
+        bool isReady = Random.value > 0.5f;
 
         AddUser(nick, isReady);
         ShowNotification($"{nick} 님이 로비에 입장했습니다");
@@ -103,5 +107,53 @@ public class LobbyUIManager : MonoBehaviour
             yield return null;
         }
         notificationGroup.alpha = 0f;
+    }
+    public void TestRemoveUserSingle()
+    {
+        int cnt = contentParent.childCount;
+        if (cnt == 0)
+        {
+            ShowNotification("로비에 유저가 없습니다.");
+            return;
+        }
+
+        // 마지막으로 들어온 슬롯 찾기
+        Transform lastSlot = contentParent.GetChild(cnt - 1);
+        // 닉네임 가져오기 (UserSlotUI 스크립트가 붙어있다면)
+        var ui = lastSlot.GetComponent<UserSlotUI>();
+        string removedName = ui != null
+            ? ui.nicknameText.text
+            : "Unknown";
+
+        // 슬롯 삭제
+        Destroy(lastSlot.gameObject);
+
+        // 퇴장 알림
+        ShowNotification($"{removedName} 님이 로비에서 나갔습니다");
+    }
+    public void ExitLobby()
+    {
+        StopAllCoroutines();
+        StartCoroutine(DoExit());
+    }
+
+    private IEnumerator DoExit()
+    {
+        // 1) 팝업 띄우기
+        notificationText.text = "로비에서 나갑니다";
+        float t = 0f;
+        while (t < 0.2f)
+        {
+            t += Time.deltaTime;
+            notificationGroup.alpha = Mathf.Lerp(0f, 1f, t / 0.2f);
+            yield return null;
+        }
+        notificationGroup.alpha = 1f;
+
+        // 2) 잠시 대기 (원하시면 생략)
+        yield return new WaitForSeconds(notificationDuration);
+
+        // 3) 씬 전환
+        SceneManager.LoadScene(menuSceneName);
     }
 }
