@@ -5,10 +5,13 @@ using UnityEngine.UI;
 
 public class LoginController : MonoBehaviour
 {
+    [Header("로그인 후 회원정보 수정, 탈퇴 창")]
+    [SerializeField] private LoginingController logining;
+
     [Header("로그인 : 아이디 입력해서 게임 입장")]
     public InputField id_i;
     public InputField pwd_i;
-    [SerializeField] private Text log;  // 로그인 경고 안내 문구
+    public Text log;  // 로그인 경고 안내 문구
 
     [Header("회원가입 : UI OnOff 조절")]
     [SerializeField] GameObject Signup_pannel;
@@ -31,6 +34,7 @@ public class LoginController : MonoBehaviour
             User_info info = SQLManager.instance.info;
             Debug.Log($"{info.User_name}님 안녕하세요");
             gameObject.SetActive(false);
+            logining.loginingPannel.SetActive(true);
 
         }
 
@@ -66,6 +70,11 @@ public class LoginController : MonoBehaviour
             // 회원가입 성공
             Debug.Log($"{id_Signup.text} 가입 성공");
             Signup_pannel.gameObject.SetActive(false);
+
+            //temp
+            id_Signup.text = string.Empty;
+            pwd_Signup.text = string.Empty;
+            log_signup.text = string.Empty;
         }
 
         else
