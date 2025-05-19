@@ -1,6 +1,6 @@
-// Assets/3.Script/KSScript/LobbyUIManager.cs
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class LobbyUIManager : MonoBehaviour
 {
@@ -11,9 +11,7 @@ public class LobbyUIManager : MonoBehaviour
 
     private int testUserCount = 0;
 
-    /// <summary>
-    /// 버튼 OnClick에 연결 (Inspector에서)
-    /// </summary>
+    // 버튼 OnClick에 연결
     public void TestAddUserSingle()
     {
         testUserCount++;
@@ -22,33 +20,25 @@ public class LobbyUIManager : MonoBehaviour
         AddUser(nick, isReady);
     }
 
-    /// <summary>
-    /// 실제 슬롯 생성 & 초기화
-    /// </summary>
     public void AddUser(string nickname, bool isReady)
     {
         // 1) 프리팹 인스턴스화
         GameObject slotGO = Instantiate(userSlotPrefab, contentParent);
-        if (slotGO == null)
-        {
-            Debug.LogError("⚠️ 슬롯 인스턴스화 실패!");
-            return;
-        }
+        if (slotGO == null) return;
 
-        // 2) UserSlotUI 컴포넌트로 초기화
+        // --- 강제 Stretch 적용 (선택) ---
+        var rt = slotGO.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0, rt.anchorMin.y);
+        rt.anchorMax = new Vector2(1, rt.anchorMax.y);
+        rt.offsetMin = new Vector2(0, rt.offsetMin.y);
+        rt.offsetMax = new Vector2(0, rt.offsetMax.y);
+
+        // 2) 텍스트 세팅
         var ui = slotGO.GetComponent<UserSlotUI>();
-        if (ui == null)
-        {
-            Debug.LogError("⚠️ UserSlotUI 컴포넌트를 찾을 수 없음!");
-            return;
-        }
         ui.Initialize(nickname, isReady);
 
-        // 3) 스크롤을 맨 아래로 (최신 항목이 보이도록)
+        // 3) 스크롤을 맨 아래로
         Canvas.ForceUpdateCanvases();
-        if (scrollRect != null)
-            scrollRect.verticalNormalizedPosition = 0f;
-        else
-            Debug.LogWarning("⚠️ ScrollRect가 할당되지 않음!");
+        scrollRect.verticalNormalizedPosition = 0f;
     }
 }
