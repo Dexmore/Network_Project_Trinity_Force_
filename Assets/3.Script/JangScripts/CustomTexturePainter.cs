@@ -21,6 +21,9 @@ public class CustomTexturePainter : MonoBehaviour
     private Color32[] fullColorBuffer;
     private Dictionary<Vector2Int, Color32> pixelBuffer = new();
 
+    private Stack<Color32[]> undoStack = new();
+    private Stack<Color32[]> redoStack = new();
+
     private SpriteRenderer spriteRenderer;
     private BoxCollider2D drawAreaCollider;
 
@@ -36,7 +39,7 @@ public class CustomTexturePainter : MonoBehaviour
     {
         texture = new Texture2D(textureWidth, textureHeight, TextureFormat.RGBA32, false)
         {
-            filterMode = FilterMode.Point // 흐림 방지
+            filterMode = FilterMode.Point
         };
 
         fullColorBuffer = new Color32[textureWidth * textureHeight];
@@ -135,7 +138,7 @@ public class CustomTexturePainter : MonoBehaviour
                 Vector2Int pos = new(x, y);
                 int idx = y * textureWidth + x;
 
-                pixelBuffer[pos] = brushColor; // 무조건 덮어쓰기
+                pixelBuffer[pos] = brushColor;
 
                 minX = Mathf.Min(minX, x);
                 minY = Mathf.Min(minY, y);
@@ -162,6 +165,8 @@ public class CustomTexturePainter : MonoBehaviour
     {
         if (pixelBuffer.Count == 0) return;
 
+        PushUndo();
+
         foreach (var kvp in pixelBuffer)
         {
             Vector2Int pos = kvp.Key;
@@ -169,7 +174,7 @@ public class CustomTexturePainter : MonoBehaviour
             fullColorBuffer[idx] = kvp.Value;
         }
 
-        texture.SetPixels32(fullColorBuffer); // 전체 업데이트로 동기화 유지
+        texture.SetPixels32(fullColorBuffer);
         texture.Apply(false);
 
         pixelBuffer.Clear();
@@ -178,6 +183,8 @@ public class CustomTexturePainter : MonoBehaviour
 
     void FloodFill(int x, int y, Color32 targetColor, Color32 newColor)
     {
+        PushUndo();
+
         Color32[] tempBuffer = texture.GetPixels32();
         Queue<Vector2Int> queue = new();
         queue.Enqueue(new Vector2Int(x, y));
@@ -191,7 +198,7 @@ public class CustomTexturePainter : MonoBehaviour
             if (!ColorsEqual(tempBuffer[index], targetColor)) continue;
 
             tempBuffer[index] = newColor;
-            fullColorBuffer[index] = newColor; // 버퍼도 동기화
+            fullColorBuffer[index] = newColor;
 
             queue.Enqueue(new Vector2Int(p.x + 1, p.y));
             queue.Enqueue(new Vector2Int(p.x - 1, p.y));
@@ -201,6 +208,36 @@ public class CustomTexturePainter : MonoBehaviour
 
         texture.SetPixels32(tempBuffer);
         texture.Apply(false);
+    }
+
+    void PushUndo()
+    {
+        Color32[] snapshot = new Color32[fullColorBuffer.Length];
+        fullColorBuffer.CopyTo(snapshot, 0);
+        undoStack.Push(snapshot);
+        redoStack.Clear();
+    }
+
+    public void Undo()
+    {
+        if (undoStack.Count == 0) return;
+
+        redoStack.Push((Color32[])fullColorBuffer.Clone());
+        fullColorBuffer = undoStack.Pop();
+
+        texture.SetPixels32(fullColorBuffer);
+        texture.Apply();
+    }
+
+    public void Redo()
+    {
+        if (redoStack.Count == 0) return;
+
+        undoStack.Push((Color32[])fullColorBuffer.Clone());
+        fullColorBuffer = redoStack.Pop();
+
+        texture.SetPixels32(fullColorBuffer);
+        texture.Apply();
     }
 
     bool ColorsEqual(Color32 a, Color32 b)
@@ -254,4 +291,7 @@ public class CustomTexturePainter : MonoBehaviour
     public void SetFillMode() => currentMode = Mode.Fill;
 
     bool IsValidPixel(int x, int y) => x >= 0 && x < textureWidth && y >= 0 && y < textureHeight;
+
+    public void OnClickUndo() => Undo();
+    public void OnClickRedo() => Redo();
 }
