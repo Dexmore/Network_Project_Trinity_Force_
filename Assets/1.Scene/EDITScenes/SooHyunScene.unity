@@ -376,9 +376,9 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1036038072}
   m_Direction: 0
   m_MinValue: 1
-  m_MaxValue: 5
+  m_MaxValue: 10
   m_WholeNumbers: 0
-  m_Value: 5
+  m_Value: 10
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -2682,8 +2682,8 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 4224364971448626168}
   - {fileID: 1721953476347197646}
+  - {fileID: 4224364971448626168}
   - {fileID: 1125238663}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
