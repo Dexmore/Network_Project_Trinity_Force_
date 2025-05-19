@@ -13,11 +13,17 @@ public class LoginController : MonoBehaviour
     public InputField pwd_i;
     public Text log;  // 로그인 경고 안내 문구
 
-    [Header("회원가입 : UI OnOff 조절")]
-    [SerializeField] GameObject Signup_pannel;
+    [Header("회원가입 1단계: 아이디, 비밀번호 입력 + UI OnOff 조절")]
+    [SerializeField] GameObject Signup_pannel;  // 1단계 패널
     [SerializeField] InputField id_Signup;
     [SerializeField] InputField pwd_Signup;
-    [SerializeField] private Text log_signup;   //회원 가입시 경고 안내 문구
+    [SerializeField] private Text log1_signup;   //회원가입시(아이디 중복 시) 경고 안내 문구
+
+    [Header("회원가입 2단계: 닉네임 입력 + UI OnOff 조절")]
+    private string cached_id;   //1단계 저장한 아이디
+    [SerializeField] GameObject Nickname_pannel;    // 2단계 패널
+    [SerializeField] InputField nickname_Signup;    // 2단계에서 사용할 닉네임 입력 필드
+    [SerializeField] private Text log2_signup;   //회원 가입시(닉네임 중복 시) 경고 안내 문구
 
     #region 로그인
     public void LoginBtn()
@@ -30,14 +36,21 @@ public class LoginController : MonoBehaviour
 
         if (SQLManager.instance.Login(id_i.text, pwd_i.text))
         {
-            //로그인 성공
             User_info info = SQLManager.instance.info;
+
+        // 만약 로그인 시 nickname이 null이라면
+            if (string.IsNullOrEmpty(SQLManager.instance.info.User_Nickname))
+            {
+                cached_id = id_i.text;
+                //닉네임 입력 패널을 보여준다.
+                Nickname_pannel.SetActive(true);
+                return;
+            }
+            //로그인 성공 후
             Debug.Log($"{info.User_name}님 안녕하세요");
             gameObject.SetActive(false);
             logining.loginingPannel.SetActive(true);
-
         }
-
         else
         {
             log.text = "아이디와 비밀번호를 확인해주세요";
@@ -55,32 +68,74 @@ public class LoginController : MonoBehaviour
     public void CloseSignupPannel()
     {
         Signup_pannel.gameObject.SetActive(false);
+
+        // 입력창 초기화
+        id_Signup.text = string.Empty;
+        pwd_Signup.text = string.Empty;
+        log1_signup.text = string.Empty;
     }
 
-    public void SignUpBtn()
+    // 1단계 아이디, 비밀 번호 입력 -> 중복이 안되면 2단계로 가는 버튼
+    public void CheckIDAndOPenNicknamePannelBtn()
     {
         if (id_Signup.text.Equals(string.Empty) || pwd_Signup.text.Equals(string.Empty))
         {
-            log_signup.text = "아이디와 비밀번호를 입력하세요";
+            log1_signup.text = "아이디와 비밀번호를 입력하세요";
             return;
         }
 
-        if (SQLManager.instance.Signup(id_Signup.text, pwd_Signup.text))
+        if (SQLManager.instance.SignupStep1(id_Signup.text, pwd_Signup.text))
         {
-            // 회원가입 성공
-            Debug.Log($"{id_Signup.text} 가입 성공");
-            Signup_pannel.gameObject.SetActive(false);
+            // 2단계에 입력할 아이디 저장 
+            cached_id = id_Signup.text;
 
-            //temp
+            // 1단계 성공 + 등록
+            Debug.Log($"{id_Signup.text} 입력하셨습니다.");
+            Signup_pannel.gameObject.SetActive(false);
+            Nickname_pannel.gameObject.SetActive(true);
+
+            // 입력창 초기화
             id_Signup.text = string.Empty;
             pwd_Signup.text = string.Empty;
-            log_signup.text = string.Empty;
+            log1_signup.text = string.Empty;
         }
 
         else
         {
+            //log1_signup.text = "이미 존재하는 아이디입니다.";
             Debug.Log("다시 확인하세요");
         }
+    }
+
+    // 2단계 닉네임 입력 -> 중복이 안되면 회원 가입 완료
+    public void CompleteSignup()
+    {
+        if (nickname_Signup.text.Equals(string.Empty))
+        {
+            log2_signup.text = "아이디와 비밀번호를 입력하세요";
+            return;
+        }
+
+        if(SQLManager.instance.SignupStep2(nickname_Signup.text, cached_id))
+        {
+            // 2단계 성공 + 회원가입 완료
+            Debug.Log($"{nickname_Signup.text}님 가입 완료");
+            Nickname_pannel.gameObject.SetActive(false);
+
+            // 입력창 초기화
+            nickname_Signup.text = string.Empty;
+        }
+
+        else
+        {
+            //log2_signup.text = "이미 존재하는 닉네임입니다";
+            Debug.Log("다시 확인하세요");
+        }
+    }
+
+    public void CloseNicknamePannel()
+    {
+        Nickname_pannel.gameObject.SetActive(false);
     }
     #endregion
 }

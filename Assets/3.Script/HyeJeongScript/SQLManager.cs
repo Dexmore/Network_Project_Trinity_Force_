@@ -13,11 +13,13 @@ public class User_info
 {
     public string User_name { get; private set; }
     public string User_Password { get; private set; }
+    public string User_Nickname { get; private set; }
 
-    public User_info(string name, string password)
+    public User_info(string name, string password, string nickname)
     {
         User_name = name;
         User_Password = password;
+        User_Nickname = nickname;
     }
 }
 public class SQLManager : MonoBehaviour
@@ -128,7 +130,7 @@ public class SQLManager : MonoBehaviour
             // 쿼리문
             //SELECT User_Name, User_Password, User_PhoneNum FROM user_info WHERE User_Name='옥혜정' AND user_password='1234';
             string sqlcommend =
-                string.Format(@"SELECT Name, Password  FROM user_info WHERE Name='{0}' AND Password='{1}';", id, passwoard);
+                string.Format(@"SELECT Name, Password, Nickname  FROM user_info WHERE Name='{0}' AND Password='{1}';", id, passwoard);
 
             MySqlCommand cmd = new MySqlCommand(sqlcommend, con);   // 쿼리문을 연결된 DB에 날리기 위한 객체
             reader = cmd.ExecuteReader();
@@ -141,10 +143,17 @@ public class SQLManager : MonoBehaviour
                     /*삼항연산자*/
                     string name = (reader.IsDBNull(0)) ? string.Empty : reader["Name"].ToString();
                     string pwd = (reader.IsDBNull(1)) ? string.Empty : reader["Password"].ToString();
+                    string nickname = (reader.IsDBNull(1)) ? string.Empty : reader["Nickname"].ToString();
 
                     if (!name.Equals(string.Empty) || !pwd.Equals(string.Empty))
                     {
-                        info = new User_info(name, pwd);
+                        info = new User_info(name, pwd, nickname);
+
+                        if(nickname == null)
+                        {
+                            return false;
+                        }
+
                         if (!reader.IsClosed) reader.Close();
                         return true;
                     }
@@ -165,8 +174,10 @@ public class SQLManager : MonoBehaviour
         }
     }
 
-    // temp 회원가입
-    public bool Signup(string id, string password)
+    // 회원가입
+    // 1단계 : 아이디 , 비밀번호를 입력한다. 아이디 중복이 안될 시 2단계로 이동한다
+    // 2단계 : 닉네임을 입력한다. 닉네임도 중복이 허용되지 않는다. 중복이 안되면 회원가입 완료
+    public bool SignupStep1(string id, string password)
     {
         try
         {
@@ -174,15 +185,70 @@ public class SQLManager : MonoBehaviour
             {
                 return false;
             }
+
+            //아이디 중복 확인
+            string sqlcheck =
+                string.Format("SELECT COUNT(*) FROM user_info WHERE Name = '{0}';", id);
+            MySqlCommand checkcmd = new MySqlCommand(sqlcheck, con);
+            checkcmd.Parameters.AddWithValue("@id", id);
+
+            object resultObj = checkcmd.ExecuteScalar();
+            int count = Convert.ToInt32(resultObj);
+
+            if(count > 0)   //아이디 중복
+            {
+                Debug.Log($"중복된 아이디 : {id}");
+                return false;   
+            }
+
             //INSERT INTO user_info VALUES("홍길동","1234","01000000000");
             string sqlsignup =
-                 string.Format(@"INSERT INTO user_info VALUES('{0}','{1}')", id, password);
+                 string.Format(@"INSERT INTO user_info VALUES('{0}','{1}', NULL)", id, password);
             MySqlCommand cmd = new MySqlCommand(sqlsignup, con);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@password", password);
+            
             // ExecuteNonQuery() : 영향을 받은 행의 수를 반환 
             // insert -> 1(1개의 행 추가)
             // update -> n(n개의 행 변경) 
             // delete -> n (n개의 행 삭제)
             int result = cmd.ExecuteNonQuery(); // 성공시 1 반환
+
+            if (result > 0)
+            {
+                Debug.Log("다음 단계로 이동합니다");
+                return true;
+            }
+
+            else
+            {
+                Debug.Log("실패");
+                return false;
+            }
+        }
+
+        catch (Exception e)
+        {
+            Debug.Log(e.Message);
+            return false;
+        }
+    }
+
+    public bool SignupStep2(string nickname, string id)
+    {
+        try
+        {
+            if (!connection_check(con))
+            {
+                return false;
+            }
+
+            // 2단계 : 닉네임 추가
+            string sqlnickname =
+                string.Format(@"UPDATE user_info SET Nickname = '{0}' WHERE Name='{1}';", nickname, id);
+            MySqlCommand cmd = new MySqlCommand(sqlnickname, con);
+
+            int result = cmd.ExecuteNonQuery();
 
             if (result > 0)
             {
@@ -197,15 +263,16 @@ public class SQLManager : MonoBehaviour
             }
         }
 
-        catch (Exception e)
+        catch(Exception e)
         {
             Debug.Log(e.Message);
             return false;
         }
     }
 
+
     // 회원정보 수정
-    public bool Updateinfo(string curid, string newid, string newpwd)
+    public bool Updateinfo(string id, string curname, string newname, string newpwd)
     {
         try
         {
@@ -217,14 +284,14 @@ public class SQLManager : MonoBehaviour
             //쿼리문
             //UPDATE user_info SET User_Password='4696' WHERE User_Name='옥혜정';
             string sqlupdate =
-                string.Format(@"UPDATE user_info SET Name = '{0}', Password='{1}' WHERE Name='{2}';", newid, newpwd,  curid);
+                string.Format(@"UPDATE user_info SET Nickname = '{0}', Password='{1}' WHERE Nickname='{2}';", newname, newpwd,  curname);
             MySqlCommand cmd = new MySqlCommand(sqlupdate, con);
 
             int result = cmd.ExecuteNonQuery(); // 성공시 n개 반환
 
             if (result > 0)
             {
-                info = new User_info(newid, newpwd);
+                info = new User_info(id, newpwd, newname);
                 Debug.Log("회원정보 수정 완료");
                 return true;
             }

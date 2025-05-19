@@ -13,7 +13,7 @@ public class LoginingController : MonoBehaviour
 
     [Header("회원정보 수정")]
     [SerializeField] private GameObject Update_pannel;
-    public InputField id_new;
+    public InputField name_new;
     public InputField pwd_new;
     [SerializeField] private Text editlog;  // 회원정보 수정 경고 안내 문구
 
@@ -48,25 +48,26 @@ public class LoginingController : MonoBehaviour
             Debug.Log("로그인 먼저 하세요");
             return;
         }
-
-        string currentname = SQLManager.instance.info?.User_name;
-        string newid = id_new.text;
+    
+        string id = SQLManager.instance.info?.User_name;
+        string currentname = SQLManager.instance.info?.User_Nickname;
+        string newname = name_new.text;
         string newpwd = pwd_new.text;
 
         //temp
         Debug.Log(currentname);
 
-        if(id_new.text.Equals(string.Empty) || pwd_new.text.Equals(string.Empty))
+        if(name_new.text.Equals(string.Empty) || pwd_new.text.Equals(string.Empty))
         {
             editlog.text = "아이디와 비밀번호를 모두 입력하세요";
             return;
         }
 
-        if(SQLManager.instance.Updateinfo(currentname, newid, newpwd))
+        if(SQLManager.instance.Updateinfo(id, currentname, newname, newpwd))
         {
-            Debug.Log($"닉네임이 {newid}로 변경되었습니다.");
+            Debug.Log($"닉네임이 {newname}로 변경되었습니다.");
             Update_pannel.gameObject.SetActive(false);
-            id_new.text = string.Empty;
+            name_new.text = string.Empty;
             pwd_new.text = string.Empty;
             editlog.text = string.Empty;
         }
