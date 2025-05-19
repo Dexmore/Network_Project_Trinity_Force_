@@ -13,26 +13,30 @@ public class TexturePainter : MonoBehaviour
     [Range(1, 10)] public int brushSize = 5;
     public bool isEraser = false;
 
-    [Header("Slider UI")]
+    [Header("UI References")]
     public Slider brushSizeSlider;
-
-    [Header("Pencil / Erase Button")]
     public Button PencilButton;
     public Button EraseButton;
-
-    public float applyInterval = 0.02f;
+    public Button UndoButton;
+    public Button RedoButton;
 
     private Texture2D texture;
     private Color32[] fullColorBuffer;
-    private readonly Dictionary<Vector2Int, Color32> pixelBuffer = new();
+    private Color32[] displayBuffer; // 추가: 실시간 반영용
+    private Dictionary<Vector2Int, Color32> pixelBuffer = new();
 
     private SpriteRenderer spriteRenderer;
     private BoxCollider2D drawAreaCollider;
-
     private Vector2Int? lastDrawPixelPos;
-    private float lastApplyTime;
 
-    private int minX, minY, maxX, maxY;
+    private struct ChangeSet
+    {
+        public Dictionary<Vector2Int, Color32> before;
+        public Dictionary<Vector2Int, Color32> after;
+    }
+
+    private Stack<ChangeSet> undoStack = new();
+    private Stack<ChangeSet> redoStack = new();
 
     void Start()
     {
@@ -42,8 +46,13 @@ public class TexturePainter : MonoBehaviour
         };
 
         fullColorBuffer = new Color32[textureWidth * textureHeight];
-        FillWithColor(Color.white);
-        texture.SetPixels32(fullColorBuffer);
+        displayBuffer = new Color32[textureWidth * textureHeight];
+        for (int i = 0; i < fullColorBuffer.Length; i++)
+            fullColorBuffer[i] = Color.white;
+
+        fullColorBuffer.CopyTo(displayBuffer, 0);
+
+        texture.SetPixels32(displayBuffer);
         texture.Apply();
 
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -54,12 +63,15 @@ public class TexturePainter : MonoBehaviour
 
         if (brushSizeSlider != null)
         {
-            brushSizeSlider.onValueChanged.AddListener(val => SetBrushSize(Mathf.RoundToInt(val)));
+            brushSizeSlider.onValueChanged.AddListener(val => brushSize = Mathf.Clamp(Mathf.RoundToInt(val), 1, 10));
             brushSizeSlider.value = brushSize;
         }
 
-        PencilButton.gameObject.SetActive(false);
-        EraseButton.gameObject.SetActive(true);
+        if (UndoButton != null) UndoButton.onClick.AddListener(Undo);
+        if (RedoButton != null) RedoButton.onClick.AddListener(Redo);
+
+        PencilButton?.gameObject.SetActive(false);
+        EraseButton?.gameObject.SetActive(true);
     }
 
     void Update()
@@ -67,25 +79,23 @@ public class TexturePainter : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             lastDrawPixelPos = null;
-            ResetMinMax();
+            pixelBuffer.Clear();
         }
 
         if (Input.GetMouseButton(0))
         {
             TryDrawAtMousePosition();
+            UpdateLiveTexture();
         }
 
         if (Input.GetMouseButtonUp(0))
         {
-            lastDrawPixelPos = null;
             ApplyBufferedPixels();
+            lastDrawPixelPos = null;
         }
 
-        if (Time.time - lastApplyTime > applyInterval && pixelBuffer.Count > 0)
-        {
-            ApplyBufferedPixels();
-            lastApplyTime = Time.time;
-        }
+        if (UndoButton != null) UndoButton.interactable = undoStack.Count > 0;
+        if (RedoButton != null) RedoButton.interactable = redoStack.Count > 0;
     }
 
     void TryDrawAtMousePosition()
@@ -98,16 +108,20 @@ public class TexturePainter : MonoBehaviour
         Vector2Int pixelPos = new(Mathf.FloorToInt(normalized.x * textureWidth), Mathf.FloorToInt(normalized.y * textureHeight));
 
         if (lastDrawPixelPos.HasValue)
+        {
             DrawLineBuffered(lastDrawPixelPos.Value, pixelPos);
+        }
         else
+        {
             DrawCircleBuffered(pixelPos);
+        }
 
         lastDrawPixelPos = pixelPos;
     }
 
     void DrawCircleBuffered(Vector2Int center)
     {
-        Color32 colorToUse = isEraser ? new Color32(255, 255, 255, 255) : brushColor;
+        Color32 drawColor = isEraser ? new Color32(255, 255, 255, 255) : brushColor;
         int rSquared = brushSize * brushSize;
 
         for (int dx = -brushSize; dx <= brushSize; dx++)
@@ -121,16 +135,7 @@ public class TexturePainter : MonoBehaviour
                 if (!IsValidPixel(x, y)) continue;
 
                 Vector2Int pos = new(x, y);
-                int idx = y * textureWidth + x;
-
-                if (fullColorBuffer[idx].Equals(colorToUse)) continue;
-
-                pixelBuffer[pos] = colorToUse;
-
-                if (x < minX) minX = x;
-                if (y < minY) minY = y;
-                if (x > maxX) maxX = x;
-                if (y > maxY) maxY = y;
+                pixelBuffer[pos] = drawColor;
             }
         }
     }
@@ -146,92 +151,108 @@ public class TexturePainter : MonoBehaviour
         }
     }
 
+    void UpdateLiveTexture()
+    {
+        fullColorBuffer.CopyTo(displayBuffer, 0);
+
+        foreach (var kvp in pixelBuffer)
+        {
+            int idx = kvp.Key.y * textureWidth + kvp.Key.x;
+            displayBuffer[idx] = kvp.Value;
+        }
+
+        texture.SetPixels32(displayBuffer);
+        texture.Apply();
+    }
+
     void ApplyBufferedPixels()
     {
         if (pixelBuffer.Count == 0) return;
 
-        int width = maxX - minX + 1;
-        int height = maxY - minY + 1;
-        Color32[] partialBuffer = new Color32[width * height];
+        Dictionary<Vector2Int, Color32> before = new();
+        Dictionary<Vector2Int, Color32> after = new();
 
-        for (int y = minY; y <= maxY; y++)
+        foreach (var kvp in pixelBuffer)
         {
-            for (int x = minX; x <= maxX; x++)
-            {
-                Vector2Int pos = new(x, y);
-                int localIdx = (y - minY) * width + (x - minX);
-                int fullIdx = y * textureWidth + x;
-
-                if (pixelBuffer.TryGetValue(pos, out var col))
-                {
-                    partialBuffer[localIdx] = col;
-                    fullColorBuffer[fullIdx] = col;
-                }
-                else
-                {
-                    partialBuffer[localIdx] = fullColorBuffer[fullIdx];
-                }
-            }
+            int idx = kvp.Key.y * textureWidth + kvp.Key.x;
+            before[kvp.Key] = fullColorBuffer[idx];
+            after[kvp.Key] = kvp.Value;
+            fullColorBuffer[idx] = kvp.Value;
         }
 
-        texture.SetPixels32(minX, minY, width, height, partialBuffer);
-        texture.Apply(false);
+        texture.SetPixels32(fullColorBuffer);
+        texture.Apply();
+        undoStack.Push(new ChangeSet { before = before, after = after });
+        redoStack.Clear();
         pixelBuffer.Clear();
-        ResetMinMax();
     }
 
-    void ResetMinMax()
+    public void Undo()
     {
-        minX = textureWidth;
-        minY = textureHeight;
-        maxX = 0;
-        maxY = 0;
+        if (undoStack.Count == 0) return;
+        ChangeSet set = undoStack.Pop();
+        ApplyChangeSet(set.before);
+        redoStack.Push(set);
     }
 
-    void FillWithColor(Color32 color)
+    public void Redo()
     {
-        for (int i = 0; i < fullColorBuffer.Length; i++)
-            fullColorBuffer[i] = color;
+        if (redoStack.Count == 0) return;
+        ChangeSet set = redoStack.Pop();
+        ApplyChangeSet(set.after);
+        undoStack.Push(set);
     }
 
-    void ClearTextureInternal(bool apply)
+    void ApplyChangeSet(Dictionary<Vector2Int, Color32> changes)
     {
-        FillWithColor(new Color32(255, 255, 255, 255)); // 흰색으로 초기화
-        pixelBuffer.Clear();
-        ResetMinMax();
-
-        if (apply)
+        foreach (var kvp in changes)
         {
-            texture.SetPixels32(fullColorBuffer);
-            texture.Apply();
+            int idx = kvp.Key.y * textureWidth + kvp.Key.x;
+            fullColorBuffer[idx] = kvp.Value;
         }
-    }
 
-    public void ClearTexture() => ClearTextureInternal(true);
-    public void SetBrushColor(Color color) => brushColor = color;
-    public void SetBrushSize(int size) => brushSize = Mathf.Clamp(size, 1, 10);
-    public void SetEraser()
-    {
-        isEraser = true;
-        PencilButton.gameObject.SetActive(true);
-        EraseButton.gameObject.SetActive(false);
-    }
-    public void SetPencil()
-    {
-        isEraser = false;
-        PencilButton.gameObject.SetActive(false);
-        EraseButton.gameObject.SetActive(true);
-    }
-
-    public void SaveToPNG()
-    {
-        string folder = Application.persistentDataPath + "/Drawings";
-        if (!System.IO.Directory.Exists(folder)) System.IO.Directory.CreateDirectory(folder);
-
-        string path = System.IO.Path.Combine(folder, $"drawing_{System.DateTime.Now:yyyyMMdd_HHmmss}.png");
-        System.IO.File.WriteAllBytes(path, texture.EncodeToPNG());
-        Debug.Log("Saved to: " + path);
+        texture.SetPixels32(fullColorBuffer);
+        texture.Apply();
     }
 
     bool IsValidPixel(int x, int y) => x >= 0 && x < textureWidth && y >= 0 && y < textureHeight;
+
+    public void SetBrushColor(Color color) => brushColor = color;
+
+    public void SetEraser()
+    {
+        isEraser = true;
+        PencilButton?.gameObject.SetActive(true);
+        EraseButton?.gameObject.SetActive(false);
+    }
+
+    public void SetPencil()
+    {
+        isEraser = false;
+        PencilButton?.gameObject.SetActive(false);
+        EraseButton?.gameObject.SetActive(true);
+    }
+
+    public void ClearTexture()
+    {
+        Dictionary<Vector2Int, Color32> before = new();
+        Dictionary<Vector2Int, Color32> after = new();
+
+        for (int y = 0; y < textureHeight; y++)
+        {
+            for (int x = 0; x < textureWidth; x++)
+            {
+                Vector2Int pos = new(x, y);
+                int idx = y * textureWidth + x;
+                before[pos] = fullColorBuffer[idx];
+                fullColorBuffer[idx] = new Color32(255, 255, 255, 255);
+                after[pos] = fullColorBuffer[idx];
+            }
+        }
+
+        texture.SetPixels32(fullColorBuffer);
+        texture.Apply();
+        undoStack.Push(new ChangeSet { before = before, after = after });
+        redoStack.Clear();
+    }
 }
