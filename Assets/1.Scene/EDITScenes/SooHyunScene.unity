@@ -847,7 +847,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 4586612983835247562}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0a8cce7b6da9c9c4aa553433d27581a6, type: 3}
+  m_Script: {fileID: 11500000, guid: 9e155a61fc1d2fd4e93d54ce59062b9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   paint: {fileID: 5125586409260921617}
@@ -2205,13 +2205,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 6494557965701918522}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 09fea93d22f13af42bacd3190c27f38a, type: 3}
+  m_Script: {fileID: 11500000, guid: 204cb0a9be2b256438caa29a43648ec4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   textureWidth: 1000
   textureHeight: 700
   brushColor: {r: 0, g: 0, b: 0, a: 1}
-  brushSize: 10
+  brushSize: 5
   brushSizeSlider: {fileID: 631403642}
   applyInterval: 0.02
 --- !u!224 &5408599740606826731

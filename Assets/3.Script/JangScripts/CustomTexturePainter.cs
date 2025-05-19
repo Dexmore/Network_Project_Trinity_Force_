@@ -1,16 +1,15 @@
-ï»¿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
 [RequireComponent(typeof(SpriteRenderer), typeof(BoxCollider2D))]
-public class TexturePainter : MonoBehaviour
+public class CustomTexturePainter : MonoBehaviour
 {
     [Header("Texture Settings")]
     public int textureWidth = 1024, textureHeight = 1024;
 
     [Header("Brush Settings")]
     public Color brushColor = Color.black;
-<<<<<<< Updated upstream
     [Range(1, 50)] public int brushSize = 5;
 
     [Header("Slider UI")]
@@ -29,17 +28,9 @@ public class TexturePainter : MonoBehaviour
     private float lastApplyTime;
 
     private int minX, minY, maxX, maxY;
-=======
-    public Color fillColor = Color.red;
-    public int brushSize = 5;
 
-    private Texture2D texture;
-    private bool isDrawing = false;
-    private bool isFillMode = false;
-    private BoxCollider2D drawAreaCollider;
-    private Vector2? lastMouseDrawPos = null;
-    private List<Vector2Int> pixelBuffer = new List<Vector2Int>();
->>>>>>> Stashed changes
+    private enum Mode { Brush, Fill }
+    private Mode currentMode = Mode.Brush;
 
     void Start()
     {
@@ -70,51 +61,33 @@ public class TexturePainter : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-<<<<<<< Updated upstream
+            Vector2 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            if (!drawAreaCollider.OverlapPoint(worldPos)) return;
+
+            Vector2 local = worldPos - (Vector2)spriteRenderer.bounds.min;
+            Vector2 normalized = new(local.x / spriteRenderer.bounds.size.x, local.y / spriteRenderer.bounds.size.y);
+            int px = Mathf.FloorToInt(normalized.x * textureWidth);
+            int py = Mathf.FloorToInt(normalized.y * textureHeight);
+
+            if (currentMode == Mode.Fill)
+            {
+                Color targetColor = texture.GetPixel(px, py);
+                if (targetColor != brushColor)
+                    FloodFill(px, py, targetColor, brushColor);
+                return;
+            }
+
             lastDrawPixelPos = null;
             ResetMinMax();
         }
 
-        if (Input.GetMouseButton(0))
+        if (Input.GetMouseButton(0) && currentMode == Mode.Brush)
         {
             TryDrawAtMousePosition();
-=======
-            Vector2 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-
-            if (drawAreaCollider.OverlapPoint(mouseWorldPos))
-            {
-                SpriteRenderer sr = GetComponent<SpriteRenderer>();
-                Vector2 local = mouseWorldPos - (Vector2)sr.bounds.min;
-
-                float normalizedX = local.x / sr.bounds.size.x;
-                float normalizedY = local.y / sr.bounds.size.y;
-
-                int px = Mathf.FloorToInt(normalizedX * textureWidth);
-                int py = Mathf.FloorToInt(normalizedY * textureHeight);
-
-                if (isFillMode)
-                {
-                    Color targetColor = texture.GetPixel(px, py);
-                    if (targetColor != fillColor)
-                    {
-                        FloodFill(px, py, targetColor, fillColor);
-                    }
-                }
-                else
-                {
-                    isDrawing = true;
-                    lastMouseDrawPos = null;
-                    DrawCircleBuffered(px, py);
-                    ApplyBufferedPixels();
-                    lastMouseDrawPos = new Vector2(px, py);
-                }
-            }
->>>>>>> Stashed changes
         }
 
-        if (Input.GetMouseButtonUp(0))
+        if (Input.GetMouseButtonUp(0) && currentMode == Mode.Brush)
         {
-<<<<<<< Updated upstream
             lastDrawPixelPos = null;
             ApplyBufferedPixels();
         }
@@ -123,49 +96,6 @@ public class TexturePainter : MonoBehaviour
         {
             ApplyBufferedPixels();
             lastApplyTime = Time.time;
-=======
-            if (!isFillMode)
-            {
-                isDrawing = false;
-                lastMouseDrawPos = null;
-                ApplyBufferedPixels();
-            }
-        }
-
-        if (isDrawing && !isFillMode)
-        {
-            Vector2 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-
-            if (drawAreaCollider.OverlapPoint(mouseWorldPos))
-            {
-                SpriteRenderer sr = GetComponent<SpriteRenderer>();
-                Vector2 local = mouseWorldPos - (Vector2)sr.bounds.min;
-
-                float normalizedX = local.x / sr.bounds.size.x;
-                float normalizedY = local.y / sr.bounds.size.y;
-
-                int px = Mathf.FloorToInt(normalizedX * textureWidth);
-                int py = Mathf.FloorToInt(normalizedY * textureHeight);
-
-                if (lastMouseDrawPos.HasValue)
-                {
-                    Vector2 lastPos = lastMouseDrawPos.Value;
-                    int lastPx = Mathf.FloorToInt(lastPos.x);
-                    int lastPy = Mathf.FloorToInt(lastPos.y);
-
-                    DrawLineBuffered(lastPx, lastPy, px, py);
-                }
-                else
-                {
-                    DrawCircleBuffered(px, py);
-                }
-
-                lastMouseDrawPos = new Vector2(px, py);
-
-                if (Time.frameCount % 2 == 0)
-                    ApplyBufferedPixels();
-            }
->>>>>>> Stashed changes
         }
     }
 
@@ -236,41 +166,7 @@ public class TexturePainter : MonoBehaviour
         int height = maxY - minY + 1;
         Color32[] partialBuffer = new Color32[width * height];
 
-<<<<<<< Updated upstream
         for (int y = minY; y <= maxY; y++)
-=======
-    void FloodFill(int x, int y, Color targetColor, Color replacementColor)
-    {
-        if (targetColor == replacementColor)
-            return;
-
-        Queue<Vector2Int> pixels = new Queue<Vector2Int>();
-        pixels.Enqueue(new Vector2Int(x, y));
-
-        while (pixels.Count > 0)
-        {
-            Vector2Int p = pixels.Dequeue();
-            if (p.x < 0 || p.x >= textureWidth || p.y < 0 || p.y >= textureHeight)
-                continue;
-
-            if (texture.GetPixel(p.x, p.y) != targetColor)
-                continue;
-
-            texture.SetPixel(p.x, p.y, replacementColor);
-
-            pixels.Enqueue(new Vector2Int(p.x + 1, p.y));
-            pixels.Enqueue(new Vector2Int(p.x - 1, p.y));
-            pixels.Enqueue(new Vector2Int(p.x, p.y + 1));
-            pixels.Enqueue(new Vector2Int(p.x, p.y - 1));
-        }
-
-        texture.Apply();
-    }
-
-    public void ClearTexture()
-    {
-        for (int x = 0; x < texture.width; x++)
->>>>>>> Stashed changes
         {
             for (int x = minX; x <= maxX; x++)
             {
@@ -294,6 +190,30 @@ public class TexturePainter : MonoBehaviour
         texture.Apply(false);
         pixelBuffer.Clear();
         ResetMinMax();
+    }
+
+    void FloodFill(int x, int y, Color targetColor, Color newColor)
+    {
+        if (targetColor == newColor) return;
+
+        Queue<Vector2Int> queue = new();
+        queue.Enqueue(new Vector2Int(x, y));
+
+        while (queue.Count > 0)
+        {
+            Vector2Int p = queue.Dequeue();
+            if (!IsValidPixel(p.x, p.y)) continue;
+            if (texture.GetPixel(p.x, p.y) != targetColor) continue;
+
+            texture.SetPixel(p.x, p.y, newColor);
+
+            queue.Enqueue(new Vector2Int(p.x + 1, p.y));
+            queue.Enqueue(new Vector2Int(p.x - 1, p.y));
+            queue.Enqueue(new Vector2Int(p.x, p.y + 1));
+            queue.Enqueue(new Vector2Int(p.x, p.y - 1));
+        }
+
+        texture.Apply();
     }
 
     void ResetMinMax()
@@ -331,32 +251,10 @@ public class TexturePainter : MonoBehaviour
         Debug.Log("Saved to: " + path);
     }
 
-    // ðŸ”´ íŒŒëž€ ê²€ì • ì§€ìš°ê°œ ê³µí†µ ì‚¬ìš© í•¨ìˆ˜
-    public void SetBrushColor(Color color)
-    {
-        brushColor = color;
-        isFillMode = false; // ºê·¯½Ã »ç¿ë ½Ã Ã¤¿ì±â ¸ðµå OFF
-    }
-
-<<<<<<< Updated upstream
+    public void SetBrushColor(Color color) => brushColor = color;
     public void SetBrushSize(int size) => brushSize = Mathf.Clamp(size, 1, 50);
+    public void SetBrushMode() => currentMode = Mode.Brush;
+    public void SetFillMode() => currentMode = Mode.Fill;
 
     bool IsValidPixel(int x, int y) => x >= 0 && x < textureWidth && y >= 0 && y < textureHeight;
-=======
-    public void SetFillColor(Color color)
-    {
-        fillColor = color;
-        EnableFillMode(); // Fill »ö ¼±ÅÃ ½Ã ÀÚµ¿ Fill ¸ðµå ON
-    }
-
-    public void EnableFillMode()
-    {
-        isFillMode = true;
-    }
-
-    public void DisableFillMode()
-    {
-        isFillMode = false;
-    }
->>>>>>> Stashed changes
 }
