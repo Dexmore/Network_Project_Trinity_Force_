@@ -376,9 +376,9 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1036038072}
   m_Direction: 0
   m_MinValue: 1
-  m_MaxValue: 15
+  m_MaxValue: 5
   m_WholeNumbers: 0
-  m_Value: 15
+  m_Value: 5
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -2211,9 +2211,9 @@ MonoBehaviour:
   textureWidth: 1000
   textureHeight: 700
   brushColor: {r: 0, g: 0, b: 0, a: 1}
-  brushSize: 15
+  brushSize: 10
   brushSizeSlider: {fileID: 631403642}
-  applyInterval: 0.05
+  applyInterval: 0.02
 --- !u!224 &5408599740606826731
 RectTransform:
   m_ObjectHideFlags: 0

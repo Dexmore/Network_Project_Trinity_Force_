@@ -1,4 +1,4 @@
-using UnityEngine;
+/*using UnityEngine;
 
 public class BrushController : MonoBehaviour
 {
@@ -50,3 +50,4 @@ public class BrushController : MonoBehaviour
             paint.SetFillColor(color);
     }
 }
+*/
