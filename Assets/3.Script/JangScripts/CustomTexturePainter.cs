@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
@@ -36,7 +36,7 @@ public class CustomTexturePainter : MonoBehaviour
     {
         texture = new Texture2D(textureWidth, textureHeight, TextureFormat.RGBA32, false)
         {
-            filterMode = FilterMode.Point
+            filterMode = FilterMode.Point // 흐림 방지
         };
 
         fullColorBuffer = new Color32[textureWidth * textureHeight];
@@ -71,9 +71,11 @@ public class CustomTexturePainter : MonoBehaviour
 
             if (currentMode == Mode.Fill)
             {
-                Color targetColor = texture.GetPixel(px, py);
-                if (targetColor != brushColor)
+                Color32 targetColor = texture.GetPixel(px, py);
+                if (!ColorsEqual(targetColor, brushColor))
+                {
                     FloodFill(px, py, targetColor, brushColor);
+                }
                 return;
             }
 
@@ -133,9 +135,7 @@ public class CustomTexturePainter : MonoBehaviour
                 Vector2Int pos = new(x, y);
                 int idx = y * textureWidth + x;
 
-                if (fullColorBuffer[idx].Equals(brushColor)) continue;
-
-                pixelBuffer[pos] = brushColor;
+                pixelBuffer[pos] = brushColor; // 무조건 덮어쓰기
 
                 minX = Mathf.Min(minX, x);
                 minY = Mathf.Min(minY, y);
@@ -162,40 +162,23 @@ public class CustomTexturePainter : MonoBehaviour
     {
         if (pixelBuffer.Count == 0) return;
 
-        int width = maxX - minX + 1;
-        int height = maxY - minY + 1;
-        Color32[] partialBuffer = new Color32[width * height];
-
-        for (int y = minY; y <= maxY; y++)
+        foreach (var kvp in pixelBuffer)
         {
-            for (int x = minX; x <= maxX; x++)
-            {
-                Vector2Int pos = new(x, y);
-                int localIdx = (y - minY) * width + (x - minX);
-                int fullIdx = y * textureWidth + x;
-
-                if (pixelBuffer.TryGetValue(pos, out var col))
-                {
-                    partialBuffer[localIdx] = col;
-                    fullColorBuffer[fullIdx] = col;
-                }
-                else
-                {
-                    partialBuffer[localIdx] = fullColorBuffer[fullIdx];
-                }
-            }
+            Vector2Int pos = kvp.Key;
+            int idx = pos.y * textureWidth + pos.x;
+            fullColorBuffer[idx] = kvp.Value;
         }
 
-        texture.SetPixels32(minX, minY, width, height, partialBuffer);
+        texture.SetPixels32(fullColorBuffer); // 전체 업데이트로 동기화 유지
         texture.Apply(false);
+
         pixelBuffer.Clear();
         ResetMinMax();
     }
 
-    void FloodFill(int x, int y, Color targetColor, Color newColor)
+    void FloodFill(int x, int y, Color32 targetColor, Color32 newColor)
     {
-        if (targetColor == newColor) return;
-
+        Color32[] tempBuffer = texture.GetPixels32();
         Queue<Vector2Int> queue = new();
         queue.Enqueue(new Vector2Int(x, y));
 
@@ -203,9 +186,12 @@ public class CustomTexturePainter : MonoBehaviour
         {
             Vector2Int p = queue.Dequeue();
             if (!IsValidPixel(p.x, p.y)) continue;
-            if (texture.GetPixel(p.x, p.y) != targetColor) continue;
 
-            texture.SetPixel(p.x, p.y, newColor);
+            int index = p.y * textureWidth + p.x;
+            if (!ColorsEqual(tempBuffer[index], targetColor)) continue;
+
+            tempBuffer[index] = newColor;
+            fullColorBuffer[index] = newColor; // 버퍼도 동기화
 
             queue.Enqueue(new Vector2Int(p.x + 1, p.y));
             queue.Enqueue(new Vector2Int(p.x - 1, p.y));
@@ -213,7 +199,13 @@ public class CustomTexturePainter : MonoBehaviour
             queue.Enqueue(new Vector2Int(p.x, p.y - 1));
         }
 
-        texture.Apply();
+        texture.SetPixels32(tempBuffer);
+        texture.Apply(false);
+    }
+
+    bool ColorsEqual(Color32 a, Color32 b)
+    {
+        return a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a;
     }
 
     void ResetMinMax()
@@ -251,7 +243,12 @@ public class CustomTexturePainter : MonoBehaviour
         Debug.Log("Saved to: " + path);
     }
 
-    public void SetBrushColor(Color color) => brushColor = color;
+    public void SetBrushColor(Color color)
+    {
+        color.a = 1f;
+        brushColor = color;
+    }
+
     public void SetBrushSize(int size) => brushSize = Mathf.Clamp(size, 1, 50);
     public void SetBrushMode() => currentMode = Mode.Brush;
     public void SetFillMode() => currentMode = Mode.Fill;
