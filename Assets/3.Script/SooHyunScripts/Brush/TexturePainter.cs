@@ -54,8 +54,7 @@ public class TexturePainter : MonoBehaviour
         FillButton.onClick.AddListener(() =>
         {
             isFillMode = !isFillMode;
-            if (!isFillMode)
-                SetPencil(); // 채우기 모드 해제 시 자동으로 브러시 모드로
+            if (!isFillMode) SetPencil();
         });
 
         SetPencil();
@@ -63,14 +62,10 @@ public class TexturePainter : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            OnMouseDown();
-        }
+        if (Input.GetMouseButtonDown(0)) OnMouseDown();
         if (Input.GetMouseButton(0) && !isFillMode) { Draw(); UpdateLiveTexture(); }
         if (Input.GetMouseButtonUp(0)) { CommitDraw(); }
     }
-
 
     void OnMouseDown()
     {
@@ -85,11 +80,9 @@ public class TexturePainter : MonoBehaviour
             FloodFill(pixelPos, target, fill);
             return;
         }
-        else
-        {
-            lastDrawPixelPos = null;
-            pixelBuffer.Clear();
-        }
+
+        lastDrawPixelPos = null;
+        pixelBuffer.Clear();
     }
 
     Vector2Int GetMousePixel()
@@ -262,5 +255,13 @@ public class TexturePainter : MonoBehaviour
 
         undoStack.Push(new ChangeSet { before = before, after = after });
         redoStack.Clear();
+    }
+
+    public Texture2D GetTextureCopy()
+    {
+        Texture2D copy = new Texture2D(texture.width, texture.height, texture.format, false);
+        copy.SetPixels(texture.GetPixels());
+        copy.Apply();
+        return copy;
     }
 }
