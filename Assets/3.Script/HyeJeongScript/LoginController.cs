@@ -44,6 +44,10 @@ public class LoginController : MonoBehaviour
                 cached_id = id_i.text;
                 //닉네임 입력 패널을 보여준다.
                 Nickname_pannel.SetActive(true);
+
+                // 닉네임 입력창 초기화
+                nickname_Signup.text = string.Empty;
+                log2_signup.text = string.Empty;
                 return;
             }
             //로그인 성공 후
@@ -63,16 +67,17 @@ public class LoginController : MonoBehaviour
     public void OpenSignupPannel()
     {
         Signup_pannel.gameObject.SetActive(true);
+
+        //입력창 초기화
+        id_Signup.text = string.Empty;
+        pwd_Signup.text = string.Empty;
+        log1_signup.text = string.Empty;
     }
 
     public void CloseSignupPannel()
     {
         Signup_pannel.gameObject.SetActive(false);
 
-        // 입력창 초기화
-        id_Signup.text = string.Empty;
-        pwd_Signup.text = string.Empty;
-        log1_signup.text = string.Empty;
     }
 
     // 1단계 아이디, 비밀 번호 입력 -> 중복이 안되면 2단계로 가는 버튼
@@ -94,15 +99,14 @@ public class LoginController : MonoBehaviour
             Signup_pannel.gameObject.SetActive(false);
             Nickname_pannel.gameObject.SetActive(true);
 
-            // 입력창 초기화
-            id_Signup.text = string.Empty;
-            pwd_Signup.text = string.Empty;
-            log1_signup.text = string.Empty;
+            // 닉네임 입력창 초기화
+            nickname_Signup.text = string.Empty;
+            log2_signup.text = string.Empty;
         }
 
         else
         {
-            //log1_signup.text = "이미 존재하는 아이디입니다.";
+            log1_signup.text = "이미 존재하는 아이디입니다.";
             Debug.Log("다시 확인하세요");
         }
     }
@@ -112,7 +116,7 @@ public class LoginController : MonoBehaviour
     {
         if (nickname_Signup.text.Equals(string.Empty))
         {
-            log2_signup.text = "아이디와 비밀번호를 입력하세요";
+            log2_signup.text = "닉네임을 입력하세요";
             return;
         }
 
@@ -122,13 +126,11 @@ public class LoginController : MonoBehaviour
             Debug.Log($"{nickname_Signup.text}님 가입 완료");
             Nickname_pannel.gameObject.SetActive(false);
 
-            // 입력창 초기화
-            nickname_Signup.text = string.Empty;
         }
 
         else
         {
-            //log2_signup.text = "이미 존재하는 닉네임입니다";
+            log2_signup.text = "이미 존재하는 닉네임입니다";
             Debug.Log("다시 확인하세요");
         }
     }

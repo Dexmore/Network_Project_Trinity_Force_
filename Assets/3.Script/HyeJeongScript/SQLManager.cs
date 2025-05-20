@@ -186,45 +186,57 @@ public class SQLManager : MonoBehaviour
                 return false;
             }
 
-            //아이디 중복 확인
+            //1. 아이디 중복 확인
+            // 닉네임이 nulll인지 아닌지  -> 가입 여부
             string sqlcheck =
-                string.Format("SELECT COUNT(*) FROM user_info WHERE Name = '{0}';", id);
+                string.Format(@"SELECT Nickname FROM user_info WHERE Name = '{0}';", id);
             MySqlCommand checkcmd = new MySqlCommand(sqlcheck, con);
-            checkcmd.Parameters.AddWithValue("@id", id);
 
+            //ExecuteScalar() : 결과로 반환된 첫 번째 행의 첫 번째 열 값을 반환하는 메소드 -> 값 1개만 가져올 때 쓴다
+            // 성능이 빨라 불필요한 데이터를 가져오지 않음
+            // ExecuteScalar()는 반환되는 값이 object
             object resultObj = checkcmd.ExecuteScalar();
-            int count = Convert.ToInt32(resultObj);
 
-            if(count > 0)   //아이디 중복
-            {
-                Debug.Log($"중복된 아이디 : {id}");
-                return false;   
-            }
-
+            //2.  아이디가 아예 없다면? 새로 Insert
             //INSERT INTO user_info VALUES("홍길동","1234","01000000000");
-            string sqlsignup =
-                 string.Format(@"INSERT INTO user_info VALUES('{0}','{1}', NULL)", id, password);
-            MySqlCommand cmd = new MySqlCommand(sqlsignup, con);
-            cmd.Parameters.AddWithValue("@id", id);
-            cmd.Parameters.AddWithValue("@password", password);
+            if(resultObj == null)  // DBNull.Value은 SQL에서 NULL
+            {
+                string sqlsignup =
+                     string.Format(@"INSERT INTO user_info VALUES('{0}','{1}', NULL)", id, password);
+                MySqlCommand cmd = new MySqlCommand(sqlsignup, con);
             
-            // ExecuteNonQuery() : 영향을 받은 행의 수를 반환 
-            // insert -> 1(1개의 행 추가)
-            // update -> n(n개의 행 변경) 
-            // delete -> n (n개의 행 삭제)
-            int result = cmd.ExecuteNonQuery(); // 성공시 1 반환
+                // ExecuteNonQuery() : 영향을 받은 행의 수를 반환 (결과를 반환하지 않는 쿼리에 사용)
+                // insert -> 1(1개의 행 추가)
+                // update -> n(n개의 행 변경) 
+                // delete -> n (n개의 행 삭제)
+                int result = cmd.ExecuteNonQuery(); // 성공시 1 반환
+                
+                if(result > 0)
+                {
+                    Debug.Log("아이디 등록 완료");
+                    return true;
+                }
 
-            if (result > 0)
-            {
-                Debug.Log("다음 단계로 이동합니다");
-                return true;
+                else
+                {
+                    Debug.Log("실패");
+                    return false;
+                }
             }
 
-            else
+            //3. 아이디는 있는데 Nickname이 null -> 재가입으로 간주, 비번만 업데이트 가능
+            if(resultObj is DBNull)  //is는 타입 검사
             {
-                Debug.Log("실패");
+                string sqlupdate =
+                    string.Format(@"UPDATE user_info SET Password = '{0}' WHERE Name = '{1}';", password, id);
+                MySqlCommand cmdupdate = new MySqlCommand(sqlupdate, con);
+                int updateresult = cmdupdate.ExecuteNonQuery();
+                return updateresult > 0;
+            }
+
+            //4. 아이디 있고, 닉네임 있다 -> 중복으로 간주
+                Debug.Log($"중복된 아이디 : {id}");
                 return false;
-            }
         }
 
         catch (Exception e)
@@ -242,6 +254,20 @@ public class SQLManager : MonoBehaviour
             {
                 return false;
             }
+
+            // 닉네임 중복 확인
+            string sqlcheckname =
+                string.Format(@"SELECT COUNT(*) FROM user_info WHERE Nickname = '{0}';", nickname);
+            MySqlCommand cmdcheck = new MySqlCommand(sqlcheckname, con);
+            object resultObj = cmdcheck.ExecuteScalar();
+            int count = Convert.ToInt32(resultObj);
+
+            if(count > 0)
+            {
+                Debug.Log($"중복된 닉네임 : {nickname}");
+                return false;
+            }
+
 
             // 2단계 : 닉네임 추가
             string sqlnickname =
