@@ -13,6 +13,10 @@ public class LoginController : MonoBehaviour
     public InputField pwd_i;
     public Text log;  // 로그인 경고 안내 문구
 
+    [Header("로그인 완료 팝업창")]
+    [SerializeField] private GameObject NoticeLogin_pannel;  // 로그인 완료 알림 패널창
+    [SerializeField] private Text NoticeLoginlog;   // 로그인 완료 알림문구
+
     [Header("회원가입 1단계: 아이디, 비밀번호 입력 + UI OnOff 조절")]
     [SerializeField] GameObject Signup_pannel;  // 1단계 패널
     [SerializeField] InputField id_Signup;
@@ -25,7 +29,16 @@ public class LoginController : MonoBehaviour
     [SerializeField] InputField nickname_Signup;    // 2단계에서 사용할 닉네임 입력 필드
     [SerializeField] private Text log2_signup;   //회원 가입시(닉네임 중복 시) 경고 안내 문구
 
+    [Header("회원가입 완료 팝업창")]
+    [SerializeField] private GameObject NoticeSignup_pannel;  // 회원가입 알림 패널창
+    [SerializeField] private Text NoticeSignuplog;   // 회원가입 알림문구
+
     #region 로그인
+    public void CloseNoticeLoginPannel()
+    {
+        NoticeLogin_pannel.gameObject.SetActive(false);
+    }
+
     public void LoginBtn()
     {
         if(id_i.text.Equals(string.Empty) || pwd_i.text.Equals(string.Empty))
@@ -50,10 +63,15 @@ public class LoginController : MonoBehaviour
                 log2_signup.text = string.Empty;
                 return;
             }
+
             //로그인 성공 후
-            Debug.Log($"{info.User_name}님 안녕하세요");
+            NoticeLogin_pannel.gameObject.SetActive(true);
+            NoticeLoginlog.text = $"{info.User_name}님 안녕하세요";
+
             gameObject.SetActive(false);
             logining.loginingPannel.SetActive(true);
+
+            Invoke("CloseNoticeLoginPannel", 3f);
         }
         else
         {
@@ -80,6 +98,11 @@ public class LoginController : MonoBehaviour
 
     }
 
+    public void CloseNoticePannel()
+    {
+        NoticeSignup_pannel.gameObject.SetActive(false);
+    }
+
     // 1단계 아이디, 비밀 번호 입력 -> 중복이 안되면 2단계로 가는 버튼
     public void CheckIDAndOPenNicknamePannelBtn()
     {
@@ -95,7 +118,6 @@ public class LoginController : MonoBehaviour
             cached_id = id_Signup.text;
 
             // 1단계 성공 + 등록
-            Debug.Log($"{id_Signup.text} 입력하셨습니다.");
             Signup_pannel.gameObject.SetActive(false);
             Nickname_pannel.gameObject.SetActive(true);
 
@@ -107,7 +129,6 @@ public class LoginController : MonoBehaviour
         else
         {
             log1_signup.text = "이미 존재하는 아이디입니다.";
-            Debug.Log("다시 확인하세요");
         }
     }
 
@@ -123,15 +144,16 @@ public class LoginController : MonoBehaviour
         if(SQLManager.instance.SignupStep2(nickname_Signup.text, cached_id))
         {
             // 2단계 성공 + 회원가입 완료
-            Debug.Log($"{nickname_Signup.text}님 가입 완료");
+            NoticeSignup_pannel.gameObject.SetActive(true);
+            NoticeSignuplog.text = $"{nickname_Signup.text}님 가입 완료";
             Nickname_pannel.gameObject.SetActive(false);
 
+            Invoke("CloseNoticePannel", 3f);
         }
 
         else
         {
             log2_signup.text = "이미 존재하는 닉네임입니다";
-            Debug.Log("다시 확인하세요");
         }
     }
 

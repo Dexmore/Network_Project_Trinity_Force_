@@ -211,15 +211,13 @@ public class SQLManager : MonoBehaviour
                 // delete -> n (n개의 행 삭제)
                 int result = cmd.ExecuteNonQuery(); // 성공시 1 반환
                 
-                if(result > 0)
+                if(result > 0)  // 아이디 등록 완료
                 {
-                    Debug.Log("아이디 등록 완료");
                     return true;
                 }
 
                 else
                 {
-                    Debug.Log("실패");
                     return false;
                 }
             }
@@ -236,7 +234,6 @@ public class SQLManager : MonoBehaviour
             }
 
             //4. 아이디 있고, 닉네임 있다 -> 중복으로 간주
-                Debug.Log($"중복된 아이디 : {id}");
                 return false;
         }
 
@@ -263,9 +260,8 @@ public class SQLManager : MonoBehaviour
             object resultObj = cmdcheck.ExecuteScalar();
             int count = Convert.ToInt32(resultObj);
 
-            if(count > 0)
+            if(count > 0)   // 닉네임 중복
             {
-                Debug.Log($"중복된 닉네임 : {nickname}");
                 return false;
             }
 
@@ -277,15 +273,13 @@ public class SQLManager : MonoBehaviour
 
             int result = cmd.ExecuteNonQuery();
 
-            if (result > 0)
+            if (result > 0) // 회원가입 성공
             {
-                Debug.Log("회원가입 성공");
                 return true;
             }
 
-            else
+            else //회원 가입 실패
             {
-                Debug.Log("회원가입 실패");
                 return false;
             }
         }
@@ -318,9 +312,8 @@ public class SQLManager : MonoBehaviour
             object resultObj = checkcmd.ExecuteScalar();
             int count = Convert.ToInt32(resultObj);
 
-            if(count > 0)
+            if(count > 0)   // 닉네임 중복 시
             {
-                Debug.Log($"중복된 닉네임 :  {newname}");
                 return false;
             }
 
@@ -332,16 +325,14 @@ public class SQLManager : MonoBehaviour
 
             int result = cmd.ExecuteNonQuery(); // 성공시 n개 반환
 
-            if (result > 0)
+            if (result > 0) // 닉네임 변경 완료
             {
                 info.User_Nickname = newname;
-                Debug.Log("닉네임 변경 완료");
                 return true;
             }
 
-            else
+            else //변경 실패
             {
-                Debug.Log("변경 실패.");
                 return false;
             }
         }
@@ -371,16 +362,14 @@ public class SQLManager : MonoBehaviour
 
             int result = cmd.ExecuteNonQuery(); // 성공시 n개 반환
 
-            if (result > 0)
+            if (result > 0) //비밀번호 변경 완료
             {
                 info.User_Password = newpassword;
-                Debug.Log("비밀번호 변경 완료");
                 return true;
             }
 
-            else
+            else // 변경실패
             {
-                Debug.Log("변경 실패.");
                 return false;
             }
         }
@@ -412,14 +401,12 @@ public class SQLManager : MonoBehaviour
 
             if (result > 0)
             {
-                Debug.Log($"{id}가 삭제되었습니다.");
                 info = null;
                 return true;
             }
 
             else
             {
-                Debug.Log("삭제 실패했습니다.");
                 return false;
             }
         }

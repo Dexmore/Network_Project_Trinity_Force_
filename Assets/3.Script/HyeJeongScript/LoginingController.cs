@@ -33,14 +33,18 @@ public class LoginingController : MonoBehaviour
     [SerializeField] private Text NoticePWDlog;    // 비밀번호 변경 알림
 
     [Header("회원탈퇴")]
-    public GameObject Delete_Pannel;
+    public GameObject Delete_Pannel;    // 회원탈퇴 패널창
+
+    [Header("회원탈퇴 알림창")]
+    [SerializeField] private GameObject NoticeDelete_pannel;  // 회원탈퇴 알림 패널창
+    [SerializeField] private Text Deletelog;   // 회원탈퇴 알림문구
 
     //로그아웃
     public void LogoutBtn()
     {
         loginingPannel.SetActive(false);
         login.gameObject.SetActive(true);
-        Debug.Log("로그아웃 되었습니다");
+
         //temp
         EmptyLoginField();
     }
@@ -95,17 +99,21 @@ public class LoginingController : MonoBehaviour
         NoticePWD_pannel.gameObject.SetActive(false);
     }
 
+    public void CloseNoticeDeletePannel()
+    {
+        NoticeDelete_pannel.gameObject.SetActive(false);
+    }
+
     public void UpdateNicknameBtn()
     {
-        if (SQLManager.instance.info == null)
+        if (SQLManager.instance.info == null)   
         {
-            Debug.Log("로그인 먼저 하세요");
             return;
         }
 
         string id = SQLManager.instance.info?.User_name;
         string currentname = SQLManager.instance.info?.User_Nickname;
-        string newname = name_new.text.Trim();  //
+        string newname = name_new.text.Trim();
         //Trim() : 공백제거
 
         if(name_new.text.Equals(string.Empty))
@@ -133,7 +141,6 @@ public class LoginingController : MonoBehaviour
     {
         if (SQLManager.instance.info == null)
         {
-            Debug.Log("로그인 먼저 하세요");
             return;
         }
 
@@ -177,7 +184,6 @@ public class LoginingController : MonoBehaviour
     {
         if(SQLManager.instance.info == null)
         {
-            Debug.Log("로그인 먼저 하세요");
             return;
         }
 
@@ -186,24 +192,24 @@ public class LoginingController : MonoBehaviour
 
         if(SQLManager.instance.Deleteinfo(id, pwd))
         {
-            Debug.Log("회원이 탈퇴되었습니다. 그동안 이용해주셔서 감사합니다.");
+            NoticeDelete_pannel.gameObject.SetActive(true);
+            Deletelog.text = "회원이 탈퇴되었습니다. 그동안 이용해주셔서 감사합니다.";
+
             loginingPannel.SetActive(false);
             Delete_Pannel.SetActive(false);
+
             login.gameObject.SetActive(true);
             EmptyLoginField();
-        }
 
-        else
-        {
-            Debug.Log("탈퇴 실패");
+            //3초 후 사라짐
+            Invoke("CloseNoticeDeletePannel", 3f);
         }
     }
     #endregion
 
-    //temp
+    // 로그인 입력창 초기화
     public void EmptyLoginField()
     {
-        //temp
         login.id_i.text = string.Empty;
         login.pwd_i.text = string.Empty;
         login.log.text = string.Empty;
