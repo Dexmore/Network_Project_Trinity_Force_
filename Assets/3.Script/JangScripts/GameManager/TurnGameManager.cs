@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿// 갈틱폰 스타일로 수정된 TurnGameManager.cs (문장 → 그림 → 문장 → 그림 순서)
+using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
@@ -23,6 +24,7 @@ public class TurnGameManager : MonoBehaviour
     public Text promptText;
     public InputField sentenceInput;
     public Button submitSentenceButton;
+    public RawImage sentenceImage;
 
     [Header("Drawing UI")]
     public GameObject drawingPanel;
@@ -66,9 +68,9 @@ public class TurnGameManager : MonoBehaviour
         if (string.IsNullOrEmpty(sentence)) return;
 
         turns[currentTurnIndex].prompt = sentence;
-
-        turns.Add(new TurnInfo { turnType = TurnType.Drawing, prompt = sentence, playerId = $"Player {turns.Count + 1}" });
         currentTurnIndex++;
+
+        turns.Add(new TurnInfo { turnType = TurnType.Drawing, prompt = sentence, playerId = $"Player {currentTurnIndex + 1}" });
 
         ShowDrawing(sentence);
     }
@@ -83,11 +85,11 @@ public class TurnGameManager : MonoBehaviour
         File.WriteAllBytes(path, bytes);
 
         turns[currentTurnIndex].imagePath = path;
-        drawingSystem.ClearTexture();
+        currentTurnIndex++;
 
+        drawingSystem.ClearTexture();
         HideAllPanels();
         sentenceInput.text = "";
-        currentTurnIndex++;
 
         if (currentTurnIndex >= playerCount * 2)
         {
@@ -95,8 +97,8 @@ public class TurnGameManager : MonoBehaviour
         }
         else
         {
-            turns.Add(new TurnInfo { turnType = TurnType.Sentence, prompt = "다음 문장을 입력하세요!", playerId = $"Player {turns.Count + 1}" });
-            ShowSentence("다음 문장을 입력하세요!");
+            turns.Add(new TurnInfo { turnType = TurnType.Sentence, prompt = "이 그림을 보고 문장을 작성하세요!", playerId = $"Player {currentTurnIndex + 1}" });
+            ShowSentence("이 그림을 보고 문장을 작성하세요!");
         }
     }
 
@@ -105,7 +107,19 @@ public class TurnGameManager : MonoBehaviour
         HideAllPanels();
         promptText.text = prompt;
         sentencePanel.SetActive(true);
+
+        // 마지막 그림이 있다면 표시
+        if (currentTurnIndex > 0 && turns[currentTurnIndex - 1].turnType == TurnType.Drawing)
+        {
+            sentenceImage.gameObject.SetActive(true);
+            StartCoroutine(LoadImage("file://" + turns[currentTurnIndex - 1].imagePath, sentenceImage));
+        }
+        else
+        {
+            sentenceImage.gameObject.SetActive(false);
+        }
     }
+
 
     void ShowDrawing(string prompt)
     {
@@ -132,7 +146,6 @@ public class TurnGameManager : MonoBehaviour
         if (resultPanel != null)
             resultPanel.SetActive(true);
 
-        // 기존 결과 지우기
         if (resultContent != null)
         {
             foreach (Transform child in resultContent)
@@ -165,8 +178,6 @@ public class TurnGameManager : MonoBehaviour
                     var rawImg = img.GetComponentInChildren<RawImage>();
                     if (rawImg != null)
                     {
-                        Debug.Log("📁 imagePath: " + turn.imagePath);
-                        Debug.LogError("❌ RawImage 못 찾음!");
                         StartCoroutine(LoadImage("file://" + turn.imagePath, rawImg));
                     }
                     else
@@ -177,7 +188,6 @@ public class TurnGameManager : MonoBehaviour
             }
         }
     }
-
 
     IEnumerator LoadImage(string path, RawImage target)
     {
@@ -195,5 +205,4 @@ public class TurnGameManager : MonoBehaviour
             }
         }
     }
-
 }
