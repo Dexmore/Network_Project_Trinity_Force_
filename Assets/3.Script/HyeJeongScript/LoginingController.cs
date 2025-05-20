@@ -115,10 +115,12 @@ public class LoginingController : MonoBehaviour
 
         if (SQLManager.instance.UpdateNicknameinfo(id, currentname, newname))
         {
+            Updatename_pannel.gameObject.SetActive(false);
             NoticeNickname_pannel.gameObject.SetActive(true);
             NoticeNicknamelog.text = $"닉네임이 {newname}(으)로 변경되었습니다.";
 
-            Updatename_pannel.gameObject.SetActive(false);
+            // 3초 후 사라짐
+            Invoke("CloseNoticeNicknamePannel", 3f);
         }
 
         else
@@ -148,6 +150,9 @@ public class LoginingController : MonoBehaviour
             NoticePWD_pannel.gameObject.SetActive(true);
             NoticePWDlog.text = "비밀번호가 변경되었습니다.";
             Updatepwd_pannel.gameObject.SetActive(false);
+
+            // 3초 후 사라짐
+            Invoke("CloseNoticePWDPannel", 3f);
         }
 
         else
