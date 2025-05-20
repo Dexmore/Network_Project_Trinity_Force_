@@ -5,32 +5,32 @@ using UnityEngine.UI;
 
 public class LoginController : MonoBehaviour
 {
-    [Header("·Î±×ÀÎ ÈÄ È¸¿øÁ¤º¸ ¼öÁ¤, Å»Åğ Ã¢")]
+    [Header("ë¡œê·¸ì¸ í›„ íšŒì›ì •ë³´ ìˆ˜ì •, íƒˆí‡´ ì°½")]
     [SerializeField] private LoginingController logining;
 
-    [Header("·Î±×ÀÎ : ¾ÆÀÌµğ ÀÔ·ÂÇØ¼­ °ÔÀÓ ÀÔÀå")]
+    [Header("ë¡œê·¸ì¸ : ì•„ì´ë”” ì…ë ¥í•´ì„œ ê²Œì„ ì…ì¥")]
     public InputField id_i;
     public InputField pwd_i;
-    public Text log;  // ·Î±×ÀÎ °æ°í ¾È³» ¹®±¸
+    public Text log;  // ë¡œê·¸ì¸ ê²½ê³  ì•ˆë‚´ ë¬¸êµ¬
 
-    [Header("È¸¿ø°¡ÀÔ 1´Ü°è: ¾ÆÀÌµğ, ºñ¹Ğ¹øÈ£ ÀÔ·Â + UI OnOff Á¶Àı")]
-    [SerializeField] GameObject Signup_pannel;  // 1´Ü°è ÆĞ³Î
+    [Header("íšŒì›ê°€ì… 1ë‹¨ê³„: ì•„ì´ë””, ë¹„ë°€ë²ˆí˜¸ ì…ë ¥ + UI OnOff ì¡°ì ˆ")]
+    [SerializeField] GameObject Signup_pannel;  // 1ë‹¨ê³„ íŒ¨ë„
     [SerializeField] InputField id_Signup;
     [SerializeField] InputField pwd_Signup;
-    [SerializeField] private Text log1_signup;   //È¸¿ø°¡ÀÔ½Ã(¾ÆÀÌµğ Áßº¹ ½Ã) °æ°í ¾È³» ¹®±¸
+    [SerializeField] private Text log1_signup;   //íšŒì›ê°€ì…ì‹œ(ì•„ì´ë”” ì¤‘ë³µ ì‹œ) ê²½ê³  ì•ˆë‚´ ë¬¸êµ¬
 
-    [Header("È¸¿ø°¡ÀÔ 2´Ü°è: ´Ğ³×ÀÓ ÀÔ·Â + UI OnOff Á¶Àı")]
-    private string cached_id;   //1´Ü°è ÀúÀåÇÑ ¾ÆÀÌµğ
-    [SerializeField] GameObject Nickname_pannel;    // 2´Ü°è ÆĞ³Î
-    [SerializeField] InputField nickname_Signup;    // 2´Ü°è¿¡¼­ »ç¿ëÇÒ ´Ğ³×ÀÓ ÀÔ·Â ÇÊµå
-    [SerializeField] private Text log2_signup;   //È¸¿ø °¡ÀÔ½Ã(´Ğ³×ÀÓ Áßº¹ ½Ã) °æ°í ¾È³» ¹®±¸
+    [Header("íšŒì›ê°€ì… 2ë‹¨ê³„: ë‹‰ë„¤ì„ ì…ë ¥ + UI OnOff ì¡°ì ˆ")]
+    private string cached_id;   //1ë‹¨ê³„ ì €ì¥í•œ ì•„ì´ë””
+    [SerializeField] GameObject Nickname_pannel;    // 2ë‹¨ê³„ íŒ¨ë„
+    [SerializeField] InputField nickname_Signup;    // 2ë‹¨ê³„ì—ì„œ ì‚¬ìš©í•  ë‹‰ë„¤ì„ ì…ë ¥ í•„ë“œ
+    [SerializeField] private Text log2_signup;   //íšŒì› ê°€ì…ì‹œ(ë‹‰ë„¤ì„ ì¤‘ë³µ ì‹œ) ê²½ê³  ì•ˆë‚´ ë¬¸êµ¬
 
-    #region ·Î±×ÀÎ
+    #region ë¡œê·¸ì¸
     public void LoginBtn()
     {
         if(id_i.text.Equals(string.Empty) || pwd_i.text.Equals(string.Empty))
         {
-            log.text = "¾ÆÀÌµğ¿Í ºñ¹Ğ¹øÈ£¸¦ ÀÔ·ÂÇÏ¼¼¿ä";
+            log.text = "ì•„ì´ë””ì™€ ë¹„ë°€ë²ˆí˜¸ë¥¼ ì…ë ¥í•˜ì„¸ìš”";
             return;
         }
 
@@ -38,37 +38,37 @@ public class LoginController : MonoBehaviour
         {
             User_info info = SQLManager.instance.info;
 
-        // ¸¸¾à ·Î±×ÀÎ ½Ã nicknameÀÌ nullÀÌ¶ó¸é
+        // ë§Œì•½ ë¡œê·¸ì¸ ì‹œ nicknameì´ nullì´ë¼ë©´
             if (string.IsNullOrEmpty(SQLManager.instance.info.User_Nickname))
             {
                 cached_id = id_i.text;
-                //´Ğ³×ÀÓ ÀÔ·Â ÆĞ³ÎÀ» º¸¿©ÁØ´Ù.
+                //ë‹‰ë„¤ì„ ì…ë ¥ íŒ¨ë„ì„ ë³´ì—¬ì¤€ë‹¤.
                 Nickname_pannel.SetActive(true);
 
-                // ´Ğ³×ÀÓ ÀÔ·ÂÃ¢ ÃÊ±âÈ­
+                // ë‹‰ë„¤ì„ ì…ë ¥ì°½ ì´ˆê¸°í™”
                 nickname_Signup.text = string.Empty;
                 log2_signup.text = string.Empty;
                 return;
             }
-            //·Î±×ÀÎ ¼º°ø ÈÄ
-            Debug.Log($"{info.User_name}´Ô ¾È³çÇÏ¼¼¿ä");
+            //ë¡œê·¸ì¸ ì„±ê³µ í›„
+            Debug.Log($"{info.User_name}ë‹˜ ì•ˆë…•í•˜ì„¸ìš”");
             gameObject.SetActive(false);
             logining.loginingPannel.SetActive(true);
         }
         else
         {
-            log.text = "¾ÆÀÌµğ¿Í ºñ¹Ğ¹øÈ£¸¦ È®ÀÎÇØÁÖ¼¼¿ä";
+            log.text = "ì•„ì´ë””ì™€ ë¹„ë°€ë²ˆí˜¸ë¥¼ í™•ì¸í•´ì£¼ì„¸ìš”";
         }
     }
     #endregion
 
-    #region È¸¿ø°¡ÀÔ
-    // È¸¿ø°¡ÀÔÃ¢ ¹öÆ°
+    #region íšŒì›ê°€ì…
+    // íšŒì›ê°€ì…ì°½ ë²„íŠ¼
     public void OpenSignupPannel()
     {
         Signup_pannel.gameObject.SetActive(true);
 
-        //ÀÔ·ÂÃ¢ ÃÊ±âÈ­
+        //ì…ë ¥ì°½ ì´ˆê¸°í™”
         id_Signup.text = string.Empty;
         pwd_Signup.text = string.Empty;
         log1_signup.text = string.Empty;
@@ -80,58 +80,58 @@ public class LoginController : MonoBehaviour
 
     }
 
-    // 1´Ü°è ¾ÆÀÌµğ, ºñ¹Ğ ¹øÈ£ ÀÔ·Â -> Áßº¹ÀÌ ¾ÈµÇ¸é 2´Ü°è·Î °¡´Â ¹öÆ°
+    // 1ë‹¨ê³„ ì•„ì´ë””, ë¹„ë°€ ë²ˆí˜¸ ì…ë ¥ -> ì¤‘ë³µì´ ì•ˆë˜ë©´ 2ë‹¨ê³„ë¡œ ê°€ëŠ” ë²„íŠ¼
     public void CheckIDAndOPenNicknamePannelBtn()
     {
         if (id_Signup.text.Equals(string.Empty) || pwd_Signup.text.Equals(string.Empty))
         {
-            log1_signup.text = "¾ÆÀÌµğ¿Í ºñ¹Ğ¹øÈ£¸¦ ÀÔ·ÂÇÏ¼¼¿ä";
+            log1_signup.text = "ì•„ì´ë””ì™€ ë¹„ë°€ë²ˆí˜¸ë¥¼ ì…ë ¥í•˜ì„¸ìš”";
             return;
         }
 
         if (SQLManager.instance.SignupStep1(id_Signup.text, pwd_Signup.text))
         {
-            // 2´Ü°è¿¡ ÀÔ·ÂÇÒ ¾ÆÀÌµğ ÀúÀå 
+            // 2ë‹¨ê³„ì— ì…ë ¥í•  ì•„ì´ë”” ì €ì¥ 
             cached_id = id_Signup.text;
 
-            // 1´Ü°è ¼º°ø + µî·Ï
-            Debug.Log($"{id_Signup.text} ÀÔ·ÂÇÏ¼Ì½À´Ï´Ù.");
+            // 1ë‹¨ê³„ ì„±ê³µ + ë“±ë¡
+            Debug.Log($"{id_Signup.text} ì…ë ¥í•˜ì…¨ìŠµë‹ˆë‹¤.");
             Signup_pannel.gameObject.SetActive(false);
             Nickname_pannel.gameObject.SetActive(true);
 
-            // ´Ğ³×ÀÓ ÀÔ·ÂÃ¢ ÃÊ±âÈ­
+            // ë‹‰ë„¤ì„ ì…ë ¥ì°½ ì´ˆê¸°í™”
             nickname_Signup.text = string.Empty;
             log2_signup.text = string.Empty;
         }
 
         else
         {
-            log1_signup.text = "ÀÌ¹Ì Á¸ÀçÇÏ´Â ¾ÆÀÌµğÀÔ´Ï´Ù.";
-            Debug.Log("´Ù½Ã È®ÀÎÇÏ¼¼¿ä");
+            log1_signup.text = "ì´ë¯¸ ì¡´ì¬í•˜ëŠ” ì•„ì´ë””ì…ë‹ˆë‹¤.";
+            Debug.Log("ë‹¤ì‹œ í™•ì¸í•˜ì„¸ìš”");
         }
     }
 
-    // 2´Ü°è ´Ğ³×ÀÓ ÀÔ·Â -> Áßº¹ÀÌ ¾ÈµÇ¸é È¸¿ø °¡ÀÔ ¿Ï·á
+    // 2ë‹¨ê³„ ë‹‰ë„¤ì„ ì…ë ¥ -> ì¤‘ë³µì´ ì•ˆë˜ë©´ íšŒì› ê°€ì… ì™„ë£Œ
     public void CompleteSignup()
     {
         if (nickname_Signup.text.Equals(string.Empty))
         {
-            log2_signup.text = "´Ğ³×ÀÓÀ» ÀÔ·ÂÇÏ¼¼¿ä";
+            log2_signup.text = "ë‹‰ë„¤ì„ì„ ì…ë ¥í•˜ì„¸ìš”";
             return;
         }
 
         if(SQLManager.instance.SignupStep2(nickname_Signup.text, cached_id))
         {
-            // 2´Ü°è ¼º°ø + È¸¿ø°¡ÀÔ ¿Ï·á
-            Debug.Log($"{nickname_Signup.text}´Ô °¡ÀÔ ¿Ï·á");
+            // 2ë‹¨ê³„ ì„±ê³µ + íšŒì›ê°€ì… ì™„ë£Œ
+            Debug.Log($"{nickname_Signup.text}ë‹˜ ê°€ì… ì™„ë£Œ");
             Nickname_pannel.gameObject.SetActive(false);
 
         }
 
         else
         {
-            log2_signup.text = "ÀÌ¹Ì Á¸ÀçÇÏ´Â ´Ğ³×ÀÓÀÔ´Ï´Ù";
-            Debug.Log("´Ù½Ã È®ÀÎÇÏ¼¼¿ä");
+            log2_signup.text = "ì´ë¯¸ ì¡´ì¬í•˜ëŠ” ë‹‰ë„¤ì„ì…ë‹ˆë‹¤";
+            Debug.Log("ë‹¤ì‹œ í™•ì¸í•˜ì„¸ìš”");
         }
     }
 

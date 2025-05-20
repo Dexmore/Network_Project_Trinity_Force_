@@ -1886,13 +1886,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 205e1ed537b159745929e0367383a923, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  logining: {fileID: 0}
   id_i: {fileID: 252022923}
   pwd_i: {fileID: 1336810280}
   log: {fileID: 1976699835}
   Signup_pannel: {fileID: 1402942321}
   id_Signup: {fileID: 773853299}
   pwd_Signup: {fileID: 648418848}
-  log_signup: {fileID: 0}
+  log1_signup: {fileID: 649211451}
+  Nickname_pannel: {fileID: 0}
+  nickname_Signup: {fileID: 0}
+  log2_signup: {fileID: 0}
 --- !u!1 &1336810278
 GameObject:
   m_ObjectHideFlags: 0
