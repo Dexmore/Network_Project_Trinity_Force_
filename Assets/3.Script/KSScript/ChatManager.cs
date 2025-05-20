@@ -6,9 +6,13 @@ using System.Collections.Generic;
 
 public class ChatManager : MonoBehaviour
 {
+    [Header("User Settings")]
+    [Tooltip("내 채팅에 표시될 유저 닉네임")]
+    public string localUserName = "User";
+
     [Header("UI References")]
     [SerializeField] private TMP_InputField inputField;
-    [SerializeField] private RectTransform chatField;   // 패널: 피벗(0.5,0.5) 가정
+    [SerializeField] private RectTransform chatField;
     [SerializeField] private GameObject messagePrefab;
 
     [Header("Layout Settings")]
@@ -28,6 +32,7 @@ public class ChatManager : MonoBehaviour
         float paddingY = 10f;
         startPos = new Vector2(paddingX, paddingY);
     }
+
     private void Start()
     {
         inputField.onSubmit.AddListener(OnSubmit);
@@ -65,13 +70,21 @@ public class ChatManager : MonoBehaviour
         var go = Instantiate(messagePrefab, chatField, false);
         var rtNew = go.GetComponent<RectTransform>();
         var tmp = go.GetComponentInChildren<TMP_Text>();
+        if (tmp == null)
+        {
+            Debug.LogError("MessagePrefab에 TMP_Text 컴포넌트가 없습니다.");
+            Destroy(go);
+            return;
+        }
 
         // 2) 타임스탬프 생성
         string timestamp = DateTime.Now.ToString("HH:mm:ss");
-        // 3) 메시지+타임스탬프 세팅
-        tmp.text = $"{text}  [{timestamp}]";
 
-        // … 이하 기존 로직 그대로 …
+        // 3) [시간] 유저이름 : 채팅내용 포맷
+        tmp.richText = true;
+        tmp.text = $"<size=80%>[{timestamp}]</size> {localUserName} : {text}";
+
+        // 4) 레이아웃 계산 및 배치
         Canvas.ForceUpdateCanvases();
         float h = rtNew.rect.height;
         float shift = h + messageSpacing;
@@ -80,6 +93,7 @@ public class ChatManager : MonoBehaviour
         rtNew.anchoredPosition = startPos;
         messages.Insert(0, rtNew);
 
+        // 5) 화면 위로 벗어난 메시지 삭제
         float threshold = chatField.rect.height + deleteMargin;
         for (int i = messages.Count - 1; i >= 0; i--)
         {
@@ -91,5 +105,4 @@ public class ChatManager : MonoBehaviour
             else break;
         }
     }
-
 }

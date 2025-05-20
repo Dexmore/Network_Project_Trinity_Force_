@@ -485,7 +485,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 2083290129}
         m_TargetAssemblyTypeName: LobbyUIManager, Assembly-CSharp
-        m_MethodName: ExitLobby
+        m_MethodName: OnReadyButtonClicked
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -561,14 +561,14 @@ RectTransform:
   m_GameObject: {fileID: 421025828}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1, y: 1.075, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 786856380}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 26}
+  m_AnchoredPosition: {x: 0, y: 35}
   m_SizeDelta: {x: 700, y: 400}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &421025830
@@ -583,11 +583,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4d6d726995697b46b42f47d9be27ca4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  localUserName: "\uD14C\uC2A4\uD2B8\uB2C9\uB124\uC784\uC785\uB2C8\uB2F9"
   inputField: {fileID: 850504814}
   chatField: {fileID: 421025829}
   messagePrefab: {fileID: 5131222508067862275, guid: 0067f3d4b68f2174587951261773be54, type: 3}
   messageSpacing: 30
-  deleteMargin: -10
+  deleteMargin: -30
 --- !u!114 &421025831
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1299,7 +1300,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 2083290129}
         m_TargetAssemblyTypeName: LobbyUIManager, Assembly-CSharp
-        m_MethodName: TestReadyAll
+        m_MethodName: OnTestReadyAll
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1383,7 +1384,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 351.2, y: -1067.4}
+  m_AnchoredPosition: {x: 351.2, y: -1058.4}
   m_SizeDelta: {x: 700, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &850504814
@@ -2737,9 +2738,10 @@ MonoBehaviour:
   notificationText: {fileID: 1820409007}
   notificationDuration: 1
   menuSceneName: KSScene
-  readyButton: {fileID: 333674912}
-  readyButtonText: {fileID: 1820409007}
   gameSceneName: KSScene
+  readyButton: {fileID: 333674912}
+  testReadyButton: {fileID: 0}
+  readyButtonText: {fileID: 1820409007}
 --- !u!4 &2083290130
 Transform:
   m_ObjectHideFlags: 0
