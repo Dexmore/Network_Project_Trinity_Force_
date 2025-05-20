@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using System.IO;
 
 [RequireComponent(typeof(SpriteRenderer), typeof(BoxCollider2D))]
 public class CustomTexturePainter : MonoBehaviour
@@ -273,10 +274,10 @@ public class CustomTexturePainter : MonoBehaviour
     public void SaveToPNG()
     {
         string folder = Application.persistentDataPath + "/Drawings";
-        if (!System.IO.Directory.Exists(folder)) System.IO.Directory.CreateDirectory(folder);
+        if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 
-        string path = System.IO.Path.Combine(folder, $"drawing_{System.DateTime.Now:yyyyMMdd_HHmmss}.png");
-        System.IO.File.WriteAllBytes(path, texture.EncodeToPNG());
+        string path = Path.Combine(folder, $"drawing_{System.DateTime.Now:yyyyMMdd_HHmmss}.png");
+        File.WriteAllBytes(path, texture.EncodeToPNG());
         Debug.Log("Saved to: " + path);
     }
 
@@ -294,4 +295,10 @@ public class CustomTexturePainter : MonoBehaviour
 
     public void OnClickUndo() => Undo();
     public void OnClickRedo() => Redo();
+
+    // ✅ 이 함수 추가: TurnManager에서 그림(Texture2D)을 받아갈 수 있음
+    public Texture2D GetTexture()
+    {
+        return texture;
+    }
 }

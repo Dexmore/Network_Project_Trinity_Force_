@@ -107,7 +107,7 @@ public class LobbyUIManager : MonoBehaviour
         }
         notificationGroup.alpha = 1f;
         yield return new WaitForSeconds(notificationDuration);
-        SceneManager.LoadScene(menuSceneName);
+        SceneManager.LoadScene("RoomSelectScene");
     }
 
     public void ShowNotification(string message, float duration = -1f)
@@ -213,7 +213,7 @@ public class LobbyUIManager : MonoBehaviour
             yield return new WaitForSeconds(1f);
         }
 
-        SceneManager.LoadScene(gameSceneName);
+        SceneManager.LoadScene("RoomSelectScene");
     }
 
     public void OnTestReadyAll()

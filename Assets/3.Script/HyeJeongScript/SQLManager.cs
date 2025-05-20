@@ -12,8 +12,8 @@ using LitJson;
 public class User_info
 {
     public string User_name { get; private set; }
-    public string User_Password { get; private set; }
-    public string User_Nickname { get; private set; }
+    public string User_Password { get; set; }
+    public string User_Nickname { get; set; }
 
     public User_info(string name, string password, string nickname)
     {
@@ -199,7 +199,7 @@ public class SQLManager : MonoBehaviour
 
             //2.  아이디가 아예 없다면? 새로 Insert
             //INSERT INTO user_info VALUES("홍길동","1234","01000000000");
-            if(resultObj == null)  // DBNull.Value은 SQL에서 NULL
+            if(resultObj == null)  
             {
                 string sqlsignup =
                      string.Format(@"INSERT INTO user_info VALUES('{0}','{1}', NULL)", id, password);
@@ -225,7 +225,8 @@ public class SQLManager : MonoBehaviour
             }
 
             //3. 아이디는 있는데 Nickname이 null -> 재가입으로 간주, 비번만 업데이트 가능
-            if(resultObj is DBNull)  //is는 타입 검사
+            // DBNull.Value은 SQL에서 NULL
+            if (resultObj is DBNull)  //is는 타입 검사
             {
                 string sqlupdate =
                     string.Format(@"UPDATE user_info SET Password = '{0}' WHERE Name = '{1}';", password, id);
@@ -298,7 +299,62 @@ public class SQLManager : MonoBehaviour
 
 
     // 회원정보 수정
-    public bool Updateinfo(string id, string curname, string newname, string newpwd)
+    // 1단계 : 닉네임과 비밀번호 중 한 개를 선택한다.
+    // 2단계 : 닉네임 선택하면 닉네임만 변경, 비밀번호를 선택하면 비밀번호만 변경
+
+    // 닉네임 변경 함수
+    public bool UpdateNicknameinfo(string id, string currentname, string newname)
+    {
+        try
+        {
+            if (!connection_check(con))
+            {
+                return false;
+            }
+            //닉네임 중복 확인
+            string sqlcheckname =
+                string.Format(@"SELECT COUNT(*) FROM user_info WHERE Nickname = '{0}';", newname);
+            MySqlCommand checkcmd = new MySqlCommand(sqlcheckname, con);
+            object resultObj = checkcmd.ExecuteScalar();
+            int count = Convert.ToInt32(resultObj);
+
+            if(count > 0)
+            {
+                Debug.Log($"중복된 닉네임 :  {newname}");
+                return false;
+            }
+
+            //쿼리문
+            //UPDATE user_info SET User_Password='4696' WHERE User_Name='옥혜정';
+            string sqlupdatename =
+                string.Format(@"UPDATE user_info SET Nickname = '{0}' WHERE Name ='{1}';", newname, id);
+            MySqlCommand cmd = new MySqlCommand(sqlupdatename, con);
+
+            int result = cmd.ExecuteNonQuery(); // 성공시 n개 반환
+
+            if (result > 0)
+            {
+                info.User_Nickname = newname;
+                Debug.Log("닉네임 변경 완료");
+                return true;
+            }
+
+            else
+            {
+                Debug.Log("변경 실패.");
+                return false;
+            }
+        }
+
+        catch (Exception e)
+        {
+            Debug.Log(e.Message);
+            return false;
+        }
+    }
+
+    // 비밀번호 변경
+    public bool Updatepasswordinfo(string id, string newpassword)
     {
         try
         {
@@ -309,22 +365,22 @@ public class SQLManager : MonoBehaviour
 
             //쿼리문
             //UPDATE user_info SET User_Password='4696' WHERE User_Name='옥혜정';
-            string sqlupdate =
-                string.Format(@"UPDATE user_info SET Nickname = '{0}', Password='{1}' WHERE Nickname='{2}';", newname, newpwd,  curname);
-            MySqlCommand cmd = new MySqlCommand(sqlupdate, con);
+            string sqlupdatepwd =
+                string.Format(@"UPDATE user_info SET Password = '{0}' WHERE Name ='{1}';", newpassword, id);
+            MySqlCommand cmd = new MySqlCommand(sqlupdatepwd, con);
 
             int result = cmd.ExecuteNonQuery(); // 성공시 n개 반환
 
             if (result > 0)
             {
-                info = new User_info(id, newpwd, newname);
-                Debug.Log("회원정보 수정 완료");
+                info.User_Password = newpassword;
+                Debug.Log("비밀번호 변경 완료");
                 return true;
             }
 
             else
             {
-                Debug.Log("수정할 수 없습니다.");
+                Debug.Log("변경 실패.");
                 return false;
             }
         }
