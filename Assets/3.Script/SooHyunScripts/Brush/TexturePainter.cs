@@ -51,7 +51,12 @@ public class TexturePainter : MonoBehaviour
         drawAreaCollider.size = spriteRenderer.bounds.size;
 
         brushSizeSlider.onValueChanged.AddListener(val => brushSize = Mathf.Clamp(Mathf.RoundToInt(val), 1, 15));
-        FillButton.onClick.AddListener(() => isFillMode = true);
+        FillButton.onClick.AddListener(() =>
+        {
+            isFillMode = !isFillMode;
+            if (!isFillMode)
+                SetPencil(); // 채우기 모드 해제 시 자동으로 브러시 모드로
+        });
 
         SetPencil();
     }
