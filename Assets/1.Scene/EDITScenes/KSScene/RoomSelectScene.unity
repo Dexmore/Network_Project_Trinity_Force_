@@ -938,7 +938,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 726560104}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1286939610}
+        m_TargetAssemblyTypeName: CreateRoomHandler, Assembly-CSharp
+        m_MethodName: ConfirmCreateRoom
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &726560104
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1524,6 +1536,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   createRoomPopup: {fileID: 1679082816}
+  roomNameInput: {fileID: 1635748975}
 --- !u!4 &1286939611
 Transform:
   m_ObjectHideFlags: 0
@@ -1994,7 +2007,7 @@ GameObject:
   - component: {fileID: 1666517226}
   - component: {fileID: 1666517228}
   m_Layer: 5
-  m_Name: JoinRoom
+  m_Name: JoinRoom_btn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2298,7 +2311,7 @@ GameObject:
   - component: {fileID: 1817037255}
   - component: {fileID: 1817037254}
   m_Layer: 5
-  m_Name: CreatRoom
+  m_Name: CreatRoom_btn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2452,7 +2465,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -236, y: 479}
+  m_AnchoredPosition: {x: -236, y: 411.5}
   m_SizeDelta: {x: 1000, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2136249201
@@ -2476,7 +2489,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_text: "\uC5B4\uB5A4 \uBC29\uC744 \uC120\uD0DD\uD560\uC9C0 \uD14C\uC2A4\uD2B8
-    \uD558\uB294 \uC52C\uC785\uB2C8\uB2E4~"
+    \uD558\uB294 \uC52C\uC785\uB2C8\uB2E4\n\uB124\uD2B8\uC6CC\uD06C \uAD6C\uCD95
+    \uD544\uC694"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 1c86bc1c2a5ee004b9285b2cc2a077c8, type: 2}
   m_sharedMaterial: {fileID: -2302269181198422432, guid: 1c86bc1c2a5ee004b9285b2cc2a077c8, type: 2}
