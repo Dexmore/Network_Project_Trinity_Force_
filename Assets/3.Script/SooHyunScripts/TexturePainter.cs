@@ -1,6 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UI;
-using System.Collections.Generic;
 
 [RequireComponent(typeof(SpriteRenderer), typeof(BoxCollider2D))]
 public class TexturePainter : MonoBehaviour
@@ -12,48 +12,37 @@ public class TexturePainter : MonoBehaviour
     public Color brushColor = Color.black;
     [Range(1, 10)] public int brushSize = 5;
     public bool isEraser = false;
+    public bool isFillMode = false;
 
     [Header("UI References")]
     public Slider brushSizeSlider;
     public Button PencilButton;
     public Button EraseButton;
-    public Button UndoButton;
-    public Button RedoButton;
+    public Button FillButton;
 
     private Texture2D texture;
-    private Color32[] fullColorBuffer;
-    private Color32[] displayBuffer; // 추가: 실시간 반영용
-    private Dictionary<Vector2Int, Color32> pixelBuffer = new();
-
+    private Color32[] fullColorBuffer, displayBuffer;
+    private readonly Dictionary<Vector2Int, Color32> pixelBuffer = new();
     private SpriteRenderer spriteRenderer;
     private BoxCollider2D drawAreaCollider;
     private Vector2Int? lastDrawPixelPos;
+    private static readonly Color32 White = new(255, 255, 255, 255);
 
     private struct ChangeSet
     {
-        public Dictionary<Vector2Int, Color32> before;
-        public Dictionary<Vector2Int, Color32> after;
+        public Dictionary<Vector2Int, Color32> before, after;
     }
 
-    private Stack<ChangeSet> undoStack = new();
-    private Stack<ChangeSet> redoStack = new();
+    private readonly Stack<ChangeSet> undoStack = new();
+    private readonly Stack<ChangeSet> redoStack = new();
 
     void Start()
     {
-        texture = new Texture2D(textureWidth, textureHeight, TextureFormat.RGBA32, false)
-        {
-            filterMode = FilterMode.Point
-        };
-
+        texture = new Texture2D(textureWidth, textureHeight, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
         fullColorBuffer = new Color32[textureWidth * textureHeight];
         displayBuffer = new Color32[textureWidth * textureHeight];
-        for (int i = 0; i < fullColorBuffer.Length; i++)
-            fullColorBuffer[i] = Color.white;
-
-        fullColorBuffer.CopyTo(displayBuffer, 0);
-
-        texture.SetPixels32(displayBuffer);
-        texture.Apply();
+        for (int i = 0; i < fullColorBuffer.Length; i++) fullColorBuffer[i] = White;
+        ApplyTexture(fullColorBuffer);
 
         spriteRenderer = GetComponent<SpriteRenderer>();
         spriteRenderer.sprite = Sprite.Create(texture, new Rect(0, 0, textureWidth, textureHeight), new Vector2(0.5f, 0.5f));
@@ -61,197 +50,211 @@ public class TexturePainter : MonoBehaviour
         drawAreaCollider = GetComponent<BoxCollider2D>();
         drawAreaCollider.size = spriteRenderer.bounds.size;
 
-        if (brushSizeSlider != null)
-        {
-            brushSizeSlider.onValueChanged.AddListener(val => brushSize = Mathf.Clamp(Mathf.RoundToInt(val), 1, 10));
-            brushSizeSlider.value = brushSize;
-        }
+        brushSizeSlider.onValueChanged.AddListener(val => brushSize = Mathf.Clamp(Mathf.RoundToInt(val), 1, 10));
+        FillButton.onClick.AddListener(() => isFillMode = true);
 
-        if (UndoButton != null) UndoButton.onClick.AddListener(Undo);
-        if (RedoButton != null) RedoButton.onClick.AddListener(Redo);
-
-        PencilButton?.gameObject.SetActive(false);
-        EraseButton?.gameObject.SetActive(true);
+        SetPencil();
     }
 
     void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {
-            lastDrawPixelPos = null;
-            pixelBuffer.Clear();
+            OnMouseDown();
         }
-
-        if (Input.GetMouseButton(0))
-        {
-            TryDrawAtMousePosition();
-            UpdateLiveTexture();
-        }
-
-        if (Input.GetMouseButtonUp(0))
-        {
-            ApplyBufferedPixels();
-            lastDrawPixelPos = null;
-        }
-
-        if (UndoButton != null) UndoButton.interactable = undoStack.Count > 0;
-        if (RedoButton != null) RedoButton.interactable = redoStack.Count > 0;
+        if (Input.GetMouseButton(0) && !isFillMode) { Draw(); UpdateLiveTexture(); }
+        if (Input.GetMouseButtonUp(0)) { CommitDraw(); }
     }
 
-    void TryDrawAtMousePosition()
+
+    void OnMouseDown()
     {
-        Vector2 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        if (!drawAreaCollider.OverlapPoint(worldPos)) return;
+        Vector2Int pixelPos = GetMousePixel();
+        if (!IsValidPixel(pixelPos.x, pixelPos.y)) return;
 
-        Vector2 local = worldPos - (Vector2)spriteRenderer.bounds.min;
-        Vector2 normalized = new(local.x / spriteRenderer.bounds.size.x, local.y / spriteRenderer.bounds.size.y);
-        Vector2Int pixelPos = new(Mathf.FloorToInt(normalized.x * textureWidth), Mathf.FloorToInt(normalized.y * textureHeight));
-
-        if (lastDrawPixelPos.HasValue)
+        if (isFillMode)
         {
-            DrawLineBuffered(lastDrawPixelPos.Value, pixelPos);
+            int idx = pixelPos.y * textureWidth + pixelPos.x;
+            Color32 target = fullColorBuffer[idx];
+            Color32 fill = isEraser ? White : brushColor;
+            FloodFill(pixelPos, target, fill);
+            return;
         }
         else
         {
-            DrawCircleBuffered(pixelPos);
+            lastDrawPixelPos = null;
+            pixelBuffer.Clear();
         }
+    }
 
+    Vector2Int GetMousePixel()
+    {
+        Vector2 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        if (!drawAreaCollider.OverlapPoint(worldPos)) return new(-1, -1);
+        Vector2 local = worldPos - (Vector2)spriteRenderer.bounds.min;
+        Vector2 normalized = new(local.x / spriteRenderer.bounds.size.x, local.y / spriteRenderer.bounds.size.y);
+        return new(Mathf.FloorToInt(normalized.x * textureWidth), Mathf.FloorToInt(normalized.y * textureHeight));
+    }
+
+    void Draw()
+    {
+        Vector2Int pixelPos = GetMousePixel();
+        if (!IsValidPixel(pixelPos.x, pixelPos.y)) return;
+        if (lastDrawPixelPos.HasValue) DrawLine(lastDrawPixelPos.Value, pixelPos);
+        else DrawCircle(pixelPos);
         lastDrawPixelPos = pixelPos;
     }
 
-    void DrawCircleBuffered(Vector2Int center)
+    void DrawCircle(Vector2Int center)
     {
-        Color32 drawColor = isEraser ? new Color32(255, 255, 255, 255) : brushColor;
+        Color32 color = isEraser ? White : brushColor;
         int rSquared = brushSize * brushSize;
-
         for (int dx = -brushSize; dx <= brushSize; dx++)
         {
             for (int dy = -brushSize; dy <= brushSize; dy++)
             {
                 if (dx * dx + dy * dy > rSquared) continue;
-
-                int x = center.x + dx;
-                int y = center.y + dy;
+                int x = center.x + dx, y = center.y + dy;
                 if (!IsValidPixel(x, y)) continue;
-
-                Vector2Int pos = new(x, y);
-                pixelBuffer[pos] = drawColor;
+                pixelBuffer[new(x, y)] = color;
             }
         }
     }
 
-    void DrawLineBuffered(Vector2Int from, Vector2Int to)
+    void DrawLine(Vector2Int from, Vector2Int to)
     {
         int steps = Mathf.CeilToInt(Vector2Int.Distance(from, to) * 1.5f);
         for (int i = 0; i <= steps; i++)
-        {
-            float t = (float)i / steps;
-            Vector2 lerp = Vector2.Lerp(from, to, t);
-            DrawCircleBuffered(Vector2Int.RoundToInt(lerp));
-        }
+            DrawCircle(Vector2Int.RoundToInt(Vector2.Lerp(from, to, (float)i / steps)));
     }
 
     void UpdateLiveTexture()
     {
         fullColorBuffer.CopyTo(displayBuffer, 0);
-
         foreach (var kvp in pixelBuffer)
-        {
-            int idx = kvp.Key.y * textureWidth + kvp.Key.x;
-            displayBuffer[idx] = kvp.Value;
-        }
-
-        texture.SetPixels32(displayBuffer);
-        texture.Apply();
+            displayBuffer[kvp.Key.y * textureWidth + kvp.Key.x] = kvp.Value;
+        ApplyTexture(displayBuffer);
     }
 
-    void ApplyBufferedPixels()
+    void CommitDraw()
     {
         if (pixelBuffer.Count == 0) return;
-
-        Dictionary<Vector2Int, Color32> before = new();
-        Dictionary<Vector2Int, Color32> after = new();
+        var before = new Dictionary<Vector2Int, Color32>();
+        var after = new Dictionary<Vector2Int, Color32>();
 
         foreach (var kvp in pixelBuffer)
         {
             int idx = kvp.Key.y * textureWidth + kvp.Key.x;
             before[kvp.Key] = fullColorBuffer[idx];
-            after[kvp.Key] = kvp.Value;
-            fullColorBuffer[idx] = kvp.Value;
+            fullColorBuffer[idx] = after[kvp.Key] = kvp.Value;
         }
 
-        texture.SetPixels32(fullColorBuffer);
-        texture.Apply();
+        ApplyTexture(fullColorBuffer);
         undoStack.Push(new ChangeSet { before = before, after = after });
         redoStack.Clear();
         pixelBuffer.Clear();
     }
 
-    public void Undo()
+    void ApplyTexture(Color32[] buffer)
     {
-        if (undoStack.Count == 0) return;
-        ChangeSet set = undoStack.Pop();
-        ApplyChangeSet(set.before);
-        redoStack.Push(set);
-    }
-
-    public void Redo()
-    {
-        if (redoStack.Count == 0) return;
-        ChangeSet set = redoStack.Pop();
-        ApplyChangeSet(set.after);
-        undoStack.Push(set);
-    }
-
-    void ApplyChangeSet(Dictionary<Vector2Int, Color32> changes)
-    {
-        foreach (var kvp in changes)
-        {
-            int idx = kvp.Key.y * textureWidth + kvp.Key.x;
-            fullColorBuffer[idx] = kvp.Value;
-        }
-
-        texture.SetPixels32(fullColorBuffer);
+        texture.SetPixels32(buffer);
         texture.Apply();
     }
 
+    public void Undo() => ApplyChange(undoStack, redoStack);
+    public void Redo() => ApplyChange(redoStack, undoStack);
+
+    void ApplyChange(Stack<ChangeSet> from, Stack<ChangeSet> to)
+    {
+        if (from.Count == 0) return;
+        ChangeSet set = from.Pop();
+        var opposite = new Dictionary<Vector2Int, Color32>();
+
+        foreach (var kvp in set.before)
+        {
+            int idx = kvp.Key.y * textureWidth + kvp.Key.x;
+            opposite[kvp.Key] = fullColorBuffer[idx];
+            fullColorBuffer[idx] = kvp.Value;
+        }
+
+        ApplyTexture(fullColorBuffer);
+        to.Push(new ChangeSet { before = opposite, after = set.before });
+    }
+
+    void FloodFill(Vector2Int start, Color32 target, Color32 fill)
+    {
+        if (target.Equals(fill)) return;
+        var queue = new Queue<Vector2Int>();
+        var visited = new HashSet<Vector2Int>();
+        var before = new Dictionary<Vector2Int, Color32>();
+        var after = new Dictionary<Vector2Int, Color32>();
+
+        queue.Enqueue(start);
+        visited.Add(start);
+
+        while (queue.Count > 0)
+        {
+            Vector2Int pos = queue.Dequeue();
+            int idx = pos.y * textureWidth + pos.x;
+            if (!fullColorBuffer[idx].Equals(target)) continue;
+
+            fullColorBuffer[idx] = fill;
+            before[pos] = target;
+            after[pos] = fill;
+
+            foreach (Vector2Int dir in new[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right })
+            {
+                Vector2Int next = pos + dir;
+                if (!IsValidPixel(next.x, next.y) || visited.Contains(next)) continue;
+                int nextIdx = next.y * textureWidth + next.x;
+                if (fullColorBuffer[nextIdx].Equals(target))
+                {
+                    queue.Enqueue(next);
+                    visited.Add(next);
+                }
+            }
+        }
+
+        ApplyTexture(fullColorBuffer);
+        undoStack.Push(new ChangeSet { before = before, after = after });
+        redoStack.Clear();
+    }
+
     bool IsValidPixel(int x, int y) => x >= 0 && x < textureWidth && y >= 0 && y < textureHeight;
-
     public void SetBrushColor(Color color) => brushColor = color;
-
     public void SetEraser()
     {
         isEraser = true;
-        PencilButton?.gameObject.SetActive(true);
-        EraseButton?.gameObject.SetActive(false);
+        PencilButton.gameObject.SetActive(true);
+        EraseButton.gameObject.SetActive(false);
     }
-
     public void SetPencil()
     {
         isEraser = false;
-        PencilButton?.gameObject.SetActive(false);
-        EraseButton?.gameObject.SetActive(true);
+        PencilButton.gameObject.SetActive(false);
+        EraseButton.gameObject.SetActive(true);
     }
 
     public void ClearTexture()
     {
-        Dictionary<Vector2Int, Color32> before = new();
-        Dictionary<Vector2Int, Color32> after = new();
+        var beforeBuffer = new Color32[fullColorBuffer.Length];
+        fullColorBuffer.CopyTo(beforeBuffer, 0);
+        for (int i = 0; i < fullColorBuffer.Length; i++) fullColorBuffer[i] = White;
+        ApplyTexture(fullColorBuffer);
 
-        for (int y = 0; y < textureHeight; y++)
+        var before = new Dictionary<Vector2Int, Color32>();
+        var after = new Dictionary<Vector2Int, Color32>();
+        for (int i = 0; i < fullColorBuffer.Length; i++)
         {
-            for (int x = 0; x < textureWidth; x++)
+            if (!beforeBuffer[i].Equals(fullColorBuffer[i]))
             {
-                Vector2Int pos = new(x, y);
-                int idx = y * textureWidth + x;
-                before[pos] = fullColorBuffer[idx];
-                fullColorBuffer[idx] = new Color32(255, 255, 255, 255);
-                after[pos] = fullColorBuffer[idx];
+                int x = i % textureWidth, y = i / textureWidth;
+                var pos = new Vector2Int(x, y);
+                before[pos] = beforeBuffer[i];
+                after[pos] = fullColorBuffer[i];
             }
         }
 
-        texture.SetPixels32(fullColorBuffer);
-        texture.Apply();
         undoStack.Push(new ChangeSet { before = before, after = after });
         redoStack.Clear();
     }
