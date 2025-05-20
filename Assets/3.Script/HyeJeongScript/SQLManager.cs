@@ -199,7 +199,7 @@ public class SQLManager : MonoBehaviour
 
             //2.  아이디가 아예 없다면? 새로 Insert
             //INSERT INTO user_info VALUES("홍길동","1234","01000000000");
-            if(resultObj == null)  // DBNull.Value은 SQL에서 NULL
+            if(resultObj == null)  
             {
                 string sqlsignup =
                      string.Format(@"INSERT INTO user_info VALUES('{0}','{1}', NULL)", id, password);
@@ -225,7 +225,8 @@ public class SQLManager : MonoBehaviour
             }
 
             //3. 아이디는 있는데 Nickname이 null -> 재가입으로 간주, 비번만 업데이트 가능
-            if(resultObj is DBNull)  //is는 타입 검사
+            // DBNull.Value은 SQL에서 NULL
+            if (resultObj is DBNull)  //is는 타입 검사
             {
                 string sqlupdate =
                     string.Format(@"UPDATE user_info SET Password = '{0}' WHERE Name = '{1}';", password, id);

@@ -11,15 +11,26 @@ public class LoginingController : MonoBehaviour
     [Header("로그인 후 회원정보 패널")]
     public GameObject loginingPannel;
 
-    [Header("회원정보 수정")]
+    [Header("회원정보 변경창")]
     [SerializeField] private GameObject Update_pannel;  // 회원정보 수정 선택 패널 -> 닉네임, 비밀번호 중 1개 선택
-    [SerializeField] private GameObject Updatename_pannel;  // 닉네임 정보 수정 패널
-    [SerializeField] private GameObject Updatepwd_pannel;  // 비밀번호 정보 수정 패널
 
+    [Header("회원정보 변경창 - 닉네임")]
+    [SerializeField] private GameObject Updatename_pannel;  // 닉네임 정보 수정 패널
     public InputField name_new;
     [SerializeField] private Text updatenamelog;   // 닉네임 변경 경고 문구
+
+    [Header("닉네임 변경 후 팝업창")]
+    [SerializeField] private GameObject NoticeNickname_pannel;  // 닉네임 변경 패널창
+    [SerializeField] private Text NoticeNicknamelog;    // 닉네임 변경 알림
+
+    [Header("회원정보 변경창 - 비밀번호")]
+    [SerializeField] private GameObject Updatepwd_pannel;  // 비밀번호 정보 수정 패널
     public InputField pwd_new;
     [SerializeField] private Text updatepwdlog;   // 비밀번호 변경 경고 문구
+
+    [Header("비밀번호 변경후 팝업창")]
+    [SerializeField] private GameObject NoticePWD_pannel;  // 비밀번호 변경 패널창
+    [SerializeField] private Text NoticePWDlog;    // 비밀번호 변경 알림
 
     [Header("회원탈퇴")]
     public GameObject Delete_Pannel;
@@ -74,6 +85,16 @@ public class LoginingController : MonoBehaviour
         Updatepwd_pannel.gameObject.SetActive(false);
     }
 
+    public void CloseNoticeNicknamePannel()
+    {
+        NoticeNickname_pannel.gameObject.SetActive(false);
+    }
+
+    public void CloseNoticePWDPannel()
+    {
+        NoticePWD_pannel.gameObject.SetActive(false);
+    }
+
     public void UpdateNicknameBtn()
     {
         if (SQLManager.instance.info == null)
@@ -94,10 +115,10 @@ public class LoginingController : MonoBehaviour
 
         if (SQLManager.instance.UpdateNicknameinfo(id, currentname, newname))
         {
-            Debug.Log($"닉네임이 {newname}로 변경되었습니다.");
+            NoticeNickname_pannel.gameObject.SetActive(true);
+            NoticeNicknamelog.text = $"닉네임이 {newname}(으)로 변경되었습니다.";
+
             Updatename_pannel.gameObject.SetActive(false);
-            name_new.text = string.Empty;
-            updatenamelog.text = string.Empty;
         }
 
         else
@@ -124,10 +145,9 @@ public class LoginingController : MonoBehaviour
 
         if(SQLManager.instance.Updatepasswordinfo(id, newpwd))
         {
-            Debug.Log("비밀번호가 변경되었습니다.");
+            NoticePWD_pannel.gameObject.SetActive(true);
+            NoticePWDlog.text = "비밀번호가 변경되었습니다.";
             Updatepwd_pannel.gameObject.SetActive(false);
-            pwd_new.text = string.Empty;
-            updatepwdlog.text = string.Empty;
         }
 
         else
@@ -135,39 +155,6 @@ public class LoginingController : MonoBehaviour
             updatepwdlog.text = "다시 입력하세요";
         }
     }
-
-    //public void UpdateBtn()
-    //{
-    //    if (SQLManager.instance.info == null)
-    //    {
-    //        Debug.Log("로그인 먼저 하세요");
-    //        return;
-    //    }
-    
-    //    string id = SQLManager.instance.info?.User_name;
-    //    string currentname = SQLManager.instance.info?.User_Nickname;
-    //    string newname = name_new.text;
-    //    string newpwd = pwd_new.text;
-
-    //    //temp
-    //    Debug.Log(currentname);
-
-    //    if(name_new.text.Equals(string.Empty) || pwd_new.text.Equals(string.Empty))
-    //    {
-    //        updatenamelog.text = "변경하고 싶은 닉네임을 입력하세요";
-    //        return;
-    //    }
-
-    //    if(SQLManager.instance.Updateinfo(id, currentname, newname, newpwd))
-    //    {
-    //        Debug.Log($"닉네임이 {newname}로 변경되었습니다.");
-    //        Update_pannel.gameObject.SetActive(false);
-    //        name_new.text = string.Empty;
-    //        pwd_new.text = string.Empty;
-    //        updatenamelog.text = string.Empty;
-    //    }
-
-    //}
     #endregion
 
     #region 회원탈퇴
