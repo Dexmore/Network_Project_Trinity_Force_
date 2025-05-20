@@ -11,6 +11,9 @@ public class Palette : MonoBehaviour, IPointerDownHandler
     public TexturePainter painter;
     private void Start()
     {
+        RGB.gameObject.SetActive(false);
+        colorPreview.gameObject.SetActive(false);
+
         // 버튼 클릭 시 팔레트 활성화
         PaletteButton.onClick.AddListener(() =>
         {

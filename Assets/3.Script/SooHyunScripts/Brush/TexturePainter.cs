@@ -10,7 +10,7 @@ public class TexturePainter : MonoBehaviour
 
     [Header("Brush Settings")]
     public Color brushColor = Color.black;
-    [Range(1, 10)] public int brushSize = 5;
+    [Range(1, 15)] public int brushSize = 5;
     public bool isEraser = false;
     public bool isFillMode = false;
 
@@ -50,7 +50,7 @@ public class TexturePainter : MonoBehaviour
         drawAreaCollider = GetComponent<BoxCollider2D>();
         drawAreaCollider.size = spriteRenderer.bounds.size;
 
-        brushSizeSlider.onValueChanged.AddListener(val => brushSize = Mathf.Clamp(Mathf.RoundToInt(val), 1, 10));
+        brushSizeSlider.onValueChanged.AddListener(val => brushSize = Mathf.Clamp(Mathf.RoundToInt(val), 1, 15));
         FillButton.onClick.AddListener(() => isFillMode = true);
 
         SetPencil();
