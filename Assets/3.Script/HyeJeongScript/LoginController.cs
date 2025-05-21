@@ -65,11 +65,14 @@ public class LoginController : MonoBehaviour
             }
 
             //로그인 성공 후
-            NoticeLogin_pannel.gameObject.SetActive(true);
-            NoticeLoginlog.text = $"{info.User_Nickname}님 안녕하세요";
+            NoticeLogin_pannel.SetActive(true);
+            NoticeLoginlog.text = $"<color=yellow>{info.User_Nickname}</color>님 안녕하세요";
 
             gameObject.SetActive(false);
-            logining.loginingPannel.SetActive(true);
+
+            //temp
+            logining.userNickname.text = SQLManager.instance.info.User_Nickname;
+            logining.loginingPannel.SetActive(true);    //로그아웃, 회원정보 변경, 회원탈퇴 패널창 나타남
 
             Invoke("CloseNoticeLoginPannel", 3f);
         }
@@ -84,7 +87,7 @@ public class LoginController : MonoBehaviour
     // 회원가입창 버튼
     public void OpenSignupPannel()
     {
-        Signup_pannel.gameObject.SetActive(true);
+        Signup_pannel.SetActive(true);
 
         //입력창 초기화
         id_Signup.text = string.Empty;
@@ -94,13 +97,13 @@ public class LoginController : MonoBehaviour
 
     public void CloseSignupPannel()
     {
-        Signup_pannel.gameObject.SetActive(false);
+        Signup_pannel.SetActive(false);
 
     }
 
     public void CloseNoticePannel()
     {
-        NoticeSignup_pannel.gameObject.SetActive(false);
+        NoticeSignup_pannel.SetActive(false);
     }
 
     // 1단계 아이디, 비밀 번호 입력 -> 중복이 안되면 2단계로 가는 버튼
@@ -118,8 +121,8 @@ public class LoginController : MonoBehaviour
             cached_id = id_Signup.text;
 
             // 1단계 성공 + 등록
-            Signup_pannel.gameObject.SetActive(false);
-            Nickname_pannel.gameObject.SetActive(true);
+            Signup_pannel.SetActive(false);
+            Nickname_pannel.SetActive(true);
 
             // 닉네임 입력창 초기화
             nickname_Signup.text = string.Empty;
@@ -144,9 +147,9 @@ public class LoginController : MonoBehaviour
         if(SQLManager.instance.SignupStep2(nickname_Signup.text, cached_id))
         {
             // 2단계 성공 + 회원가입 완료
-            NoticeSignup_pannel.gameObject.SetActive(true);
-            NoticeSignuplog.text = $"{nickname_Signup.text}님 가입 완료";
-            Nickname_pannel.gameObject.SetActive(false);
+            NoticeSignup_pannel.SetActive(true);
+            NoticeSignuplog.text = $"<color=yellow>{nickname_Signup.text}</color>님 가입 완료";
+            Nickname_pannel.SetActive(false);
 
             Invoke("CloseNoticePannel", 3f);
         }
@@ -159,7 +162,7 @@ public class LoginController : MonoBehaviour
 
     public void CloseNicknamePannel()
     {
-        Nickname_pannel.gameObject.SetActive(false);
+        Nickname_pannel.SetActive(false);
     }
     #endregion
 }

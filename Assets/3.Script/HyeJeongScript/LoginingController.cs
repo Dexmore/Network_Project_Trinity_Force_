@@ -9,7 +9,9 @@ public class LoginingController : MonoBehaviour
     [SerializeField] private LoginController login;
 
     [Header("로그인 후 회원정보 패널")]
-    public GameObject loginingPannel;
+    public GameObject userPannel;   // 유저 닉네임 패널창
+    public Text userNickname;   // 유저 닉네임
+    public GameObject loginingPannel;   // 로그아웃, 회원정보수정, 회원탈퇴 패널창
 
     [Header("회원정보 변경창")]
     [SerializeField] private GameObject Update_pannel;  // 회원정보 수정 선택 패널 -> 닉네임, 비밀번호 중 1개 선택
@@ -52,18 +54,18 @@ public class LoginingController : MonoBehaviour
     #region 회원정보 수정
     public void OpenUpdatePannel()
     {
-        Update_pannel.gameObject.SetActive(true);
+        Update_pannel.SetActive(true);
     }
 
     public void CloseUpdatePannel()
     {
-        Update_pannel.gameObject.SetActive(false);
+        Update_pannel.SetActive(false);
     }
 
     public void OpennicknamePannel()
     {
-        Update_pannel.gameObject.SetActive(false);
-        Updatename_pannel.gameObject.SetActive(true);
+        Update_pannel.SetActive(false);
+        Updatename_pannel.SetActive(true);
 
         //입력창 초기화
         name_new.text = string.Empty;
@@ -72,8 +74,8 @@ public class LoginingController : MonoBehaviour
 
     public void OpenpasswordPannel()
     {
-        Update_pannel.gameObject.SetActive(false);
-        Updatepwd_pannel.gameObject.SetActive(true);
+        Update_pannel.SetActive(false);
+        Updatepwd_pannel.SetActive(true);
 
         //입력창 초기화
         pwd_new.text = string.Empty;
@@ -81,27 +83,27 @@ public class LoginingController : MonoBehaviour
     }
     public void ClosenicknamePannel()
     {
-        Updatename_pannel.gameObject.SetActive(false);
+        Updatename_pannel.SetActive(false);
     }
 
     public void ClosepasswordPannel()
     {
-        Updatepwd_pannel.gameObject.SetActive(false);
+        Updatepwd_pannel.SetActive(false);
     }
 
     public void CloseNoticeNicknamePannel()
     {
-        NoticeNickname_pannel.gameObject.SetActive(false);
+        NoticeNickname_pannel.SetActive(false);
     }
 
     public void CloseNoticePWDPannel()
     {
-        NoticePWD_pannel.gameObject.SetActive(false);
+        NoticePWD_pannel.SetActive(false);
     }
 
     public void CloseNoticeDeletePannel()
     {
-        NoticeDelete_pannel.gameObject.SetActive(false);
+        NoticeDelete_pannel.SetActive(false);
     }
 
     public void UpdateNicknameBtn()
@@ -123,9 +125,9 @@ public class LoginingController : MonoBehaviour
 
         if (SQLManager.instance.UpdateNicknameinfo(id, currentname, newname))
         {
-            Updatename_pannel.gameObject.SetActive(false);
-            NoticeNickname_pannel.gameObject.SetActive(true);
-            NoticeNicknamelog.text = $"닉네임이 {newname}(으)로 변경되었습니다.";
+            Updatename_pannel.SetActive(false);
+            NoticeNickname_pannel.SetActive(true);
+            NoticeNicknamelog.text = $"닉네임이 <color=yellow>{newname}</color>(으)로 변경되었습니다.";
 
             // 3초 후 사라짐
             Invoke("CloseNoticeNicknamePannel", 3f);
@@ -154,9 +156,9 @@ public class LoginingController : MonoBehaviour
 
         if(SQLManager.instance.Updatepasswordinfo(id, newpwd))
         {
-            NoticePWD_pannel.gameObject.SetActive(true);
+            NoticePWD_pannel.SetActive(true);
             NoticePWDlog.text = "비밀번호가 변경되었습니다.";
-            Updatepwd_pannel.gameObject.SetActive(false);
+            Updatepwd_pannel.SetActive(false);
 
             // 3초 후 사라짐
             Invoke("CloseNoticePWDPannel", 3f);
@@ -172,12 +174,12 @@ public class LoginingController : MonoBehaviour
     #region 회원탈퇴
     public void OpenDeletePannel()
     {
-        Delete_Pannel.gameObject.SetActive(true);
+        Delete_Pannel.SetActive(true);
     }
 
     public void CloseDeletePannel()
     {
-        Delete_Pannel.gameObject.SetActive(false);
+        Delete_Pannel.SetActive(false);
     }
 
     public void DeleteBtn()
@@ -192,7 +194,7 @@ public class LoginingController : MonoBehaviour
 
         if(SQLManager.instance.Deleteinfo(id, pwd))
         {
-            NoticeDelete_pannel.gameObject.SetActive(true);
+            NoticeDelete_pannel.SetActive(true);
             Deletelog.text = "회원탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사합니다.";
 
             loginingPannel.SetActive(false);
