@@ -66,7 +66,7 @@ public class LoginController : MonoBehaviour
 
             //로그인 성공 후
             NoticeLogin_pannel.gameObject.SetActive(true);
-            NoticeLoginlog.text = $"{info.User_name}님 안녕하세요";
+            NoticeLoginlog.text = $"{info.User_Nickname}님 안녕하세요";
 
             gameObject.SetActive(false);
             logining.loginingPannel.SetActive(true);

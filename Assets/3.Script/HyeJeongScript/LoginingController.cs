@@ -193,7 +193,7 @@ public class LoginingController : MonoBehaviour
         if(SQLManager.instance.Deleteinfo(id, pwd))
         {
             NoticeDelete_pannel.gameObject.SetActive(true);
-            Deletelog.text = "회원이 탈퇴되었습니다. 그동안 이용해주셔서 감사합니다.";
+            Deletelog.text = "회원탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사합니다.";
 
             loginingPannel.SetActive(false);
             Delete_Pannel.SetActive(false);
