@@ -22,18 +22,15 @@ public class TurnChain
 
 public class TimeManager : NetworkBehaviour
 {
-    [Header("UI")]
-    public GameObject sentencePanel;
-    public GameObject drawingPanel;
-    public GameObject guessPanel;
+    // UI 연결은 런타임에 자동
+    private GameObject sentencePanel;
+    private GameObject drawingPanel;
+    private GameObject guessPanel;
 
-    public TMP_InputField sentenceInput;
-    public TMP_InputField guessInput;
-    public RawImage guessImage;
-    public TexturePainter paint;
-
-    [Tooltip("게임 중에는 비활성화하고 결과 씬에서만 표시")]
-    public TextMeshProUGUI playerInfoText;
+    private TMP_InputField sentenceInput;
+    private TMP_InputField guessInput;
+    private RawImage guessImage;
+    private TexturePainter paint;
 
     [Header("설정")]
     public int totalPlayers = 4;
@@ -47,46 +44,60 @@ public class TimeManager : NetworkBehaviour
     [SyncVar] private int currentPlayer = 0;
     [SyncVar] private int currentCycle = 0;
 
-    // === Called by Player.cs ===
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+
+        // UI 컴포넌트 런타임 연결
+        sentencePanel = GameObject.Find("TextCanvas");
+        drawingPanel = GameObject.Find("DrawCanvas");
+        guessPanel = GameObject.Find("GuessCanvas");
+
+        sentenceInput = GameObject.Find("SentenceInput")?.GetComponent<TMP_InputField>();
+        guessInput = GameObject.Find("GuessInput")?.GetComponent<TMP_InputField>();
+        guessImage = GameObject.Find("GuessImage")?.GetComponent<RawImage>();
+        paint = GameObject.Find("Brush")?.GetComponent<TexturePainter>();
+
+        Debug.Log("[Client] UI 연결 완료");
+    }
+
+    // Player.cs에서 호출됨
     public int GetCurrentPlayer() => currentPlayer;
 
     public void LocalPlayerUpdateUI()
     {
-        sentencePanel.SetActive(false);
-        drawingPanel.SetActive(false);
-        guessPanel.SetActive(false);
+        HideAllPanels();
 
-        if (currentCycle == 0)
+        if (currentCycle == 0 && sentencePanel != null)
         {
             sentencePanel.SetActive(true);
-            sentenceInput.text = "";
+            if (sentenceInput != null) sentenceInput.text = "";
         }
-        else if (IsDrawingTurn())
+        else if (IsDrawingTurn() && drawingPanel != null)
         {
             drawingPanel.SetActive(true);
-            paint.ClearTexture();
+            if (paint != null) paint.ClearTexture();
         }
-        else if (IsGuessTurn())
+        else if (IsGuessTurn() && guessPanel != null)
         {
             guessPanel.SetActive(true);
-            guessInput.text = "";
+            if (guessInput != null) guessInput.text = "";
 
             int idx = GetTargetChainIndex();
             if (idx < chains.Count && chains[idx].drawings.Count > 0)
             {
-                guessImage.texture = chains[idx].drawings[chains[idx].drawings.Count - 1];
+                if (guessImage != null)
+                    guessImage.texture = chains[idx].drawings[^1];
             }
         }
     }
 
     public void HideAllPanels()
     {
-        sentencePanel.SetActive(false);
-        drawingPanel.SetActive(false);
-        guessPanel.SetActive(false);
+        if (sentencePanel != null) sentencePanel.SetActive(false);
+        if (drawingPanel != null) drawingPanel.SetActive(false);
+        if (guessPanel != null) guessPanel.SetActive(false);
     }
-
-    // === Turn Update Logic ===
 
     private void Update()
     {
@@ -106,7 +117,7 @@ public class TimeManager : NetworkBehaviour
 
         if (currentCycle == 0)
         {
-            string sentence = sentenceInput != null ? sentenceInput.text : $"Default {currentPlayer}";
+            string sentence = sentenceInput != null ? sentenceInput.text : $"Default Sentence {currentPlayer}";
             chains.Add(new TurnChain(sentence, currentPlayer));
         }
         else if (IsDrawingTurn())

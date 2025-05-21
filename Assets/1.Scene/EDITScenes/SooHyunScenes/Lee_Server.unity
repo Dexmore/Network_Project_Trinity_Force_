@@ -132,6 +132,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1359481987}
   - component: {fileID: 1359481990}
+  - component: {fileID: 1359481991}
   - component: {fileID: 1359481989}
   m_Layer: 0
   m_Name: NetworkManager
@@ -183,22 +184,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dontDestroyOnLoad: 1
   runInBackground: 1
-  headlessStartMode: 0
+  headlessStartMode: 1
   editorAutoStart: 0
   sendRate: 60
   offlineScene: 
   onlineScene: 
   offlineSceneLoadDelay: 0
-  transport: {fileID: 0}
+  transport: {fileID: 1359481991}
   networkAddress: 192.168.100.48
   maxConnections: 100
   disconnectInactiveConnections: 0
   disconnectInactiveTimeout: 60
   authenticator: {fileID: 0}
-  playerPrefab: {fileID: 8196676306562079360, guid: f1aa569aaa6e2e140bcee92d92a4788b, type: 3}
+  playerPrefab: {fileID: 5003440181623280675, guid: 245474edcfeace849a2a482c53f3902a, type: 3}
   autoCreatePlayer: 1
   playerSpawnMethod: 0
-  spawnPrefabs: []
+  spawnPrefabs:
+  - {fileID: 7629083459069807304, guid: eec332036e45e2f40ab0f2def8138845, type: 3}
   exceptionsDisconnect: 1
   snapshotSettings:
     bufferTimeMultiplier: 2
@@ -214,7 +216,36 @@ MonoBehaviour:
   evaluationMethod: 0
   evaluationInterval: 3
   timeInterpolationGui: 0
-  timeManagerPrefab: {fileID: 8305723724161796664, guid: 52e40f935f9c14c4e80126b2c1c0dc53, type: 3}
+  timeManagerPrefab: {fileID: 7629083459069807304, guid: eec332036e45e2f40ab0f2def8138845, type: 3}
+--- !u!114 &1359481991
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1359481985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b0fecffa3f624585964b0d0eb21b18e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  port: 7777
+  DualMode: 1
+  NoDelay: 1
+  Interval: 10
+  Timeout: 10000
+  RecvBufferSize: 7361536
+  SendBufferSize: 7361536
+  FastResend: 2
+  ReceiveWindowSize: 4096
+  SendWindowSize: 4096
+  MaxRetransmit: 40
+  MaximizeSocketBuffers: 1
+  ReliableMaxMessageSize: 297433
+  UnreliableMaxMessageSize: 1194
+  debugLog: 0
+  statisticsGUI: 0
+  statisticsLog: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

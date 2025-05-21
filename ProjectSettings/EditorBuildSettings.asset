@@ -21,6 +21,6 @@ EditorBuildSettings:
     path: Assets/1.Scene/EDITScenes/SooHyunScenes/ResultScene.unity
     guid: 15d4b24d72cd69a45a345ee88cc1259b
   - enabled: 0
-    path: Assets/1.Scene/EDITScenes/SooHyunScenes/Server.unity
+    path: Assets/1.Scene/EDITScenes/SooHyunScenes/Lee_Server.unity
     guid: 3f8944f85d7340a46abc51879c110661
   m_configObjects: {}

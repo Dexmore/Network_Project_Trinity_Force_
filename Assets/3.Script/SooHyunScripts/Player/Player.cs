@@ -12,11 +12,9 @@ public class Player : NetworkBehaviour
         TimeManager tm = FindObjectOfType<TimeManager>();
         if (tm == null) return;
 
-        bool isMyTurn = playerIndex == tm.GetCurrentPlayer();
-
-        if (isMyTurn)
-            tm.LocalPlayerUpdateUI(); // 내 차례니까 UI 보이기
+        if (playerIndex == tm.GetCurrentPlayer())
+            tm.LocalPlayerUpdateUI();
         else
-            tm.HideAllPanels();       // 내 차례 아니니까 UI 숨기기
+            tm.HideAllPanels();
     }
 }
