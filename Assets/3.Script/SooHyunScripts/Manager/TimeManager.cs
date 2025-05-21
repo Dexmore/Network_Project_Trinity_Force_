@@ -3,181 +3,153 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
+using Mirror;
 
-public class TimeManager : MonoBehaviour
+[System.Serializable]
+public class TurnChain
 {
-    public static TimeManager Instance;
+    public string originalSentence;
+    public int ownerPlayerIndex;
+    public List<Texture2D> drawings = new();
+    public List<string> guesses = new();
 
+    public TurnChain(string sentence, int playerIndex)
+    {
+        originalSentence = sentence;
+        ownerPlayerIndex = playerIndex;
+    }
+}
+
+public class TimeManager : NetworkBehaviour
+{
     [Header("UI")]
-    public Image Clock_Filled_textScene;
-    public Image Clock_Filled_drawScene;
+    public GameObject sentencePanel;
+    public GameObject drawingPanel;
+    public GameObject guessPanel;
 
-    [Header("타이머 설정")]
-    public float time_limit = 10f;
-    private float time_start = 0f;
-    private bool isClick = false;
-
-    [Header("Canvas 설정")]
-    public GameObject DrawCanvas;
-    public GameObject TextCanvas;
-
-    [Header("TexturePainter 연결")]
+    public TMP_InputField sentenceInput;
+    public TMP_InputField guessInput;
+    public RawImage guessImage;
     public TexturePainter paint;
 
-    [Header("Text / TextInput")]
-    public TextMeshProUGUI textDisplay;    // 이전 데이터 보여주는 영역
-    public TMP_InputField textInput;       // 텍스트 입력
+    [Tooltip("게임 중에는 비활성화하고 결과 씬에서만 표시")]
+    public TextMeshProUGUI playerInfoText;
 
-    [Header("문장 입력 턴에 보여줄 그림")]
-    public RawImage imageDisplay; // 그림 표시용 UI
+    [Header("설정")]
+    public int totalPlayers = 4;
+    public float timeLimit = 30f;
 
-    [Header("플레이어 턴 관리")]
-    public int totalTurns = 4; // 총 턴 수
-    [SerializeField]private int currentTurn = 0;
+    private float timeStart = 0f;
+    private bool isClick = false;
 
-    private bool isDrawTurn => currentTurn % 2 == 1;
+    public List<TurnChain> chains = new();
 
-    // 저장 리스트
-    public List<string> sentenceList = new List<string>();
-    public List<Texture2D> drawingList = new List<Texture2D>();
+    [SyncVar] private int currentPlayer = 0;
+    [SyncVar] private int currentCycle = 0;
 
-    private void Awake()
+    // === Called by Player.cs ===
+    public int GetCurrentPlayer() => currentPlayer;
+
+    public void LocalPlayerUpdateUI()
     {
-        if (Instance != null && Instance != this)
+        sentencePanel.SetActive(false);
+        drawingPanel.SetActive(false);
+        guessPanel.SetActive(false);
+
+        if (currentCycle == 0)
         {
-            Destroy(gameObject);
-            return;
+            sentencePanel.SetActive(true);
+            sentenceInput.text = "";
         }
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
+        else if (IsDrawingTurn())
+        {
+            drawingPanel.SetActive(true);
+            paint.ClearTexture();
+        }
+        else if (IsGuessTurn())
+        {
+            guessPanel.SetActive(true);
+            guessInput.text = "";
+
+            int idx = GetTargetChainIndex();
+            if (idx < chains.Count && chains[idx].drawings.Count > 0)
+            {
+                guessImage.texture = chains[idx].drawings[chains[idx].drawings.Count - 1];
+            }
+        }
     }
 
-    private void Start()
+    public void HideAllPanels()
     {
-        UpdateCanvasState();
+        sentencePanel.SetActive(false);
+        drawingPanel.SetActive(false);
+        guessPanel.SetActive(false);
     }
+
+    // === Turn Update Logic ===
 
     private void Update()
     {
-        if (isDrawTurn)
+        if (!isServer) return;
+
+        timeStart += Time.deltaTime;
+        if (timeStart >= timeLimit || isClick)
         {
-            if (Clock_Filled_drawScene == null) return;
-
-            time_start += Time.deltaTime;
-            float t = Mathf.Clamp01(time_start / time_limit);
-            Clock_Filled_drawScene.fillAmount = t;
-
-            if (t >= 1f || isClick)
-            {
-                EndDrawingTurn();
-            }
-        }
-        else
-        {
-            if (Clock_Filled_textScene == null) return;
-
-            time_start += Time.deltaTime;
-            float t = Mathf.Clamp01(time_start / time_limit);
-            Clock_Filled_textScene.fillAmount = t;
-
-            if (t >= 1f || isClick)
-            {
-                EndTextTurn();
-            }
+            ForceEndTurn();
         }
     }
 
-    public void ForceEndTurn()
-    {
-        isClick = true;
-    }
-
-    private void EndTextTurn()
+    private void ForceEndTurn()
     {
         isClick = false;
-        time_start = 0f;
+        timeStart = 0f;
 
-        string inputText = textInput != null ? textInput.text : "";
-        sentenceList.Add(inputText);
+        if (currentCycle == 0)
+        {
+            string sentence = sentenceInput != null ? sentenceInput.text : $"Default {currentPlayer}";
+            chains.Add(new TurnChain(sentence, currentPlayer));
+        }
+        else if (IsDrawingTurn())
+        {
+            Texture2D drawing = paint.GetTextureCopy();
+            int target = GetTargetChainIndex();
+            chains[target].drawings.Add(drawing);
+        }
+        else if (IsGuessTurn())
+        {
+            int target = GetTargetChainIndex();
+            string guess = guessInput != null ? guessInput.text : $"Guess by {currentPlayer}";
+            chains[target].guesses.Add(guess);
+        }
 
-        currentTurn++;
-
-        UpdateCanvasState();
+        AdvanceTurn();
     }
 
-    private void EndDrawingTurn()
+    [Server]
+    private void AdvanceTurn()
     {
-        isClick = false;
-        time_start = 0f;
+        currentPlayer++;
 
-        // 현재 Texture 저장
-        Texture2D savedTexture = paint.GetTextureCopy();
-        drawingList.Add(savedTexture);
+        if (currentPlayer >= totalPlayers)
+        {
+            currentPlayer = 0;
+            currentCycle++;
 
-        paint.ClearTexture(); // 다음 사람을 위해 초기화
+            if (currentCycle >= totalPlayers)
+            {
+                SceneManager.LoadScene("ResultScene");
+                return;
+            }
+        }
 
-        currentTurn++;
-
-        UpdateCanvasState();
+        timeStart = 0f;
     }
 
-    private void UpdateCanvasState()
+    private int GetTargetChainIndex()
     {
-        bool draw = isDrawTurn;
-
-        TextCanvas.SetActive(!draw);
-        DrawCanvas.SetActive(draw);
-
-        if (draw)
-        {
-            // 그림 그리기 턴 → 문장 보여주기
-            int index = drawingList.Count < sentenceList.Count ? drawingList.Count : sentenceList.Count - 1;
-
-            if (textDisplay != null)
-            {
-                if (index >= 0 && index < sentenceList.Count)
-                    textDisplay.text = sentenceList[index];
-                else
-                    textDisplay.text = "";
-            }
-
-            if (imageDisplay != null)
-                imageDisplay.gameObject.SetActive(false); // 그림은 숨김
-        }
-        else
-        {
-            // 문장 입력 턴 → 이전 그림 보여주기
-            int index = drawingList.Count - 1;
-
-            if (imageDisplay != null)
-            {
-                if (index >= 0 && index < drawingList.Count)
-                {
-                    imageDisplay.texture = drawingList[index];
-                    imageDisplay.gameObject.SetActive(true);
-                }
-                else
-                {
-                    imageDisplay.gameObject.SetActive(false);
-                }
-            }
-
-            if (textDisplay != null)
-                textDisplay.text = "그림을 보고 문장을 작성해 주세요.";
-        }
-
-        // 입력창 초기화
-        if (textInput != null)
-            textInput.text = "";
-
-        if (Clock_Filled_textScene != null) Clock_Filled_textScene.fillAmount = 0f;
-        if (Clock_Filled_drawScene != null) Clock_Filled_drawScene.fillAmount = 0f;
-
-        // 턴 종료 시 결과 씬으로 이동
-        if (currentTurn >= totalTurns)
-        {
-            SceneManager.LoadScene("ResultScene");
-        }
+        return (currentPlayer - currentCycle + totalPlayers) % totalPlayers;
     }
 
+    private bool IsDrawingTurn() => currentCycle % 2 == 1;
+    private bool IsGuessTurn() => currentCycle > 0 && currentCycle % 2 == 0;
 }

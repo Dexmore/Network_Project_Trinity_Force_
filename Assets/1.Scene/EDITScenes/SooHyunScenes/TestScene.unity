@@ -214,17 +214,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1755601280 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1398335675882542281, guid: 61f49dcff18991546bed44c2854c5747, type: 3}
-  m_PrefabInstance: {fileID: 8432150722759433157}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1915587414
 GameObject:
   m_ObjectHideFlags: 0
@@ -303,52 +292,6 @@ MonoBehaviour:
   m_DeselectOnBackgroundClick: 1
   m_PointerBehavior: 0
   m_CursorLockBehavior: 0
---- !u!114 &6020538042374389335
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6793338734315871367}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 45397889d7741c442bcf53d6fca35d22, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Clock_Filled: {fileID: 1755601280}
-  time_limit: 60
---- !u!1 &6793338734315871367
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6794452461800747580}
-  - component: {fileID: 6020538042374389335}
-  m_Layer: 0
-  m_Name: TimeManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &6794452461800747580
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6793338734315871367}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1035.8345, y: 533.978, z: -16.383007}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &8432150722759433157
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -453,4 +396,3 @@ SceneRoots:
   - {fileID: 372183985}
   - {fileID: 8432150722759433157}
   - {fileID: 1915587417}
-  - {fileID: 6794452461800747580}
