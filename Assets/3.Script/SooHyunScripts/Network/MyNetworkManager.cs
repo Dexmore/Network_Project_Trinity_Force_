@@ -1,9 +1,9 @@
+ï»¿using UnityEngine;
 using Mirror;
-using UnityEngine;
 
 public class MyNetworkManager : NetworkManager
 {
-    public GameObject timeManagerPrefab;
+    public GameObject timeManagerPrefab; // Drag & Drop
     private GameObject timeManagerInstance;
 
     private int playerCounter = 0;
@@ -12,22 +12,17 @@ public class MyNetworkManager : NetworkManager
     {
         base.OnServerAddPlayer(conn);
 
-        // ÇÃ·¹ÀÌ¾î¿¡ °íÀ¯ ÀÎµ¦½º ºÎ¿©
+        // í”Œë ˆì´ì–´ ì¸ë±ìŠ¤ ë¶€ì—¬
         Player player = conn.identity.GetComponent<Player>();
         player.playerIndex = playerCounter++;
+        Debug.Log($"[Server] Player {player.playerIndex} joined");
 
-        // ÃÖÃÊ 1È¸¸¸ TimeManager »ı¼º ¹× ½ºÆù
-        if (timeManagerInstance == null)
+        // ì„œë²„ì—ì„œë§Œ TimeManager ìƒì„±
+        if (timeManagerInstance == null && NetworkServer.active)
         {
+            Debug.Log("[Server] Spawning TimeManager");
             timeManagerInstance = Instantiate(timeManagerPrefab);
-            DontDestroyOnLoad(timeManagerInstance);
             NetworkServer.Spawn(timeManagerInstance);
         }
-    }
-
-    public override void OnServerDisconnect(NetworkConnectionToClient conn)
-    {
-        base.OnServerDisconnect(conn);
-        playerCounter--;
     }
 }

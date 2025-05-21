@@ -48,16 +48,10 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  sentencePanel: {fileID: 0}
-  drawingPanel: {fileID: 0}
-  guessPanel: {fileID: 0}
-  sentenceInput: {fileID: 0}
-  guessInput: {fileID: 0}
-  guessImage: {fileID: 0}
-  paint: {fileID: 0}
-  playerInfoText: {fileID: 0}
+  turnTime: 5
   totalPlayers: 4
-  timeLimit: 5
+  currentPlayer: 0
+  currentCycle: 0
   chains: []
 --- !u!114 &8862151245501227210
 MonoBehaviour:

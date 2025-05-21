@@ -184,7 +184,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dontDestroyOnLoad: 1
   runInBackground: 1
-  headlessStartMode: 1
+  headlessStartMode: 0
   editorAutoStart: 0
   sendRate: 60
   offlineScene: 
@@ -198,8 +198,9 @@ MonoBehaviour:
   authenticator: {fileID: 0}
   playerPrefab: {fileID: 5003440181623280675, guid: 245474edcfeace849a2a482c53f3902a, type: 3}
   autoCreatePlayer: 1
-  playerSpawnMethod: 0
+  playerSpawnMethod: 1
   spawnPrefabs:
+  - {fileID: 5003440181623280675, guid: 245474edcfeace849a2a482c53f3902a, type: 3}
   - {fileID: 7629083459069807304, guid: eec332036e45e2f40ab0f2def8138845, type: 3}
   exceptionsDisconnect: 1
   snapshotSettings:

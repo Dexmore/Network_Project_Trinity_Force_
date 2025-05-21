@@ -1,166 +1,182 @@
-﻿using System.Collections.Generic;
+﻿
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 using UnityEngine.SceneManagement;
 using Mirror;
 
 [System.Serializable]
 public class TurnChain
 {
-    public string originalSentence;
     public int ownerPlayerIndex;
+    public List<string> texts = new();
     public List<Texture2D> drawings = new();
-    public List<string> guesses = new();
 
-    public TurnChain(string sentence, int playerIndex)
-    {
-        originalSentence = sentence;
-        ownerPlayerIndex = playerIndex;
-    }
+    public TurnChain(int ownerIndex) => ownerPlayerIndex = ownerIndex;
 }
+
+// 생략: TurnChain 클래스는 동일합니다
 
 public class TimeManager : NetworkBehaviour
 {
-    // UI 연결은 런타임에 자동
-    private GameObject sentencePanel;
-    private GameObject drawingPanel;
-    private GameObject guessPanel;
-
-    private TMP_InputField sentenceInput;
-    private TMP_InputField guessInput;
-    private RawImage guessImage;
-    private TexturePainter paint;
-
-    [Header("설정")]
+    public float turnTime = 30f;
     public int totalPlayers = 4;
-    public float timeLimit = 30f;
 
-    private float timeStart = 0f;
-    private bool isClick = false;
+    [SyncVar] public int currentCycle = 0;
 
+    private class TurnState
+    {
+        public float timer = 0f;
+        public bool isSubmitted = false;
+    }
+
+    private readonly Dictionary<int, TurnState> playerStates = new();
     public List<TurnChain> chains = new();
 
-    [SyncVar] private int currentPlayer = 0;
-    [SyncVar] private int currentCycle = 0;
-
-    public override void OnStartClient()
+    private void Start()
     {
-        base.OnStartClient();
-
-        // UI 컴포넌트 런타임 연결
-        sentencePanel = GameObject.Find("TextCanvas");
-        drawingPanel = GameObject.Find("DrawCanvas");
-        guessPanel = GameObject.Find("GuessCanvas");
-
-        sentenceInput = GameObject.Find("SentenceInput")?.GetComponent<TMP_InputField>();
-        guessInput = GameObject.Find("GuessInput")?.GetComponent<TMP_InputField>();
-        guessImage = GameObject.Find("GuessImage")?.GetComponent<RawImage>();
-        paint = GameObject.Find("Brush")?.GetComponent<TexturePainter>();
-
-        Debug.Log("[Client] UI 연결 완료");
-    }
-
-    // Player.cs에서 호출됨
-    public int GetCurrentPlayer() => currentPlayer;
-
-    public void LocalPlayerUpdateUI()
-    {
-        HideAllPanels();
-
-        if (currentCycle == 0 && sentencePanel != null)
+        if (isServer)
         {
-            sentencePanel.SetActive(true);
-            if (sentenceInput != null) sentenceInput.text = "";
-        }
-        else if (IsDrawingTurn() && drawingPanel != null)
-        {
-            drawingPanel.SetActive(true);
-            if (paint != null) paint.ClearTexture();
-        }
-        else if (IsGuessTurn() && guessPanel != null)
-        {
-            guessPanel.SetActive(true);
-            if (guessInput != null) guessInput.text = "";
-
-            int idx = GetTargetChainIndex();
-            if (idx < chains.Count && chains[idx].drawings.Count > 0)
+            for (int i = 0; i < totalPlayers; i++)
             {
-                if (guessImage != null)
-                    guessImage.texture = chains[idx].drawings[^1];
+                chains.Add(new TurnChain(i));
+                playerStates[i] = new TurnState();
             }
         }
-    }
-
-    public void HideAllPanels()
-    {
-        if (sentencePanel != null) sentencePanel.SetActive(false);
-        if (drawingPanel != null) drawingPanel.SetActive(false);
-        if (guessPanel != null) guessPanel.SetActive(false);
     }
 
     private void Update()
     {
-        if (!isServer) return;
-
-        timeStart += Time.deltaTime;
-        if (timeStart >= timeLimit || isClick)
+        if (isServer)
         {
-            ForceEndTurn();
+            HandleServerTimer();
+        }
+
+        // 클라이언트에서 UI 상태 업데이트 반복 호출
+        if (isClient)
+        {
+            Player player = NetworkClient.connection.identity.GetComponent<Player>();
+            if (player != null && IsMyTurn(player.playerIndex))
+            {
+                int chainIdx = GetChainIndex(player.playerIndex);
+                UIManager.Instance.ShowUIForTurn(currentCycle, chainIdx, chains);
+            }
         }
     }
 
-    private void ForceEndTurn()
+    private void HandleServerTimer()
     {
-        isClick = false;
-        timeStart = 0f;
+        bool allSubmitted = true;
 
-        if (currentCycle == 0)
+        foreach (var kvp in playerStates)
         {
-            string sentence = sentenceInput != null ? sentenceInput.text : $"Default Sentence {currentPlayer}";
-            chains.Add(new TurnChain(sentence, currentPlayer));
-        }
-        else if (IsDrawingTurn())
-        {
-            Texture2D drawing = paint.GetTextureCopy();
-            int target = GetTargetChainIndex();
-            chains[target].drawings.Add(drawing);
-        }
-        else if (IsGuessTurn())
-        {
-            int target = GetTargetChainIndex();
-            string guess = guessInput != null ? guessInput.text : $"Guess by {currentPlayer}";
-            chains[target].guesses.Add(guess);
+            var playerId = kvp.Key;
+            var state = kvp.Value;
+
+            if (state.isSubmitted) continue;
+
+            state.timer += Time.deltaTime;
+
+            if (state.timer >= turnTime)
+            {
+                Debug.Log($"⏱️ [SERVER] Player {playerId} 시간 초과 - 자동 제출");
+                AutoSubmit(playerId);
+                state.isSubmitted = true;
+            }
+
+            allSubmitted = false;
         }
 
-        AdvanceTurn();
+        if (allSubmitted)
+        {
+            AdvanceCycle();
+        }
     }
 
     [Server]
-    private void AdvanceTurn()
+    private void AdvanceCycle()
     {
-        currentPlayer++;
+        currentCycle++;
 
-        if (currentPlayer >= totalPlayers)
+        if (currentCycle >= totalPlayers)
         {
-            currentPlayer = 0;
-            currentCycle++;
+            Debug.Log("🎉 [SERVER] 모든 턴 완료 → 결과 씬으로 이동");
 
-            if (currentCycle >= totalPlayers)
+            if (Application.CanStreamedLevelBeLoaded("ResultScene"))
             {
                 SceneManager.LoadScene("ResultScene");
-                return;
             }
+            else
+            {
+                Debug.LogWarning("⚠️ ResultScene 씬이 Build Settings에 등록되지 않았습니다.");
+            }
+            return;
         }
 
-        timeStart = 0f;
+        foreach (var state in playerStates.Values)
+        {
+            state.timer = 0f;
+            state.isSubmitted = false;
+        }
     }
 
-    private int GetTargetChainIndex()
+    public bool IsMyTurn(int playerIndex)
     {
-        return (currentPlayer - currentCycle + totalPlayers) % totalPlayers;
+        return playerStates.ContainsKey(playerIndex) && !playerStates[playerIndex].isSubmitted;
     }
 
-    private bool IsDrawingTurn() => currentCycle % 2 == 1;
-    private bool IsGuessTurn() => currentCycle > 0 && currentCycle % 2 == 0;
+    [Command]
+    public void CmdSubmitText(string text, int playerIndex)
+    {
+        int chainIndex = GetChainIndex(playerIndex);
+        if (chainIndex < chains.Count)
+        {
+            chains[chainIndex].texts.Add(text);
+        }
+        MarkSubmitted(playerIndex);
+    }
+
+    [Command]
+    public void CmdSubmitDrawing(byte[] drawingData, int playerIndex)
+    {
+        Texture2D tex = new Texture2D(2, 2);
+        tex.LoadImage(drawingData);
+
+        int chainIndex = GetChainIndex(playerIndex);
+        if (chainIndex < chains.Count)
+        {
+            chains[chainIndex].drawings.Add(tex);
+        }
+        MarkSubmitted(playerIndex);
+    }
+
+    private void MarkSubmitted(int playerIndex)
+    {
+        if (playerStates.ContainsKey(playerIndex))
+        {
+            playerStates[playerIndex].isSubmitted = true;
+        }
+    }
+
+    private void AutoSubmit(int playerIndex)
+    {
+        if (currentCycle == 0)
+        {
+            CmdSubmitText("(자동 문장)", playerIndex);
+        }
+        else if (currentCycle % 2 == 1)
+        {
+            Texture2D empty = new Texture2D(2, 2);
+            CmdSubmitDrawing(empty.EncodeToPNG(), playerIndex);
+        }
+        else
+        {
+            CmdSubmitText("(자동 유추)", playerIndex);
+        }
+    }
+
+    public int GetChainIndex(int playerIndex)
+    {
+        return (playerIndex - currentCycle + totalPlayers) % totalPlayers;
+    }
 }
+

@@ -5,80 +5,90 @@ using TMPro;
 
 public class ResultViewer : MonoBehaviour
 {
+    public TextMeshProUGUI titleText;
     public TextMeshProUGUI textDisplay;
     public RawImage imageDisplay;
     public Button nextButton;
 
     private List<TurnChain> chains;
     private int chainIndex = 0;
-    private int stepIndex = 0; // 0: 문장, 1: 그림, 2: 추측, 3: 그림, 4: 추측...
+    private int stepIndex = 0;
 
     private void Start()
     {
-        TimeManager tm = FindObjectOfType<TimeManager>();
-        if (tm == null)
+        chains = FindObjectOfType<TimeManager>()?.chains;
+
+        if (chains == null || chains.Count == 0)
         {
-            textDisplay.text = "TimeManager 인스턴스를 찾을 수 없습니다.";
+            textDisplay.text = "❌ 결과 데이터를 불러올 수 없습니다.";
             nextButton.interactable = false;
             return;
         }
 
-        chains = tm.chains;
-
-        if (nextButton != null)
-            nextButton.onClick.AddListener(NextStep);
-
+        nextButton.onClick.AddListener(Next);
         ShowStep();
     }
 
     private void ShowStep()
     {
-        if (chains == null || chainIndex >= chains.Count)
+        textDisplay.gameObject.SetActive(false);
+        imageDisplay.gameObject.SetActive(false);
+
+        if (chainIndex >= chains.Count)
         {
-            textDisplay.text = "모든 결과를 확인했습니다!";
-            imageDisplay.gameObject.SetActive(false);
-            nextButton.gameObject.SetActive(false);
+            textDisplay.text = "🎉 모든 결과를 확인했습니다!";
+            textDisplay.gameObject.SetActive(true);
+            nextButton.interactable = false;
             return;
         }
 
-        var chain = chains[chainIndex];
+        TurnChain chain = chains[chainIndex];
+        titleText.text = $"플레이어 {chain.ownerPlayerIndex + 1}의 체인";
 
+        // 시작 문장
         if (stepIndex == 0)
         {
-            textDisplay.text = $"[플레이어 {chain.ownerPlayerIndex + 1}의 시작 문장] : {chain.originalSentence}";
+            textDisplay.text = $"[시작 문장]\n\"{chain.texts[0]}\"";
             textDisplay.gameObject.SetActive(true);
-            imageDisplay.gameObject.SetActive(false);
         }
         else
         {
-            int turn = (stepIndex - 1) / 2;
-            bool isDrawStep = stepIndex % 2 == 1;
+            int idx = (stepIndex - 1) / 2;
 
-            if (isDrawStep && turn < chain.drawings.Count)
+            if (stepIndex % 2 == 1) // 그림
             {
-                imageDisplay.texture = chain.drawings[turn];
-                imageDisplay.gameObject.SetActive(true);
-                textDisplay.gameObject.SetActive(false);
+                if (idx < chain.drawings.Count)
+                {
+                    imageDisplay.texture = chain.drawings[idx];
+                    imageDisplay.gameObject.SetActive(true);
+                }
             }
-            else if (!isDrawStep && turn < chain.guesses.Count)
+            else // 문장
             {
-                textDisplay.text = $"[플레이어 {(chain.ownerPlayerIndex + 1 + turn + 1) % 4 + 1}의 문장] : {chain.guesses[turn]}";
-                textDisplay.gameObject.SetActive(true);
-                imageDisplay.gameObject.SetActive(false);
-            }
-            else
-            {
-                chainIndex++;
-                stepIndex = 0;
-                ShowStep();
-                return;
+                int textIdx = (stepIndex / 2);
+                if (textIdx < chain.texts.Count)
+                {
+                    textDisplay.text = $"[추측 문장]\n\"{chain.texts[textIdx]}\"";
+                    textDisplay.gameObject.SetActive(true);
+                }
             }
         }
     }
 
-    private void NextStep()
+    private void Next()
     {
+        TurnChain chain = chains[chainIndex];
+
+        int maxSteps = 1 + Mathf.Max(chain.drawings.Count, chain.texts.Count - 1) * 2;
+
         stepIndex++;
+
+        if (stepIndex >= maxSteps)
+        {
+            chainIndex++;
+            stepIndex = 0;
+        }
+
         ShowStep();
     }
 }

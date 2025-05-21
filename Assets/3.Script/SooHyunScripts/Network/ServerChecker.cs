@@ -77,7 +77,6 @@ public class ServerChecker : MonoBehaviour
 
     private Type License_Type()
     {
-        Type t = Type.Empty;
         try
         {
             string jsonString = File.ReadAllText(path + "/License.json");
