@@ -8,7 +8,11 @@ public class LoginController : MonoBehaviour
     [Header("로그인 후 회원정보 수정, 탈퇴 창")]
     [SerializeField] private LoginingController logining;
 
+    // 페이드 인아웃
+    [SerializeField] private UIFade fade;
+
     [Header("로그인 : 아이디 입력해서 게임 입장")]
+    public GameObject LoginPannel;    //로그인 패널    
     public InputField id_i;
     public InputField pwd_i;
     public Text log;  // 로그인 경고 안내 문구
@@ -34,11 +38,6 @@ public class LoginController : MonoBehaviour
     [SerializeField] private Text NoticeSignuplog;   // 회원가입 알림문구
 
     #region 로그인
-    public void CloseNoticeLoginPannel()
-    {
-        NoticeLogin_pannel.gameObject.SetActive(false);
-    }
-
     public void LoginBtn()
     {
         if(id_i.text.Equals(string.Empty) || pwd_i.text.Equals(string.Empty))
@@ -65,16 +64,20 @@ public class LoginController : MonoBehaviour
             }
 
             //로그인 성공 후
-            NoticeLogin_pannel.SetActive(true);
             NoticeLoginlog.text = $"<color=yellow>{info.User_Nickname}</color>님 안녕하세요";
+            LoginPannel.SetActive(false);
 
-            gameObject.SetActive(false);
+            // 페이드인 등장
+            fade.FadeIn(NoticeLogin_pannel);
+            //NoticeLogin_pannel.SetActive(true);
 
-            //temp
-            logining.userNickname.text = SQLManager.instance.info.User_Nickname;
+            //시간 지나면 페이드 아웃
+            StartCoroutine(AutoFade(NoticeLogin_pannel, 1.5f));
+
+
             logining.loginingPannel.SetActive(true);    //로그아웃, 회원정보 변경, 회원탈퇴 패널창 나타남
+            logining.userNickname.text = SQLManager.instance.info.User_Nickname;
 
-            Invoke("CloseNoticeLoginPannel", 3f);
         }
         else
         {
@@ -98,8 +101,8 @@ public class LoginController : MonoBehaviour
     public void CloseSignupPannel()
     {
         Signup_pannel.SetActive(false);
-
     }
+
 
     public void CloseNoticePannel()
     {
@@ -147,11 +150,17 @@ public class LoginController : MonoBehaviour
         if(SQLManager.instance.SignupStep2(nickname_Signup.text, cached_id))
         {
             // 2단계 성공 + 회원가입 완료
-            NoticeSignup_pannel.SetActive(true);
             NoticeSignuplog.text = $"<color=yellow>{nickname_Signup.text}</color>님 가입 완료";
             Nickname_pannel.SetActive(false);
 
-            Invoke("CloseNoticePannel", 3f);
+            // 페이드인 등장
+            fade.FadeIn(NoticeSignup_pannel);
+            //NoticeSignup_pannel.SetActive(true);
+
+            //시간 지나면 페이드 아웃
+            StartCoroutine(AutoFade(NoticeSignup_pannel, 1.5f));
+
+            //Invoke("CloseNoticePannel", 1.5f);
         }
 
         else
@@ -165,4 +174,11 @@ public class LoginController : MonoBehaviour
         Nickname_pannel.SetActive(false);
     }
     #endregion
+
+    // 페이드 자동 아웃
+    private IEnumerator AutoFade(GameObject pannel, float duration)
+    {
+        yield return new WaitForSeconds(duration);
+        fade.Fadeout(pannel);
+    }
 }

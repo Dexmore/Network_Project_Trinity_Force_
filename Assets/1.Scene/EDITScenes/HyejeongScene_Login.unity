@@ -444,7 +444,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 279661989}
+      - m_Target: {fileID: 1703008897}
         m_TargetAssemblyTypeName: LoginingController, Assembly-CSharp
         m_MethodName: CloseUpdatePannel
         m_Mode: 1
@@ -769,7 +769,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1218344381}
+      - m_Target: {fileID: 1307221918}
         m_TargetAssemblyTypeName: LoginController, Assembly-CSharp
         m_MethodName: OpenSignupPannel
         m_Mode: 1
@@ -1212,7 +1212,6 @@ GameObject:
   m_Component:
   - component: {fileID: 279661986}
   - component: {fileID: 279661988}
-  - component: {fileID: 279661989}
   m_Layer: 5
   m_Name: LoginingPanel
   m_TagString: Untagged
@@ -1255,36 +1254,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 279661985}
   m_CullTransparentMesh: 1
---- !u!114 &279661989
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 279661985}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7368020c3c4460e46b006475869337dc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  login: {fileID: 1218344381}
-  userPannel: {fileID: 120469579}
-  userNickname: {fileID: 1143252791}
-  loginingPannel: {fileID: 279661985}
-  Update_pannel: {fileID: 2045906486}
-  Updatename_pannel: {fileID: 704249205}
-  name_new: {fileID: 1261987686}
-  updatenamelog: {fileID: 2019304374}
-  NoticeNickname_pannel: {fileID: 1269302866}
-  NoticeNicknamelog: {fileID: 1379722296}
-  Updatepwd_pannel: {fileID: 80706272}
-  pwd_new: {fileID: 536372013}
-  updatepwdlog: {fileID: 305883913}
-  NoticePWD_pannel: {fileID: 1792400321}
-  NoticePWDlog: {fileID: 1061577014}
-  Delete_Pannel: {fileID: 1819464303}
-  NoticeDelete_pannel: {fileID: 1980680576}
-  Deletelog: {fileID: 1840998168}
 --- !u!1 &287310852
 GameObject:
   m_ObjectHideFlags: 0
@@ -1368,7 +1337,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 279661989}
+      - m_Target: {fileID: 1703008897}
         m_TargetAssemblyTypeName: LoginingController, Assembly-CSharp
         m_MethodName: OpennicknamePannel
         m_Mode: 1
@@ -1501,7 +1470,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 279661989}
+      - m_Target: {fileID: 1703008897}
         m_TargetAssemblyTypeName: LoginingController, Assembly-CSharp
         m_MethodName: LogoutBtn
         m_Mode: 1
@@ -2157,6 +2126,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 536372012}
   m_CullTransparentMesh: 1
+--- !u!1 &541645091
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 541645093}
+  - component: {fileID: 541645092}
+  m_Layer: 0
+  m_Name: Fade
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &541645092
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 541645091}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70b1d6f2db7c5274d861e1d975931c92, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &541645093
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 541645091}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &557069912
 GameObject:
   m_ObjectHideFlags: 0
@@ -2398,7 +2411,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 279661989}
+      - m_Target: {fileID: 1703008897}
         m_TargetAssemblyTypeName: LoginingController, Assembly-CSharp
         m_MethodName: DeleteBtn
         m_Mode: 1
@@ -2848,7 +2861,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &649211450
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3679,7 +3692,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1218344381}
+      - m_Target: {fileID: 1307221918}
         m_TargetAssemblyTypeName: LoginController, Assembly-CSharp
         m_MethodName: LoginBtn
         m_Mode: 1
@@ -3891,7 +3904,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1218344381}
+      - m_Target: {fileID: 1307221918}
         m_TargetAssemblyTypeName: LoginController, Assembly-CSharp
         m_MethodName: CompleteSignup
         m_Mode: 1
@@ -4483,7 +4496,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 279661989}
+      - m_Target: {fileID: 1703008897}
         m_TargetAssemblyTypeName: LoginingController, Assembly-CSharp
         m_MethodName: CloseDeletePannel
         m_Mode: 1
@@ -4544,6 +4557,7 @@ GameObject:
   - component: {fileID: 1113918928}
   - component: {fileID: 1113918930}
   - component: {fileID: 1113918929}
+  - component: {fileID: 1113918931}
   m_Layer: 5
   m_Name: NoticeLogin_Panel
   m_TagString: Untagged
@@ -4569,7 +4583,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1200, y: 300}
+  m_SizeDelta: {x: 800, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1113918929
 MonoBehaviour:
@@ -4584,14 +4598,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 22e6d4f9ae7c36248a9d60b3e498066a, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -4609,6 +4623,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1113918927}
   m_CullTransparentMesh: 1
+--- !u!225 &1113918931
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1113918927}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1128763046
 GameObject:
   m_ObjectHideFlags: 0
@@ -5149,7 +5175,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1218344381}
+      - m_Target: {fileID: 1307221918}
         m_TargetAssemblyTypeName: LoginController, Assembly-CSharp
         m_MethodName: CheckIDAndOPenNicknamePannelBtn
         m_Mode: 1
@@ -5361,7 +5387,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 279661989}
+      - m_Target: {fileID: 1703008897}
         m_TargetAssemblyTypeName: LoginingController, Assembly-CSharp
         m_MethodName: OpenDeletePannel
         m_Mode: 1
@@ -5494,33 +5520,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1218344377}
   m_CullTransparentMesh: 1
---- !u!114 &1218344381
-MonoBehaviour:
+--- !u!225 &1218344381
+CanvasGroup:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1218344377}
   m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 205e1ed537b159745929e0367383a923, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  logining: {fileID: 279661989}
-  id_i: {fileID: 252022923}
-  pwd_i: {fileID: 1336810280}
-  log: {fileID: 1976699835}
-  NoticeLogin_pannel: {fileID: 1113918927}
-  NoticeLoginlog: {fileID: 870407871}
-  Signup_pannel: {fileID: 1402942321}
-  id_Signup: {fileID: 773853299}
-  pwd_Signup: {fileID: 648418848}
-  log1_signup: {fileID: 649211451}
-  Nickname_pannel: {fileID: 25437882}
-  nickname_Signup: {fileID: 1144913318}
-  log2_signup: {fileID: 276245410}
-  NoticeSignup_pannel: {fileID: 1790476302}
-  NoticeSignuplog: {fileID: 1167799520}
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1246448774
 GameObject:
   m_ObjectHideFlags: 0
@@ -5742,6 +5753,7 @@ GameObject:
   - component: {fileID: 1269302869}
   - component: {fileID: 1269302868}
   - component: {fileID: 1269302867}
+  - component: {fileID: 1269302870}
   m_Layer: 5
   m_Name: NoticeNickname_Panel
   m_TagString: Untagged
@@ -5762,14 +5774,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 22e6d4f9ae7c36248a9d60b3e498066a, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -5805,8 +5817,20 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1200, y: 300}
+  m_SizeDelta: {x: 800, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!225 &1269302870
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1269302866}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1289853129
 GameObject:
   m_ObjectHideFlags: 0
@@ -5886,6 +5910,67 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1289853129}
   m_CullTransparentMesh: 1
+--- !u!1 &1307221917
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1307221919}
+  - component: {fileID: 1307221918}
+  m_Layer: 0
+  m_Name: LoginController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1307221918
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1307221917}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 205e1ed537b159745929e0367383a923, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  logining: {fileID: 1703008897}
+  fade: {fileID: 541645092}
+  LoginPannel: {fileID: 1218344377}
+  id_i: {fileID: 252022923}
+  pwd_i: {fileID: 1336810280}
+  log: {fileID: 1976699835}
+  NoticeLogin_pannel: {fileID: 1113918927}
+  NoticeLoginlog: {fileID: 870407871}
+  Signup_pannel: {fileID: 1402942321}
+  id_Signup: {fileID: 773853299}
+  pwd_Signup: {fileID: 648418848}
+  log1_signup: {fileID: 649211451}
+  Nickname_pannel: {fileID: 25437882}
+  nickname_Signup: {fileID: 1144913318}
+  log2_signup: {fileID: 276245410}
+  NoticeSignup_pannel: {fileID: 1790476302}
+  NoticeSignuplog: {fileID: 1167799520}
+--- !u!4 &1307221919
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1307221917}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1336810278
 GameObject:
   m_ObjectHideFlags: 0
@@ -6115,7 +6200,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 279661989}
+      - m_Target: {fileID: 1703008897}
         m_TargetAssemblyTypeName: LoginingController, Assembly-CSharp
         m_MethodName: UpdateNicknameBtn
         m_Mode: 1
@@ -6327,7 +6412,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 279661989}
+      - m_Target: {fileID: 1703008897}
         m_TargetAssemblyTypeName: LoginingController, Assembly-CSharp
         m_MethodName: ClosepasswordPannel
         m_Mode: 1
@@ -7685,7 +7770,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 279661989}
+      - m_Target: {fileID: 1703008897}
         m_TargetAssemblyTypeName: LoginingController, Assembly-CSharp
         m_MethodName: CloseDeletePannel
         m_Mode: 1
@@ -7897,7 +7982,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 279661989}
+      - m_Target: {fileID: 1703008897}
         m_TargetAssemblyTypeName: LoginingController, Assembly-CSharp
         m_MethodName: ClosenicknamePannel
         m_Mode: 1
@@ -8187,7 +8272,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1218344381}
+      - m_Target: {fileID: 1307221918}
         m_TargetAssemblyTypeName: LoginController, Assembly-CSharp
         m_MethodName: CloseNicknamePannel
         m_Mode: 1
@@ -8237,6 +8322,69 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1675997898}
   m_CullTransparentMesh: 1
+--- !u!1 &1703008896
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1703008898}
+  - component: {fileID: 1703008897}
+  m_Layer: 0
+  m_Name: LoginingController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1703008897
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1703008896}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7368020c3c4460e46b006475869337dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fade: {fileID: 541645092}
+  login: {fileID: 1307221918}
+  userPannel: {fileID: 120469579}
+  userNickname: {fileID: 1143252791}
+  loginingPannel: {fileID: 279661985}
+  Update_pannel: {fileID: 2045906486}
+  Updatename_pannel: {fileID: 704249205}
+  name_new: {fileID: 1261987686}
+  updatenamelog: {fileID: 2019304374}
+  NoticeNickname_pannel: {fileID: 1269302866}
+  NoticeNicknamelog: {fileID: 1379722296}
+  Updatepwd_pannel: {fileID: 80706272}
+  pwd_new: {fileID: 536372013}
+  updatepwdlog: {fileID: 305883913}
+  NoticePWD_pannel: {fileID: 1792400321}
+  NoticePWDlog: {fileID: 1061577014}
+  Delete_Pannel: {fileID: 1819464303}
+  NoticeDelete_pannel: {fileID: 1980680576}
+  Deletelog: {fileID: 1840998168}
+--- !u!4 &1703008898
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1703008896}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1708864724
 GameObject:
   m_ObjectHideFlags: 0
@@ -8327,6 +8475,7 @@ GameObject:
   - component: {fileID: 1790476305}
   - component: {fileID: 1790476304}
   - component: {fileID: 1790476303}
+  - component: {fileID: 1790476306}
   m_Layer: 5
   m_Name: NoticeSignup_Panel
   m_TagString: Untagged
@@ -8347,14 +8496,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 22e6d4f9ae7c36248a9d60b3e498066a, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -8390,8 +8539,20 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1200, y: 300}
+  m_SizeDelta: {x: 800, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!225 &1790476306
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1790476302}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1792400321
 GameObject:
   m_ObjectHideFlags: 0
@@ -8403,6 +8564,7 @@ GameObject:
   - component: {fileID: 1792400322}
   - component: {fileID: 1792400324}
   - component: {fileID: 1792400323}
+  - component: {fileID: 1792400325}
   m_Layer: 5
   m_Name: NoticePassword_Panel
   m_TagString: Untagged
@@ -8428,7 +8590,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1200, y: 300}
+  m_SizeDelta: {x: 800, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1792400323
 MonoBehaviour:
@@ -8443,14 +8605,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 22e6d4f9ae7c36248a9d60b3e498066a, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -8468,6 +8630,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1792400321}
   m_CullTransparentMesh: 1
+--- !u!225 &1792400325
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1792400321}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1807587622
 GameObject:
   m_ObjectHideFlags: 0
@@ -8905,7 +9079,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 279661989}
+      - m_Target: {fileID: 1703008897}
         m_TargetAssemblyTypeName: LoginingController, Assembly-CSharp
         m_MethodName: OpenUpdatePannel
         m_Mode: 1
@@ -9282,6 +9456,7 @@ GameObject:
   - component: {fileID: 1980680577}
   - component: {fileID: 1980680579}
   - component: {fileID: 1980680578}
+  - component: {fileID: 1980680580}
   m_Layer: 5
   m_Name: NoticeDelete_Panel
   m_TagString: Untagged
@@ -9307,7 +9482,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1200, y: 300}
+  m_SizeDelta: {x: 1300, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1980680578
 MonoBehaviour:
@@ -9322,14 +9497,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 22e6d4f9ae7c36248a9d60b3e498066a, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -9347,6 +9522,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1980680576}
   m_CullTransparentMesh: 1
+--- !u!225 &1980680580
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1980680576}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &2003756268
 GameObject:
   m_ObjectHideFlags: 0
@@ -9898,7 +10085,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1218344381}
+      - m_Target: {fileID: 1307221918}
         m_TargetAssemblyTypeName: LoginController, Assembly-CSharp
         m_MethodName: CloseSignupPannel
         m_Mode: 1
@@ -10031,7 +10218,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 279661989}
+      - m_Target: {fileID: 1703008897}
         m_TargetAssemblyTypeName: LoginingController, Assembly-CSharp
         m_MethodName: UpdatePasswordBtn
         m_Mode: 1
@@ -10243,7 +10430,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 279661989}
+      - m_Target: {fileID: 1703008897}
         m_TargetAssemblyTypeName: LoginingController, Assembly-CSharp
         m_MethodName: OpenpasswordPannel
         m_Mode: 1
@@ -10301,3 +10488,6 @@ SceneRoots:
   - {fileID: 1396709326}
   - {fileID: 1656867331}
   - {fileID: 1408798082}
+  - {fileID: 541645093}
+  - {fileID: 1307221919}
+  - {fileID: 1703008898}
