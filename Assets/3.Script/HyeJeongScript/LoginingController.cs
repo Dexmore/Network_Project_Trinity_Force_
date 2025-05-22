@@ -211,8 +211,9 @@ public class LoginingController : MonoBehaviour
 
         string id = SQLManager.instance.info.User_name;
         string pwd = SQLManager.instance.info.User_Password;
+        string nickname = SQLManager.instance.info.User_Nickname;
 
-        if(SQLManager.instance.Deleteinfo(id, pwd))
+        if(SQLManager.instance.Deleteinfo(id, pwd, nickname))
         {
             // 회원 탈퇴 알림창 생성
             Deletelog.text = "회원탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사합니다.";
@@ -228,6 +229,7 @@ public class LoginingController : MonoBehaviour
             Delete_Pannel.SetActive(false);
 
             login.LoginPannel.SetActive(true);
+
             EmptyLoginField();
 
             //1.5초 후 사라짐

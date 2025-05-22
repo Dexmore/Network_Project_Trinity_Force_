@@ -145,16 +145,16 @@ public class SQLManager : MonoBehaviour
                     /*삼항연산자*/
                     string name = (reader.IsDBNull(0)) ? string.Empty : reader["Name"].ToString();
                     string pwd = (reader.IsDBNull(1)) ? string.Empty : reader["Password"].ToString();
-                    string nickname = (reader.IsDBNull(1)) ? string.Empty : reader["Nickname"].ToString();
+                    string nickname = (reader.IsDBNull(2)) ? null : reader["Nickname"].ToString();
 
-                    if (!name.Equals(string.Empty) || !pwd.Equals(string.Empty))
+                    if (!name.Equals(string.Empty) || !pwd.Equals(string.Empty) || nickname.Equals(string.Empty))
                     {
                         info = new User_info(name, pwd, nickname);
 
-                        if(nickname == null)
-                        {
-                            return false;
-                        }
+                        //if(nickname == null)
+                        //{
+                        //    return false;
+                        //}
 
                         if (!reader.IsClosed) reader.Close();
                         return true;
@@ -172,6 +172,71 @@ public class SQLManager : MonoBehaviour
         {
             Debug.Log(e.Message);
             if (!reader.IsClosed) reader.Close();
+            return false;
+        }
+    }
+    #endregion
+
+    #region 닉네임이 없을 때 로그인
+    public bool CompleteLoginwithName(string id, string nickname)
+    {
+        try
+        {
+            if(!connection_check(con))
+            {
+                return false;
+            }
+
+            // 닉네임 중복 확인
+            string sqlcheckname =
+                string.Format(@"SELECT COUNT(*) FROM user_info WHERE Nickname = '{0}';", nickname);
+            MySqlCommand cmdcheck = new MySqlCommand(sqlcheckname, con);
+            object resultObj = cmdcheck.ExecuteScalar();
+            int count = Convert.ToInt32(resultObj);
+
+            if (count > 0)   // 닉네임 중복
+            {
+                return false;
+            }
+
+            // 닉네임 추가 : 아이디, 비밀번호를 만들면 닉네임이 NULL -> NULL에서 다른 이름으로 바꾸기 때문에 Update를 사용한다.
+            string sqlnickname =
+                string.Format(@"UPDATE user_info SET Nickname = '{0}' WHERE Name='{1}';", nickname, id);
+            MySqlCommand cmd = new MySqlCommand(sqlnickname, con);
+
+            int result = cmd.ExecuteNonQuery();
+
+            if (result > 0) // 닉네임 만들기 성공하고 로그인 성공
+            {
+                // info 업데이트
+                string sqlinfo =
+                string.Format(@"SELECT Name, Password, Nickname  FROM user_info WHERE Name='{0}';", id);
+                MySqlCommand cmdinfo = new MySqlCommand(sqlinfo, con);
+                reader = cmdinfo.ExecuteReader();
+
+                // 읽은 데이터를 나열
+                while (reader.Read())
+                {
+                    /*삼항연산자*/
+                    string name = (reader.IsDBNull(0)) ? string.Empty : reader["Name"].ToString();
+                    string pwd = (reader.IsDBNull(1)) ? string.Empty : reader["Password"].ToString();
+                    string Nick = (reader.IsDBNull(2)) ? string.Empty : reader["Nickname"].ToString();
+
+                    info = new User_info(name, pwd, Nick);
+                }
+                if (!reader.IsClosed) reader.Close();
+                return true;
+            }
+
+            else
+            {
+                return false;
+            }
+        }
+
+        catch(Exception e)
+        {
+            Debug.Log(e.Message);
             return false;
         }
     }
@@ -245,6 +310,7 @@ public class SQLManager : MonoBehaviour
         catch (Exception e)
         {
             Debug.Log(e.Message);
+            if (!reader.IsClosed) reader.Close();
             return false;
         }
     }
@@ -389,7 +455,7 @@ public class SQLManager : MonoBehaviour
     #endregion
 
     #region 회원탈퇴
-    public bool Deleteinfo(string id, string password)
+    public bool Deleteinfo(string id, string password, string nickname)
     {
         try
         {
@@ -401,7 +467,7 @@ public class SQLManager : MonoBehaviour
             //쿼리문
             //DELETE FROM user_info WHERE User_Name='옥혜정';
             string deletesql =
-                string.Format(@"DELETE FROM user_info WHERE Name='{0}';", id);
+                string.Format(@"DELETE FROM user_info WHERE Name='{0}' And Password = '{1}' AND Nickname = '{2}';", id, password, nickname);
             MySqlCommand cmd = new MySqlCommand(deletesql, con);
 
             int result = cmd.ExecuteNonQuery(); //삭제한 n개 수
@@ -424,6 +490,5 @@ public class SQLManager : MonoBehaviour
             return false;
         }
     }
-    #endregion
+ #endregion
 }
-
