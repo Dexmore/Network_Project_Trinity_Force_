@@ -1,18 +1,23 @@
-// Assets/Scripts/EnterRoomHandler.cs
 using UnityEngine;
+using Mirror;
 using UnityEngine.SceneManagement;
 
 public class EnterRoomHandler : MonoBehaviour
 {
-    [Tooltip("입장 시 로드할 씬 이름")]
-    [SerializeField] private string sceneName = "GameScene";
+    [SerializeField] private string sceneName = "LobbyScene";
 
-    /// <summary>
-    /// 버튼 OnClick()에 바인딩.
-    /// 눌렀을 때 씬 전환을 합니다.
-    /// </summary>
-    public void EnterRoom()
+    // 실제 참가 (네트워크 연결)
+    public void JoinRoom(string hostIp)
     {
-        SceneManager.LoadScene(sceneName);
+        if (!NetworkClient.active)
+        {
+            NetworkManager.singleton.networkAddress = hostIp;
+            NetworkManager.singleton.StartClient();
+            SceneManager.LoadScene(sceneName); // 연결 후 씬 이동
+        }
+        else
+        {
+            Debug.LogWarning("이미 네트워크가 활성화되어 있습니다.");
+        }
     }
 }

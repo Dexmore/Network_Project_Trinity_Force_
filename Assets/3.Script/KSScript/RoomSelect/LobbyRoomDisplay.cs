@@ -10,6 +10,6 @@ public class LobbyRoomDisplay : MonoBehaviour
     void Start()
     {
         if (roomTitleText != null)
-            roomTitleText.text = RoomInfo.CurrentRoomTitle;
+            roomTitleText.text = RoomInfoName.CurrentRoomTitle;
     }
 }

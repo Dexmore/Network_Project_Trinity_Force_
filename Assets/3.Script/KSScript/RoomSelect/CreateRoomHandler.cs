@@ -46,7 +46,7 @@ public class CreateRoomHandler : MonoBehaviour
         return;
     }
 
-    RoomInfo.CurrentRoomTitle = title;
+    RoomInfoName.CurrentRoomTitle = title;
 
     // **호스트/클라/서버 모두 동작중이 아니면만 StartHost 실행**
     if (!NetworkServer.active && !NetworkClient.active)

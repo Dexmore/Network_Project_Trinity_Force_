@@ -413,6 +413,7 @@ GameObject:
   - component: {fileID: 8227732020104321736}
   - component: {fileID: 4679048260529285976}
   - component: {fileID: 1458766724021715216}
+  - component: {fileID: 7894630798508236140}
   m_Layer: 5
   m_Name: Room
   m_TagString: Untagged
@@ -493,6 +494,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sceneName: LobbyScene
+--- !u!114 &7894630798508236140
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7158294684937314204}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1085d17b181b1ff41b203158fb25433e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  roomNameText: {fileID: 8506116642089501012}
+  playerCountText: {fileID: 3710175213626666294}
+  joinButton: {fileID: 5582955514390646495}
 --- !u!1 &8738514215982954377
 GameObject:
   m_ObjectHideFlags: 0

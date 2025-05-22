@@ -1,6 +1,7 @@
-// Assets/Scripts/RoomInfo.cs
-public static class RoomInfo
+public class RoomInfo
 {
-    // 생성한 방의 제목을 저장할 변수
-    public static string CurrentRoomTitle;
+    public string title;
+    public int userCount;
+    public string hostIp; 
+    // 필요시 추가 정보
 }
