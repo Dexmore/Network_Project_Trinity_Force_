@@ -1,77 +1,65 @@
-// Assets/Scripts/CreateRoomHandler.cs
 using UnityEngine;
 using TMPro;
+using Mirror;
 using UnityEngine.SceneManagement;
+
 
 public class CreateRoomHandler : MonoBehaviour
 {
-    [Header("Popup & Input")]
-    [Tooltip("최초에 비활성화 상태로 둘 팝업 패널")]
     [SerializeField] private GameObject createRoomPopup;
-
-    [Tooltip("방 제목을 입력할 TMP Input Field")]
     [SerializeField] private TMP_InputField roomNameInput;
+
+    private NetworkManager netMgr;
+    private string serverIp = "3.38.169.196"; // 실제 서버 IP
+
+    void Awake()
+    {
+        netMgr = NetworkManager.singleton;
+        if (netMgr == null)
+            Debug.LogError("NetworkManager가 없습니다!");
+    }
 
     void Start()
     {
-        // 시작 시 팝업 숨기기
-        if (createRoomPopup != null)
-            createRoomPopup.SetActive(false);
+        
+        createRoomPopup.SetActive(false);
     }
 
-    /// <summary>
-    /// “방 만들기” 버튼 OnClick()에 바인딩
-    /// </summary>
     public void ShowCreateRoomPopup()
     {
-        if (createRoomPopup == null || roomNameInput == null)
-        {
-            Debug.LogError("[CreateRoomHandler] 팝업 또는 입력 필드가 할당되지 않았습니다!");
-            return;
-        }
-
-        // 입력 초기화 & 포커스
-        roomNameInput.text = "";
         createRoomPopup.SetActive(true);
+        roomNameInput.text = "";
         roomNameInput.ActivateInputField();
     }
 
-    /// <summary>
-    /// 팝업 취소 버튼 OnClick()에 바인딩
-    /// </summary>
     public void HideCreateRoomPopup()
-    {
-        if (createRoomPopup != null)
-            createRoomPopup.SetActive(false);
-    }
-
-    /// <summary>
-    /// 팝업 확인 버튼 OnClick()에 바인딩  
-    /// 방 제목을 저장하고 로비 씬으로 전환
-    /// </summary>
-    public void ConfirmCreateRoom()
-    {
-        if (roomNameInput == null)
-        {
-            Debug.LogError("[CreateRoomHandler] roomNameInput이 할당되지 않았습니다!");
-            return;
-        }
-
-        string title = roomNameInput.text.Trim();
-        if (string.IsNullOrEmpty(title))
-        {
-            Debug.LogWarning("[CreateRoomHandler] 방 제목을 입력해주세요.");
-            return;
-        }
-
-        // 방 제목 저장
-        RoomInfo.CurrentRoomTitle = title;
-
-        // 로비 씬으로 전환 (씬 이름을 실제 이름으로 조정)
-        SceneManager.LoadScene("LobbyScene");
-    }
-      public void CloseUi()
     {
         createRoomPopup.SetActive(false);
     }
+
+  public void ConfirmCreateRoom()
+{
+    string title = roomNameInput.text.Trim();
+    if (string.IsNullOrEmpty(title))
+    {
+        Debug.LogWarning("방 제목을 입력해주세요.");
+        return;
+    }
+
+    RoomInfo.CurrentRoomTitle = title;
+
+    // **호스트/클라/서버 모두 동작중이 아니면만 StartHost 실행**
+    if (!NetworkServer.active && !NetworkClient.active)
+    {
+        netMgr.networkAddress = serverIp;
+        netMgr.StartHost();
+    }
+    else
+    {
+        Debug.LogWarning("이미 네트워크가 활성화되어 있습니다.");
+    }
+
+    createRoomPopup.SetActive(false);
+    SceneManager.LoadScene("LobbyScene");
+}
 }

@@ -982,6 +982,113 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 160921882}
   m_CullTransparentMesh: 1
+--- !u!1 &189792036
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 189792039}
+  - component: {fileID: 189792040}
+  - component: {fileID: 189792041}
+  m_Layer: 0
+  m_Name: NetworkManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &189792039
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 189792036}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &189792040
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 189792036}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8aab4c8111b7c411b9b92cf3dbc5bd4e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dontDestroyOnLoad: 1
+  runInBackground: 1
+  headlessStartMode: 1
+  editorAutoStart: 0
+  sendRate: 60
+  offlineScene: Assets/1.Scene/EDITScenes/KSScene/RoomSelectScene.unity
+  onlineScene: Assets/1.Scene/EDITScenes/KSScene/LobbyScene.unity
+  offlineSceneLoadDelay: 0
+  transport: {fileID: 189792041}
+  networkAddress: 3.38.169.196
+  maxConnections: 100
+  disconnectInactiveConnections: 0
+  disconnectInactiveTimeout: 60
+  authenticator: {fileID: 0}
+  playerPrefab: {fileID: 0}
+  autoCreatePlayer: 0
+  playerSpawnMethod: 0
+  spawnPrefabs: []
+  exceptionsDisconnect: 1
+  snapshotSettings:
+    bufferTimeMultiplier: 2
+    bufferLimit: 32
+    catchupNegativeThreshold: -1
+    catchupPositiveThreshold: 1
+    catchupSpeed: 0.019999999552965164
+    slowdownSpeed: 0.03999999910593033
+    driftEmaDuration: 1
+    dynamicAdjustment: 1
+    dynamicAdjustmentTolerance: 1
+    deliveryTimeEmaDuration: 2
+  evaluationMethod: 0
+  evaluationInterval: 3
+  timeInterpolationGui: 0
+--- !u!114 &189792041
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 189792036}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b0fecffa3f624585964b0d0eb21b18e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  port: 7777
+  DualMode: 1
+  NoDelay: 1
+  Interval: 10
+  Timeout: 10000
+  RecvBufferSize: 7361536
+  SendBufferSize: 7361536
+  FastResend: 2
+  ReceiveWindowSize: 4096
+  SendWindowSize: 4096
+  MaxRetransmit: 40
+  MaximizeSocketBuffers: 1
+  ReliableMaxMessageSize: 297433
+  UnreliableMaxMessageSize: 1194
+  debugLog: 1
+  statisticsGUI: 0
+  statisticsLog: 0
 --- !u!1 &195379841
 GameObject:
   m_ObjectHideFlags: 0
@@ -1339,7 +1446,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1286939610}
         m_TargetAssemblyTypeName: CreateRoomHandler, Assembly-CSharp
-        m_MethodName: CloseUi
+        m_MethodName: HideCreateRoomPopup
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3326,7 +3433,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1599075698}
   - component: {fileID: 1599075697}
-  - component: {fileID: 1599075699}
   m_Layer: 0
   m_Name: RoomSelectManager
   m_TagString: Untagged
@@ -3346,7 +3452,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 061d7e51aa502694ab23d2c209bac3e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  selectRoomPanel: {fileID: 0}
+  selectRoomPanel: {fileID: 1110005057}
   createRoom: {fileID: 1286939610}
 --- !u!4 &1599075698
 Transform:
@@ -3365,21 +3471,6 @@ Transform:
   - {fileID: 1286939611}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1599075699
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1599075696}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f422a158475e1504c9a468b56141e4ee, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  roomItemPrefab: {fileID: 7158294684937314204, guid: 1b8217b3c7fb2fb44a1654ca2b76df9a, type: 3}
-  contentParent: {fileID: 147271762}
-  gameSceneName: LobbyScene
 --- !u!1 &1607604468
 GameObject:
   m_ObjectHideFlags: 0
@@ -4223,3 +4314,4 @@ SceneRoots:
   - {fileID: 1443842111}
   - {fileID: 1599075698}
   - {fileID: 927302465}
+  - {fileID: 189792039}

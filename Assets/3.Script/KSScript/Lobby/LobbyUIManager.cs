@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 using System.Collections;
+using Mirror;
 
 public class LobbyUIManager : MonoBehaviour
 {
@@ -93,6 +94,7 @@ public class LobbyUIManager : MonoBehaviour
         if (notificationCoroutine != null)
             StopCoroutine(notificationCoroutine);
         StartCoroutine(DoExit());
+        NetworkManager.singleton.StopHost();
     }
 
     private IEnumerator DoExit()
