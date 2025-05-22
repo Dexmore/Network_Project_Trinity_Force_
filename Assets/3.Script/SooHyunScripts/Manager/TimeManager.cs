@@ -1,4 +1,4 @@
-﻿
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -14,82 +14,81 @@ public class TurnChain
     public TurnChain(int ownerIndex) => ownerPlayerIndex = ownerIndex;
 }
 
-// 생략: TurnChain 클래스는 동일합니다
-
 public class TimeManager : NetworkBehaviour
 {
+    public static TimeManager Instance;
+
     public float turnTime = 30f;
     public int totalPlayers = 4;
 
     [SyncVar] public int currentCycle = 0;
 
-    private class TurnState
-    {
-        public float timer = 0f;
-        public bool isSubmitted = false;
-    }
+    private class TurnState { public float timer = 0f; public bool isSubmitted = false; }
 
-    private readonly Dictionary<int, TurnState> playerStates = new();
+    private Dictionary<int, TurnState> playerStates = new();
     public List<TurnChain> chains = new();
 
-    private void Start()
+    private int connectedPlayers = 0;
+    private bool gameStarted = false;
+
+    public override void OnStartServer()
     {
-        if (isServer)
+        Instance = this;
+    }
+
+    [Server]
+    public void RegisterPlayer(int index)
+    {
+        connectedPlayers++;
+        Debug.Log($"[Server] Player {index} joined. Total: {connectedPlayers}");
+
+        if (connectedPlayers == totalPlayers)
         {
-            for (int i = 0; i < totalPlayers; i++)
-            {
-                chains.Add(new TurnChain(i));
-                playerStates[i] = new TurnState();
-            }
+            StartGame();
         }
+    }
+
+    [Server]
+    private void StartGame()
+    {
+        Debug.Log("✅ All players connected. Starting game.");
+        gameStarted = true;
+
+        for (int i = 0; i < totalPlayers; i++)
+        {
+            chains.Add(new TurnChain(i));
+            playerStates[i] = new TurnState();
+        }
+
+        RpcUpdateAllClients();
     }
 
     private void Update()
     {
-        if (isServer)
-        {
-            HandleServerTimer();
-        }
-
-        // 클라이언트에서 UI 상태 업데이트 반복 호출
-        if (isClient)
-        {
-            Player player = NetworkClient.connection.identity.GetComponent<Player>();
-            if (player != null && IsMyTurn(player.playerIndex))
-            {
-                int chainIdx = GetChainIndex(player.playerIndex);
-                UIManager.Instance.ShowUIForTurn(currentCycle, chainIdx, chains);
-            }
-        }
-    }
-
-    private void HandleServerTimer()
-    {
-        bool allSubmitted = true;
+        if (!isServer || !gameStarted) return;
 
         foreach (var kvp in playerStates)
         {
-            var playerId = kvp.Key;
-            var state = kvp.Value;
-
-            if (state.isSubmitted) continue;
-
-            state.timer += Time.deltaTime;
-
-            if (state.timer >= turnTime)
+            if (!kvp.Value.isSubmitted)
             {
-                Debug.Log($"⏱️ [SERVER] Player {playerId} 시간 초과 - 자동 제출");
-                AutoSubmit(playerId);
-                state.isSubmitted = true;
+                kvp.Value.timer += Time.deltaTime;
+                if (kvp.Value.timer >= turnTime)
+                {
+                    AutoSubmit(kvp.Key);
+                    kvp.Value.isSubmitted = true;
+                }
             }
-
-            allSubmitted = false;
         }
 
-        if (allSubmitted)
-        {
+        if (AllSubmitted())
             AdvanceCycle();
-        }
+    }
+
+    private bool AllSubmitted()
+    {
+        foreach (var s in playerStates.Values)
+            if (!s.isSubmitted) return false;
+        return true;
     }
 
     [Server]
@@ -97,18 +96,9 @@ public class TimeManager : NetworkBehaviour
     {
         currentCycle++;
 
-        if (currentCycle >= totalPlayers)
+        if (currentCycle >= 1 + (totalPlayers - 1) * 2)
         {
-            Debug.Log("🎉 [SERVER] 모든 턴 완료 → 결과 씬으로 이동");
-
-            if (Application.CanStreamedLevelBeLoaded("ResultScene"))
-            {
-                SceneManager.LoadScene("ResultScene");
-            }
-            else
-            {
-                Debug.LogWarning("⚠️ ResultScene 씬이 Build Settings에 등록되지 않았습니다.");
-            }
+            SceneManager.LoadScene("ResultScene");
             return;
         }
 
@@ -117,66 +107,77 @@ public class TimeManager : NetworkBehaviour
             state.timer = 0f;
             state.isSubmitted = false;
         }
+
+        RpcUpdateAllClients();
     }
 
-    public bool IsMyTurn(int playerIndex)
+    [ClientRpc]
+    private void RpcUpdateAllClients()
     {
-        return playerStates.ContainsKey(playerIndex) && !playerStates[playerIndex].isSubmitted;
+        if (!NetworkClient.ready || NetworkClient.connection == null) return;
+
+        Player player;
+        if (!NetworkClient.connection.identity.TryGetComponent(out player)) return;
+
+        int index = player.playerIndex;
+
+        if (!gameStarted)
+        {
+            UIManager.Instance?.ShowWaitingCanvas();
+            return;
+        }
+
+        int chainIndex = GetTargetChainIndex(index);
+
+        if (currentCycle == 0)
+        {
+            // 시작 문장 입력 단계
+            UIManager.Instance?.ShowTextCanvas();
+        }
+        else if (currentCycle % 2 == 1)
+        {
+            // 그림 그리기 단계
+            UIManager.Instance?.ShowUIForTurn(currentCycle, chainIndex, chains);
+        }
+        else
+        {
+            // 추측 문장 단계
+            UIManager.Instance?.ShowUIForTurn(currentCycle, chainIndex, chains);
+        }
     }
 
     [Command]
     public void CmdSubmitText(string text, int playerIndex)
     {
-        int chainIndex = GetChainIndex(playerIndex);
-        if (chainIndex < chains.Count)
-        {
-            chains[chainIndex].texts.Add(text);
-        }
+        int targetChain = GetTargetChainIndex(playerIndex);
+        chains[targetChain].texts.Add(text);
         MarkSubmitted(playerIndex);
     }
 
     [Command]
-    public void CmdSubmitDrawing(byte[] drawingData, int playerIndex)
+    public void CmdSubmitDrawing(byte[] data, int playerIndex)
     {
-        Texture2D tex = new Texture2D(2, 2);
-        tex.LoadImage(drawingData);
-
-        int chainIndex = GetChainIndex(playerIndex);
-        if (chainIndex < chains.Count)
-        {
-            chains[chainIndex].drawings.Add(tex);
-        }
+        int targetChain = GetTargetChainIndex(playerIndex);
+        Texture2D tex = new Texture2D(2, 2); tex.LoadImage(data);
+        chains[targetChain].drawings.Add(tex);
         MarkSubmitted(playerIndex);
-    }
-
-    private void MarkSubmitted(int playerIndex)
-    {
-        if (playerStates.ContainsKey(playerIndex))
-        {
-            playerStates[playerIndex].isSubmitted = true;
-        }
     }
 
     private void AutoSubmit(int playerIndex)
     {
-        if (currentCycle == 0)
-        {
-            CmdSubmitText("(자동 문장)", playerIndex);
-        }
-        else if (currentCycle % 2 == 1)
-        {
-            Texture2D empty = new Texture2D(2, 2);
-            CmdSubmitDrawing(empty.EncodeToPNG(), playerIndex);
-        }
+        if (currentCycle == 0 || currentCycle % 2 == 0)
+            CmdSubmitText("(Auto)", playerIndex);
         else
-        {
-            CmdSubmitText("(자동 유추)", playerIndex);
-        }
+            CmdSubmitDrawing(new Texture2D(2, 2).EncodeToPNG(), playerIndex);
     }
 
-    public int GetChainIndex(int playerIndex)
+    private void MarkSubmitted(int idx)
     {
-        return (playerIndex - currentCycle + totalPlayers) % totalPlayers;
+        if (playerStates.ContainsKey(idx)) playerStates[idx].isSubmitted = true;
+    }
+
+    public int GetTargetChainIndex(int playerIndex)
+    {
+        return (playerIndex + currentCycle) % totalPlayers;
     }
 }
-

@@ -108,6 +108,7 @@ public class SQLManager : MonoBehaviour
         return true;
     }
 
+    #region 로그인
     public bool Login(string id, string passwoard)
     {
         // 직접적으로 DB에서 데이터를 가지고 오는 메소드
@@ -127,6 +128,7 @@ public class SQLManager : MonoBehaviour
             {
                 return false;
             }
+
             // 쿼리문
             //SELECT User_Name, User_Password, User_PhoneNum FROM user_info WHERE User_Name='옥혜정' AND user_password='1234';
             string sqlcommend =
@@ -143,16 +145,16 @@ public class SQLManager : MonoBehaviour
                     /*삼항연산자*/
                     string name = (reader.IsDBNull(0)) ? string.Empty : reader["Name"].ToString();
                     string pwd = (reader.IsDBNull(1)) ? string.Empty : reader["Password"].ToString();
-                    string nickname = (reader.IsDBNull(1)) ? string.Empty : reader["Nickname"].ToString();
+                    string nickname = (reader.IsDBNull(2)) ? null : reader["Nickname"].ToString();
 
-                    if (!name.Equals(string.Empty) || !pwd.Equals(string.Empty))
+                    if (!name.Equals(string.Empty) || !pwd.Equals(string.Empty) || nickname.Equals(string.Empty))
                     {
                         info = new User_info(name, pwd, nickname);
 
-                        if(nickname == null)
-                        {
-                            return false;
-                        }
+                        //if(nickname == null)
+                        //{
+                        //    return false;
+                        //}
 
                         if (!reader.IsClosed) reader.Close();
                         return true;
@@ -173,11 +175,79 @@ public class SQLManager : MonoBehaviour
             return false;
         }
     }
+    #endregion
 
-    // 회원가입
+    #region 닉네임이 없을 때 로그인
+    public bool CompleteLoginwithName(string id, string nickname)
+    {
+        try
+        {
+            if(!connection_check(con))
+            {
+                return false;
+            }
+
+            // 닉네임 중복 확인
+            string sqlcheckname =
+                string.Format(@"SELECT COUNT(*) FROM user_info WHERE Nickname = '{0}';", nickname);
+            MySqlCommand cmdcheck = new MySqlCommand(sqlcheckname, con);
+            object resultObj = cmdcheck.ExecuteScalar();
+            int count = Convert.ToInt32(resultObj);
+
+            if (count > 0)   // 닉네임 중복
+            {
+                return false;
+            }
+
+            // 닉네임 추가 : 아이디, 비밀번호를 만들면 닉네임이 NULL -> NULL에서 다른 이름으로 바꾸기 때문에 Update를 사용한다.
+            string sqlnickname =
+                string.Format(@"UPDATE user_info SET Nickname = '{0}' WHERE Name='{1}';", nickname, id);
+            MySqlCommand cmd = new MySqlCommand(sqlnickname, con);
+
+            int result = cmd.ExecuteNonQuery();
+
+            if (result > 0) // 닉네임 만들기 성공하고 로그인 성공
+            {
+                // info 업데이트
+                string sqlinfo =
+                string.Format(@"SELECT Name, Password, Nickname  FROM user_info WHERE Name='{0}';", id);
+                MySqlCommand cmdinfo = new MySqlCommand(sqlinfo, con);
+                reader = cmdinfo.ExecuteReader();
+
+                // 읽은 데이터를 나열
+                while (reader.Read())
+                {
+                    /*삼항연산자*/
+                    string name = (reader.IsDBNull(0)) ? string.Empty : reader["Name"].ToString();
+                    string pwd = (reader.IsDBNull(1)) ? string.Empty : reader["Password"].ToString();
+                    string Nick = (reader.IsDBNull(2)) ? string.Empty : reader["Nickname"].ToString();
+
+                    info = new User_info(name, pwd, Nick);
+                }
+                if (!reader.IsClosed) reader.Close();
+                return true;
+            }
+
+            else
+            {
+                return false;
+            }
+        }
+
+        catch(Exception e)
+        {
+            Debug.Log(e.Message);
+            return false;
+        }
+    }
+    #endregion
+
+    #region 회원가입
     // 1단계 : 아이디 , 비밀번호를 입력한다. 아이디 중복이 안될 시 2단계로 이동한다
     // 2단계 : 닉네임을 입력한다. 닉네임도 중복이 허용되지 않는다. 중복이 안되면 회원가입 완료
-    public bool SignupStep1(string id, string password)
+
+    //1단계 : 아이디, 비밀번호 만들기
+    public bool SignupStep1(string id, string password) 
     {
         try
         {
@@ -240,10 +310,12 @@ public class SQLManager : MonoBehaviour
         catch (Exception e)
         {
             Debug.Log(e.Message);
+            if (!reader.IsClosed) reader.Close();
             return false;
         }
     }
 
+    // 2단계 : 닉네임 만들기
     public bool SignupStep2(string nickname, string id)
     {
         try
@@ -266,7 +338,7 @@ public class SQLManager : MonoBehaviour
             }
 
 
-            // 2단계 : 닉네임 추가
+            // 닉네임 추가 : 아이디, 비밀번호를 만들면 닉네임이 NULL -> NULL에서 다른 이름으로 바꾸기 때문에 Update를 사용한다.
             string sqlnickname =
                 string.Format(@"UPDATE user_info SET Nickname = '{0}' WHERE Name='{1}';", nickname, id);
             MySqlCommand cmd = new MySqlCommand(sqlnickname, con);
@@ -290,9 +362,9 @@ public class SQLManager : MonoBehaviour
             return false;
         }
     }
+    #endregion
 
-
-    // 회원정보 수정
+    #region 회원정보 수정
     // 1단계 : 닉네임과 비밀번호 중 한 개를 선택한다.
     // 2단계 : 닉네임 선택하면 닉네임만 변경, 비밀번호를 선택하면 비밀번호만 변경
 
@@ -380,9 +452,10 @@ public class SQLManager : MonoBehaviour
             return false;
         }
     }
+    #endregion
 
-    // 회원탈퇴
-    public bool Deleteinfo(string id, string password)
+    #region 회원탈퇴
+    public bool Deleteinfo(string id, string password, string nickname)
     {
         try
         {
@@ -394,7 +467,7 @@ public class SQLManager : MonoBehaviour
             //쿼리문
             //DELETE FROM user_info WHERE User_Name='옥혜정';
             string deletesql =
-                string.Format(@"DELETE FROM user_info WHERE Name='{0}';", id);
+                string.Format(@"DELETE FROM user_info WHERE Name='{0}' And Password = '{1}' AND Nickname = '{2}';", id, password, nickname);
             MySqlCommand cmd = new MySqlCommand(deletesql, con);
 
             int result = cmd.ExecuteNonQuery(); //삭제한 n개 수
@@ -417,5 +490,5 @@ public class SQLManager : MonoBehaviour
             return false;
         }
     }
+ #endregion
 }
-

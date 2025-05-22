@@ -235,33 +235,32 @@ public class TexturePainter : MonoBehaviour
 
     public void ClearTexture()
     {
-        var beforeBuffer = new Color32[fullColorBuffer.Length];
-        fullColorBuffer.CopyTo(beforeBuffer, 0);
-        for (int i = 0; i < fullColorBuffer.Length; i++) fullColorBuffer[i] = White;
-        ApplyTexture(fullColorBuffer);
+        // 텍스처 초기화 (예시)
+        Texture2D tex = GetTextureCopy();
+        Color32[] pixels = tex.GetPixels32();
+        for (int i = 0; i < pixels.Length; i++)
+            pixels[i] = Color.white;
+        tex.SetPixels32(pixels);
+        tex.Apply();
 
-        var before = new Dictionary<Vector2Int, Color32>();
-        var after = new Dictionary<Vector2Int, Color32>();
-        for (int i = 0; i < fullColorBuffer.Length; i++)
-        {
-            if (!beforeBuffer[i].Equals(fullColorBuffer[i]))
-            {
-                int x = i % textureWidth, y = i / textureWidth;
-                var pos = new Vector2Int(x, y);
-                before[pos] = beforeBuffer[i];
-                after[pos] = fullColorBuffer[i];
-            }
-        }
-
-        undoStack.Push(new ChangeSet { before = before, after = after });
-        redoStack.Clear();
+        GetComponent<RawImage>().texture = tex;
     }
 
     public Texture2D GetTextureCopy()
     {
-        Texture2D copy = new Texture2D(texture.width, texture.height, texture.format, false);
-        copy.SetPixels(texture.GetPixels());
-        copy.Apply();
-        return copy;
+        RenderTexture rt = RenderTexture.active;
+        RenderTexture.active = GetComponent<RawImage>().texture as RenderTexture;
+
+        Texture2D tex = new Texture2D(512, 512, TextureFormat.RGBA32, false);
+        tex.ReadPixels(new Rect(0, 0, 512, 512), 0, 0);
+        tex.Apply();
+
+        RenderTexture.active = rt;
+        return tex;
+    }
+
+    public byte[] GetPNG()
+    {
+        return GetTextureCopy().EncodeToPNG();
     }
 }

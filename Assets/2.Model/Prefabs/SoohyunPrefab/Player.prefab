@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &7629083459069807304
+--- !u!1 &3910898753114109948
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,64 +8,61 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 7909518750574834062}
-  - component: {fileID: 2779773654584266553}
-  - component: {fileID: 8862151245501227210}
+  - component: {fileID: 6005210873099530697}
+  - component: {fileID: 1131028435491617686}
+  - component: {fileID: 6566825454406715043}
   m_Layer: 0
-  m_Name: TimeManager
+  m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &7909518750574834062
+--- !u!4 &6005210873099530697
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7629083459069807304}
+  m_GameObject: {fileID: 3910898753114109948}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1035.8345, y: 533.978, z: -16.383007}
+  m_LocalPosition: {x: 1025.641, y: 511.60034, z: 3.9849944}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2779773654584266553
+--- !u!114 &1131028435491617686
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7629083459069807304}
+  m_GameObject: {fileID: 3910898753114109948}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 45397889d7741c442bcf53d6fca35d22, type: 3}
+  m_Script: {fileID: 11500000, guid: ed917098f28d6e64d92c8de309c2a3bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  turnTime: 10
-  totalPlayers: 4
-  currentCycle: 0
-  chains: []
---- !u!114 &8862151245501227210
+  playerIndex: 0
+--- !u!114 &6566825454406715043
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7629083459069807304}
+  m_GameObject: {fileID: 3910898753114109948}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   sceneId: 0
-  _assetId: 2538471348
-  serverOnly: 1
+  _assetId: 3724557263
+  serverOnly: 0
   visibility: 0
   hasSpawned: 0

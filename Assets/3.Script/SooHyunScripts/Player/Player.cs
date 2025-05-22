@@ -1,53 +1,28 @@
-using UnityEngine;
 using Mirror;
+using UnityEngine;
 
 public class Player : NetworkBehaviour
 {
     [SyncVar] public int playerIndex;
 
-    private TimeManager tm;
-    private int lastCycle = -1;
-
-    private void Update()
+    public override void OnStartClient()
     {
-        if (!isLocalPlayer) return;
-
-        if (tm == null)
-            tm = FindObjectOfType<TimeManager>();
-
-        if (tm == null || !tm.IsMyTurn(playerIndex)) return;
-
-        if (tm.currentCycle != lastCycle)
+        base.OnStartClient();
+        if (isServer)
         {
-            UIManager.Instance.ShowUIForTurn(tm.currentCycle, tm.GetChainIndex(playerIndex), tm.chains);
-            lastCycle = tm.currentCycle;
+            TimeManager.Instance?.RegisterPlayer(playerIndex);
         }
     }
 
-    public void SubmitText()
+    [Command]
+    public void CmdSubmitTextToServer(string text)
     {
-        string text = UIManager.Instance.textInput.text;
-        if (!string.IsNullOrWhiteSpace(text))
-        {
-            tm.CmdSubmitText(text, playerIndex);
-        }
+        TimeManager.Instance?.CmdSubmitText(text, playerIndex);
     }
 
-    public void SubmitGuess()
+    [Command]
+    public void CmdSubmitDrawingToServer(byte[] data)
     {
-        string guess = UIManager.Instance.guessInput.text;
-        if (!string.IsNullOrWhiteSpace(guess))
-        {
-            tm.CmdSubmitText(guess, playerIndex);
-        }
-    }
-
-    public void SubmitDrawing()
-    {
-        Texture2D drawing = UIManager.Instance.painter.GetTextureCopy();
-        if (drawing != null)
-        {
-            tm.CmdSubmitDrawing(drawing.EncodeToPNG(), playerIndex);
-        }
+        TimeManager.Instance?.CmdSubmitDrawing(data, playerIndex);
     }
 }
