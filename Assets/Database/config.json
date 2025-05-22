@@ -1,9 +1,5 @@
-[
-  {
-    "IP": "3.38.169.196",
-    "TableName": "programming",
-    "ID": "root",
-    "PW": "1234",
-    "PORT": "3306"
-  }
-]
+[{"IP":"3.36.126.156",
+"TableName":"jang",
+"ID":"root",
+"PW":"jang0410@",
+"PORT":"3306"}]
