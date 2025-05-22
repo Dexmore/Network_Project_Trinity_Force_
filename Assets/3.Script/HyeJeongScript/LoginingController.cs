@@ -124,6 +124,7 @@ public class LoginingController : MonoBehaviour
         if(name_new.text.Equals(string.Empty))
         {
             updatenamelog.text = "변경할 닉네임을 입력하세요";
+            return;
         }
 
         if (SQLManager.instance.UpdateNicknameinfo(id, currentname, newname))
@@ -146,7 +147,7 @@ public class LoginingController : MonoBehaviour
 
         else
         {
-            updatenamelog.text = "중복된 닉네임입니다.";
+            updatenamelog.text = "이미 존재하는 닉네임입니다.";
         }
     }
 
@@ -163,6 +164,7 @@ public class LoginingController : MonoBehaviour
         if(pwd_new.text.Equals(string.Empty))
         {
             updatepwdlog.text = "변경할 비밀번호를 입력하세요";
+            return;
         }
 
         if(SQLManager.instance.Updatepasswordinfo(id, newpwd))
