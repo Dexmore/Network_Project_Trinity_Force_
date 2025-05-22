@@ -10,54 +10,65 @@ public class UIManager : MonoBehaviour
     public GameObject textCanvas;
     public GameObject drawCanvas;
     public GameObject guessCanvas;
+    public GameObject waitingCanvas;
 
     public TMP_InputField textInput;
     public TMP_InputField guessInput;
     public RawImage guessImage;
-
     public TexturePainter painter;
     public TextMeshProUGUI referenceText;
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
+        if (Instance != null && Instance != this) Destroy(gameObject);
+        else Instance = this;
+    }
+
+    public void ShowTextCanvas()
+    {
+        HideAll();
+        textCanvas.SetActive(true);
+        if (textInput != null)
+            textInput.text = "";
     }
 
     public void ShowUIForTurn(int cycle, int chainIndex, List<TurnChain> chains)
     {
-        bool showText = false;
-        bool showDraw = false;
-        bool showGuess = false;
-
         if (cycle == 0)
         {
-            showText = true;
-            textInput.text = "";
+            Debug.LogWarning("ShowUIForTurn was called during cycle 0, falling back to ShowTextCanvas()");
+            ShowTextCanvas();
+            return;
         }
-        else if (cycle % 2 == 1)
+
+        HideAll();
+        if (cycle % 2 == 1)
         {
-            showDraw = true;
-            painter.ClearTexture();
+            drawCanvas.SetActive(true);
+            painter?.ClearTexture();
             referenceText.text = (chainIndex < chains.Count && chains[chainIndex].texts.Count > 0)
-                ? chains[chainIndex].texts[^1]
-                : "(no text)";
+                ? chains[chainIndex].texts[^1] : "(no text)";
         }
         else
         {
-            showGuess = true;
+            guessCanvas.SetActive(true);
             guessInput.text = "";
             guessImage.texture = (chainIndex < chains.Count && chains[chainIndex].drawings.Count > 0)
-                ? chains[chainIndex].drawings[^1]
-                : null;
+                ? chains[chainIndex].drawings[^1] : null;
         }
+    }
 
-        textCanvas.SetActive(showText);
-        drawCanvas.SetActive(showDraw);
-        guessCanvas.SetActive(showGuess);
+    public void ShowWaitingCanvas()
+    {
+        HideAll();
+        waitingCanvas.SetActive(true);
+    }
+
+    public void HideAll()
+    {
+        textCanvas?.SetActive(false);
+        drawCanvas?.SetActive(false);
+        guessCanvas?.SetActive(false);
+        waitingCanvas?.SetActive(false);
     }
 }
