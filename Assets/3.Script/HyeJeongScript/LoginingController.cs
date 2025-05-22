@@ -139,7 +139,7 @@ public class LoginingController : MonoBehaviour
             //NoticeNickname_pannel.SetActive(true);
             
             //시간 지나면 페이드 아웃
-            StartCoroutine(AutoFade(NoticeNickname_pannel, 1.5f));
+            StartCoroutine(fade.AutoFade(NoticeNickname_pannel, 1.5f));
 
             // 1.5초 후 사라짐
             //Invoke("CloseNoticeNicknamePannel", 1.5f);
@@ -178,7 +178,7 @@ public class LoginingController : MonoBehaviour
             //NoticePWD_pannel.SetActive(true);
             
             //시간 지나면 페이드 아웃
-            StartCoroutine(AutoFade(NoticePWD_pannel, 1.5f));
+            StartCoroutine(fade.AutoFade(NoticePWD_pannel, 1.5f));
 
             // 1.5초 후 사라짐
             //Invoke("CloseNoticePWDPannel", 1.5f);
@@ -222,7 +222,7 @@ public class LoginingController : MonoBehaviour
             //NoticeDelete_pannel.SetActive(true);
 
             //시간 지나면 페이드 아웃
-            StartCoroutine(AutoFade(NoticeDelete_pannel, 1.5f));
+            StartCoroutine(fade.AutoFade(NoticeDelete_pannel, 1.5f));
 
             loginingPannel.SetActive(false);
             Delete_Pannel.SetActive(false);
@@ -242,13 +242,5 @@ public class LoginingController : MonoBehaviour
         login.id_i.text = string.Empty;
         login.pwd_i.text = string.Empty;
         login.log.text = string.Empty;
-    }
-
-    // 페이드 자동 아웃
-    private IEnumerator AutoFade(GameObject pannel, float duration)
-    {
-        yield return new WaitForSeconds(duration);
-        fade.Fadeout(pannel);
-    }
-  
+    }  
 }

@@ -108,6 +108,7 @@ public class SQLManager : MonoBehaviour
         return true;
     }
 
+    #region 로그인
     public bool Login(string id, string passwoard)
     {
         // 직접적으로 DB에서 데이터를 가지고 오는 메소드
@@ -127,6 +128,7 @@ public class SQLManager : MonoBehaviour
             {
                 return false;
             }
+
             // 쿼리문
             //SELECT User_Name, User_Password, User_PhoneNum FROM user_info WHERE User_Name='옥혜정' AND user_password='1234';
             string sqlcommend =
@@ -173,11 +175,14 @@ public class SQLManager : MonoBehaviour
             return false;
         }
     }
+    #endregion
 
-    // 회원가입
+    #region 회원가입
     // 1단계 : 아이디 , 비밀번호를 입력한다. 아이디 중복이 안될 시 2단계로 이동한다
     // 2단계 : 닉네임을 입력한다. 닉네임도 중복이 허용되지 않는다. 중복이 안되면 회원가입 완료
-    public bool SignupStep1(string id, string password)
+
+    //1단계 : 아이디, 비밀번호 만들기
+    public bool SignupStep1(string id, string password) 
     {
         try
         {
@@ -244,6 +249,7 @@ public class SQLManager : MonoBehaviour
         }
     }
 
+    // 2단계 : 닉네임 만들기
     public bool SignupStep2(string nickname, string id)
     {
         try
@@ -266,7 +272,7 @@ public class SQLManager : MonoBehaviour
             }
 
 
-            // 2단계 : 닉네임 추가
+            // 닉네임 추가 : 아이디, 비밀번호를 만들면 닉네임이 NULL -> NULL에서 다른 이름으로 바꾸기 때문에 Update를 사용한다.
             string sqlnickname =
                 string.Format(@"UPDATE user_info SET Nickname = '{0}' WHERE Name='{1}';", nickname, id);
             MySqlCommand cmd = new MySqlCommand(sqlnickname, con);
@@ -290,9 +296,9 @@ public class SQLManager : MonoBehaviour
             return false;
         }
     }
+    #endregion
 
-
-    // 회원정보 수정
+    #region 회원정보 수정
     // 1단계 : 닉네임과 비밀번호 중 한 개를 선택한다.
     // 2단계 : 닉네임 선택하면 닉네임만 변경, 비밀번호를 선택하면 비밀번호만 변경
 
@@ -380,8 +386,9 @@ public class SQLManager : MonoBehaviour
             return false;
         }
     }
+    #endregion
 
-    // 회원탈퇴
+    #region 회원탈퇴
     public bool Deleteinfo(string id, string password)
     {
         try
@@ -417,5 +424,6 @@ public class SQLManager : MonoBehaviour
             return false;
         }
     }
+    #endregion
 }
 

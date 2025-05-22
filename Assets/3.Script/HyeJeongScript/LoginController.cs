@@ -72,7 +72,7 @@ public class LoginController : MonoBehaviour
             //NoticeLogin_pannel.SetActive(true);
 
             //시간 지나면 페이드 아웃
-            StartCoroutine(AutoFade(NoticeLogin_pannel, 1.5f));
+            StartCoroutine(fade.AutoFade(NoticeLogin_pannel, 1.5f));
 
 
             logining.loginingPannel.SetActive(true);    //로그아웃, 회원정보 변경, 회원탈퇴 패널창 나타남
@@ -158,7 +158,7 @@ public class LoginController : MonoBehaviour
             //NoticeSignup_pannel.SetActive(true);
 
             //시간 지나면 페이드 아웃
-            StartCoroutine(AutoFade(NoticeSignup_pannel, 1.5f));
+            StartCoroutine(fade.AutoFade(NoticeSignup_pannel, 1.5f));
 
             //Invoke("CloseNoticePannel", 1.5f);
         }
@@ -174,11 +174,4 @@ public class LoginController : MonoBehaviour
         Nickname_pannel.SetActive(false);
     }
     #endregion
-
-    // 페이드 자동 아웃
-    private IEnumerator AutoFade(GameObject pannel, float duration)
-    {
-        yield return new WaitForSeconds(duration);
-        fade.Fadeout(pannel);
-    }
 }
