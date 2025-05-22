@@ -84,4 +84,11 @@ public class UIFade : MonoBehaviour
         //pannel.SetActive(false);
     }
 
+    // 페이드 자동 아웃
+    public IEnumerator AutoFade(GameObject pannel, float duration)
+    {
+        yield return new WaitForSeconds(duration);
+        Fadeout(pannel);
+    }
+
 }

@@ -124,6 +124,7 @@ public class LoginingController : MonoBehaviour
         if(name_new.text.Equals(string.Empty))
         {
             updatenamelog.text = "변경할 닉네임을 입력하세요";
+            return;
         }
 
         if (SQLManager.instance.UpdateNicknameinfo(id, currentname, newname))
@@ -138,7 +139,7 @@ public class LoginingController : MonoBehaviour
             //NoticeNickname_pannel.SetActive(true);
             
             //시간 지나면 페이드 아웃
-            StartCoroutine(AutoFade(NoticeNickname_pannel, 1.5f));
+            StartCoroutine(fade.AutoFade(NoticeNickname_pannel, 1.5f));
 
             // 1.5초 후 사라짐
             //Invoke("CloseNoticeNicknamePannel", 1.5f);
@@ -146,7 +147,7 @@ public class LoginingController : MonoBehaviour
 
         else
         {
-            updatenamelog.text = "중복된 닉네임입니다.";
+            updatenamelog.text = "이미 존재하는 닉네임입니다.";
         }
     }
 
@@ -163,6 +164,7 @@ public class LoginingController : MonoBehaviour
         if(pwd_new.text.Equals(string.Empty))
         {
             updatepwdlog.text = "변경할 비밀번호를 입력하세요";
+            return;
         }
 
         if(SQLManager.instance.Updatepasswordinfo(id, newpwd))
@@ -176,7 +178,7 @@ public class LoginingController : MonoBehaviour
             //NoticePWD_pannel.SetActive(true);
             
             //시간 지나면 페이드 아웃
-            StartCoroutine(AutoFade(NoticePWD_pannel, 1.5f));
+            StartCoroutine(fade.AutoFade(NoticePWD_pannel, 1.5f));
 
             // 1.5초 후 사라짐
             //Invoke("CloseNoticePWDPannel", 1.5f);
@@ -209,8 +211,9 @@ public class LoginingController : MonoBehaviour
 
         string id = SQLManager.instance.info.User_name;
         string pwd = SQLManager.instance.info.User_Password;
+        string nickname = SQLManager.instance.info.User_Nickname;
 
-        if(SQLManager.instance.Deleteinfo(id, pwd))
+        if(SQLManager.instance.Deleteinfo(id, pwd, nickname))
         {
             // 회원 탈퇴 알림창 생성
             Deletelog.text = "회원탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사합니다.";
@@ -220,12 +223,13 @@ public class LoginingController : MonoBehaviour
             //NoticeDelete_pannel.SetActive(true);
 
             //시간 지나면 페이드 아웃
-            StartCoroutine(AutoFade(NoticeDelete_pannel, 1.5f));
+            StartCoroutine(fade.AutoFade(NoticeDelete_pannel, 1.5f));
 
             loginingPannel.SetActive(false);
             Delete_Pannel.SetActive(false);
 
             login.LoginPannel.SetActive(true);
+
             EmptyLoginField();
 
             //1.5초 후 사라짐
@@ -240,13 +244,5 @@ public class LoginingController : MonoBehaviour
         login.id_i.text = string.Empty;
         login.pwd_i.text = string.Empty;
         login.log.text = string.Empty;
-    }
-
-    // 페이드 자동 아웃
-    private IEnumerator AutoFade(GameObject pannel, float duration)
-    {
-        yield return new WaitForSeconds(duration);
-        fade.Fadeout(pannel);
-    }
-  
+    }  
 }
