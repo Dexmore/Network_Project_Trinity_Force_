@@ -1,57 +1,35 @@
 using UnityEngine;
-using TMPro;
 using Mirror;
-using UnityEngine.SceneManagement;
-
+using TMPro;
+using System.Collections;
 
 public class CreateRoomHandler : MonoBehaviour
 {
-    [SerializeField] private GameObject createRoomPopup;
-    [SerializeField] private TMP_InputField roomNameInput;
-
+    [SerializeField] private string serverIp = "3.36.126.156";
     private NetworkManager netMgr;
-    private string serverIp = "3.38.169.196"; // 실제 서버 IP
 
     void Awake()
     {
         netMgr = NetworkManager.singleton;
         if (netMgr == null)
-            Debug.LogError("NetworkManager가 없습니다!");
-    }
-
-    // void Start()
-    // {
-
-    //     createRoomPopup.SetActive(false);
-    // }
-
-    public void ShowCreateRoomPopup()
-    {
-        createRoomPopup.SetActive(true);
-        roomNameInput.text = "";
-        roomNameInput.ActivateInputField();
-    }
-
-    public void HideCreateRoomPopup()
-    {
-        createRoomPopup.SetActive(false);
+            Debug.LogError("NetworkManager가 씬에 없습니다!");
     }
 
     public void ConfirmCreateRoom()
-{
-    if (!NetworkServer.active && !NetworkClient.active)
+
     {
-        netMgr.networkAddress = serverIp;
-        netMgr.StartHost(); // 여기까지만!
+        OnGoToLobbyButton();
     }
-    else
+    public void OnGoToLobbyButton()
     {
-        Debug.LogWarning("이미 네트워크가 활성화되어 있습니다.");
+        // 연결이 완료된 후에만 호출하세요
+        if (!NetworkClient.isConnected) return;
+
+        // 씬에 배치된 SceneControl 오브젝트 찾기
+        var sceneCtrl = NetworkClient.connection.identity
+                           .GetComponent<SceneControl>();
+        sceneCtrl.CmdSwitchToLobby();
     }
 
-    createRoomPopup.SetActive(false);
-
-    // ServerChangeScene 호출 X!!
-}
 
 }

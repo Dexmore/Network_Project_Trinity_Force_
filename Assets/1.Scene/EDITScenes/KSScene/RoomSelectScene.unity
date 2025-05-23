@@ -531,8 +531,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45dadeea6da869f4aa2281b8eb40a451, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  createRoomPopup: {fileID: 0}
   roomNameInput: {fileID: 0}
+  serverIp: 3.36.126.156
 --- !u!4 &1286939611
 Transform:
   m_ObjectHideFlags: 0
@@ -724,7 +724,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1599075698}
-  - component: {fileID: 1599075697}
   m_Layer: 0
   m_Name: RoomSelectManager
   m_TagString: Untagged
@@ -732,19 +731,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1599075697
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1599075696}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 061d7e51aa502694ab23d2c209bac3e0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  createRoom: {fileID: 1286939610}
 --- !u!4 &1599075698
 Transform:
   m_ObjectHideFlags: 0
