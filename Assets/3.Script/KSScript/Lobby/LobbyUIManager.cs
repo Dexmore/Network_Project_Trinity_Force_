@@ -31,7 +31,7 @@ public class LobbyUIManager : MonoBehaviour
 
     [Header("Buttons")]
     [Tooltip("한 명만 Ready 토글할 버튼")]
-    public Button readyButton;             
+    public Button readyButton;
     [Tooltip("전체 Ready 테스트용 버튼")]
     public Button testReadyButton;
     [Tooltip("Ready 버튼 안의 텍스트 컴포넌트")]
@@ -44,9 +44,7 @@ public class LobbyUIManager : MonoBehaviour
 
     private void Awake()
     {
-        // Inspector: readyButton에는 OnReadyButtonClicked()만 연결해주세요.
-        if (testReadyButton != null)
-            testReadyButton.onClick.AddListener(OnTestReadyAll);
+
 
         // 알림 UI 초기 숨김
         notificationGroup.alpha = 0f;
@@ -89,13 +87,15 @@ public class LobbyUIManager : MonoBehaviour
             Debug.LogError("UserSlotUI 컴포넌트를 찾을 수 없습니다!");
     }
 
+
     public void ExitLobby()
     {
         if (notificationCoroutine != null)
             StopCoroutine(notificationCoroutine);
-        StartCoroutine(DoExit());
-        NetworkManager.singleton.StopHost();
+        notificationCoroutine = StartCoroutine(DoExit());
     }
+
+
 
     private IEnumerator DoExit()
     {
@@ -109,8 +109,17 @@ public class LobbyUIManager : MonoBehaviour
         }
         notificationGroup.alpha = 1f;
         yield return new WaitForSeconds(notificationDuration);
+
+        // **여기서 네트워크 세션 종료**
+        NetworkManager.singleton.StopHost();
+
+        // **만약 StopHost가 비동기로 완전히 끝나야 한다면 여기서 잠깐 대기**
+        // yield return new WaitForSeconds(0.5f);
+
+        // 그리고 나서 씬 전환
         SceneManager.LoadScene("RoomSelectScene");
     }
+
 
     public void ShowNotification(string message, float duration = -1f)
     {

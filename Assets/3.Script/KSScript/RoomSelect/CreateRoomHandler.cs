@@ -1,65 +1,35 @@
 using UnityEngine;
-using TMPro;
 using Mirror;
-using UnityEngine.SceneManagement;
-
+using TMPro;
+using System.Collections;
 
 public class CreateRoomHandler : MonoBehaviour
 {
-    [SerializeField] private GameObject createRoomPopup;
-    [SerializeField] private TMP_InputField roomNameInput;
-
+    [SerializeField] private string serverIp = "3.36.126.156";
     private NetworkManager netMgr;
-    private string serverIp = "3.38.169.196"; // 실제 서버 IP
 
     void Awake()
     {
         netMgr = NetworkManager.singleton;
         if (netMgr == null)
-            Debug.LogError("NetworkManager가 없습니다!");
+            Debug.LogError("NetworkManager가 씬에 없습니다!");
     }
 
-    void Start()
+    public void ConfirmCreateRoom()
+
     {
-        
-        createRoomPopup.SetActive(false);
+        OnGoToLobbyButton();
     }
-
-    public void ShowCreateRoomPopup()
+    public void OnGoToLobbyButton()
     {
-        createRoomPopup.SetActive(true);
-        roomNameInput.text = "";
-        roomNameInput.ActivateInputField();
+        // 연결이 완료된 후에만 호출하세요
+        if (!NetworkClient.isConnected) return;
+
+        // 씬에 배치된 SceneControl 오브젝트 찾기
+        var sceneCtrl = NetworkClient.connection.identity
+                           .GetComponent<SceneControl>();
+        sceneCtrl.CmdSwitchToLobby();
     }
 
-    public void HideCreateRoomPopup()
-    {
-        createRoomPopup.SetActive(false);
-    }
 
-  public void ConfirmCreateRoom()
-{
-    string title = roomNameInput.text.Trim();
-    if (string.IsNullOrEmpty(title))
-    {
-        Debug.LogWarning("방 제목을 입력해주세요.");
-        return;
-    }
-
-    RoomInfoName.CurrentRoomTitle = title;
-
-    // **호스트/클라/서버 모두 동작중이 아니면만 StartHost 실행**
-    if (!NetworkServer.active && !NetworkClient.active)
-    {
-        netMgr.networkAddress = serverIp;
-        netMgr.StartHost();
-    }
-    else
-    {
-        Debug.LogWarning("이미 네트워크가 활성화되어 있습니다.");
-    }
-
-    createRoomPopup.SetActive(false);
-    SceneManager.LoadScene("LobbyScene");
-}
 }

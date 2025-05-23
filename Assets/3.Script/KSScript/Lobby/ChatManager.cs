@@ -3,8 +3,9 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
+using Mirror;
 
-public class ChatManager : MonoBehaviour
+public class ChatManager : NetworkBehaviour
 {
     [Header("User Settings")]
     [Tooltip("내 채팅에 표시될 유저 닉네임")]
@@ -16,9 +17,7 @@ public class ChatManager : MonoBehaviour
     [SerializeField] private GameObject messagePrefab;
 
     [Header("Layout Settings")]
-    [Tooltip("메시지들 사이 간격")]
     [SerializeField] private float messageSpacing = 10f;
-    [Tooltip("상단 삭제할 때 남길 여유(px)")]
     [SerializeField] private float deleteMargin = 20f;
 
     private List<RectTransform> messages = new List<RectTransform>();
@@ -26,8 +25,6 @@ public class ChatManager : MonoBehaviour
 
     private void Awake()
     {
-        // ChatField 피벗이 (0,0)이라면,
-        // 좌하단 기준으로 +padding 만큼 올려서 찍기
         float paddingX = 10f;
         float paddingY = 10f;
         startPos = new Vector2(paddingX, paddingY);
@@ -58,15 +55,36 @@ public class ChatManager : MonoBehaviour
             return;
         }
 
-        AddMessage(text);
+        // 네트워크로 채팅 전송 (로컬 말고 네트워크 전체에 브로드캐스트)
+        CmdSendChat(text, localUserName);
 
         inputField.text = "";
         inputField.ActivateInputField();
     }
 
+    // 서버로 메시지 전송
+    [Command(requiresAuthority = false)]
+    private void CmdSendChat(string text, string sender)
+    {
+        RpcReceiveChat(text, sender, DateTime.Now.ToString("HH:mm:ss"));
+    }
+
+    // 모든 클라이언트에 메시지 동기화
+    [ClientRpc]
+    private void RpcReceiveChat(string text, string sender, string timestamp)
+    {
+        AddMessage(text, sender, timestamp);
+    }
+
+    // AddMessage 오버로드
     private void AddMessage(string text)
     {
-        // 1) 메시지 생성
+        AddMessage(text, localUserName, DateTime.Now.ToString("HH:mm:ss"));
+    }
+
+    // 네트워크용 AddMessage
+    private void AddMessage(string text, string sender, string timestamp)
+    {
         var go = Instantiate(messagePrefab, chatField, false);
         var rtNew = go.GetComponent<RectTransform>();
         var tmp = go.GetComponentInChildren<TMP_Text>();
@@ -77,14 +95,9 @@ public class ChatManager : MonoBehaviour
             return;
         }
 
-        // 2) 타임스탬프 생성
-        string timestamp = DateTime.Now.ToString("HH:mm:ss");
-
-        // 3) [시간] 유저이름 : 채팅내용 포맷
         tmp.richText = true;
-        tmp.text = $"<size=80%>[{timestamp}]</size> {localUserName} : {text}";
+        tmp.text = $"<size=80%>[{timestamp}]</size> {sender} : {text}";
 
-        // 4) 레이아웃 계산 및 배치
         Canvas.ForceUpdateCanvases();
         float h = rtNew.rect.height;
         float shift = h + messageSpacing;
@@ -93,7 +106,6 @@ public class ChatManager : MonoBehaviour
         rtNew.anchoredPosition = startPos;
         messages.Insert(0, rtNew);
 
-        // 5) 화면 위로 벗어난 메시지 삭제
         float threshold = chatField.rect.height + deleteMargin;
         for (int i = messages.Count - 1; i >= 0; i--)
         {

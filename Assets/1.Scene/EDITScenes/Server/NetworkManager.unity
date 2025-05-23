@@ -202,8 +202,8 @@ MonoBehaviour:
   headlessStartMode: 0
   editorAutoStart: 0
   sendRate: 60
-  offlineScene: 
-  onlineScene: 
+  offlineScene: Assets/1.Scene/EDITScenes/HJScene/HyejeongScene_Login.unity
+  onlineScene: Assets/1.Scene/EDITScenes/KSScene/LobbyScene.unity
   offlineSceneLoadDelay: 0
   transport: {fileID: 1815096625}
   networkAddress: 3.36.126.156
@@ -214,7 +214,11 @@ MonoBehaviour:
   playerPrefab: {fileID: 0}
   autoCreatePlayer: 0
   playerSpawnMethod: 0
-  spawnPrefabs: []
+  spawnPrefabs:
+  - {fileID: 5003440181623280675, guid: 245474edcfeace849a2a482c53f3902a, type: 3}
+  - {fileID: 3910898753114109948, guid: 0d2b936157388e54bbc6adde2d39d283, type: 3}
+  - {fileID: 7629083459069807304, guid: eec332036e45e2f40ab0f2def8138845, type: 3}
+  - {fileID: 2270806748921492250, guid: 772d7f921761104498945a7508c8bf50, type: 3}
   exceptionsDisconnect: 1
   snapshotSettings:
     bufferTimeMultiplier: 2
@@ -242,8 +246,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e917b113e257e74e94b19f1e45a82d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  type: 1
-  path: 
+  type: 2
+  path: 3.38.169.196
 --- !u!1 &2050425333
 GameObject:
   m_ObjectHideFlags: 0
