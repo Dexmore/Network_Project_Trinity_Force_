@@ -1,5 +1,9 @@
 fileFormatVersion: 2
-guid: 4997ff9a65a443244baba64a6aad5a92
+<<<<<<<< Updated upstream:Assets/3.Script/JangScripts/Server/DeleteUI.cs.meta
+guid: 4dacf3ae96392544bb7ff7e8f6bb406c
+========
+guid: 2501d58dfe144064593af9ff35e267ee
+>>>>>>>> Stashed changes:Assets/3.Script/SooHyunScripts/Network/GameServer.cs.meta
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
