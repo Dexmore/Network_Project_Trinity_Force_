@@ -81,7 +81,7 @@ public class SQLManager : MonoBehaviour
         {
             Directory.CreateDirectory(path);    // 폴더 생성
         }
-        string jsonstring = File.ReadAllText(path + "/config.json");
+        string jsonstring = File.ReadAllText(path + "/LoginJson.json");
         JsonData data = JsonMapper.ToObject(jsonstring);
         string serverinfo =
             $"Server = {data[0]["IP"]};" +
