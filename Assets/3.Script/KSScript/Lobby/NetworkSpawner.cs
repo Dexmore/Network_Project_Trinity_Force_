@@ -1,6 +1,7 @@
 using UnityEngine;
 using Mirror;
-
+using TMPro;
+using UnityEngine.UI;
 public class NetworkSpawner : MonoBehaviour // ← MonoBehaviour만 상속!
 {
     public GameObject chatFieldPrefab;
@@ -11,8 +12,10 @@ public class NetworkSpawner : MonoBehaviour // ← MonoBehaviour만 상속!
     {
         if (NetworkServer.active) // 서버에서만!
         {
-            var chat = Instantiate(chatFieldPrefab, chatParent);
+            var chat = Instantiate(chatFieldPrefab, chatParent, false); // false: 부모 위치계에 맞게 생성
+
             NetworkServer.Spawn(chat);
+
         }
     }
 
