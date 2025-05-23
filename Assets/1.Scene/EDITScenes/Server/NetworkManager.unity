@@ -203,7 +203,7 @@ MonoBehaviour:
   editorAutoStart: 0
   sendRate: 60
   offlineScene: Assets/1.Scene/EDITScenes/HJScene/HyejeongScene_Login.unity
-  onlineScene: Assets/1.Scene/EDITScenes/KSScene/RoomSelectScene.unity
+  onlineScene: 
   offlineSceneLoadDelay: 0
   transport: {fileID: 1815096625}
   networkAddress: 3.38.169.196
@@ -242,8 +242,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e917b113e257e74e94b19f1e45a82d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  type: 1
-  path: 
+  type: 2
+  path: 3.38.169.196
 --- !u!1 &2050425333
 GameObject:
   m_ObjectHideFlags: 0
