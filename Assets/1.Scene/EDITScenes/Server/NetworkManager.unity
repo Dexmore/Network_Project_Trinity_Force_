@@ -203,7 +203,7 @@ MonoBehaviour:
   editorAutoStart: 0
   sendRate: 60
   offlineScene: Assets/1.Scene/EDITScenes/HJScene/HyejeongScene_Login.unity
-  onlineScene: 
+  onlineScene: Assets/1.Scene/EDITScenes/KSScene/RoomSelectScene.unity
   offlineSceneLoadDelay: 0
   transport: {fileID: 1815096625}
   networkAddress: 3.38.169.196
