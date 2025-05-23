@@ -6,6 +6,7 @@ public class ConnetServer : MonoBehaviour
 {
     private NetworkManager netMgr;
     [SerializeField] private string serverIp = "3.38.169.196"; // AWS 서버 IP
+    private string RoomSelectScene = "RoomSelectScene"; // 씬 이름 직접 할당
 
     private void Start()
     {
@@ -16,13 +17,11 @@ public class ConnetServer : MonoBehaviour
 
     public void ConnectToServer()
     {
-        // 이미 연결 중이 아니면만 시도
         if (!NetworkServer.active && !NetworkClient.active)
         {
             netMgr.networkAddress = serverIp;
-            netMgr.StartClient(); // 클라이언트로 연결 (서버면 StartHost)
-                                  // SceneManager.LoadScene()은 Mirror의 OnlineScene 사용 시 필요 없음!
-            
+            netMgr.StartClient();
+            SceneManager.LoadScene(RoomSelectScene); // 씬 이름 직접 명시!
         }
         else
         {
