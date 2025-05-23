@@ -1,30 +1,17 @@
-using UnityEngine;
 using Mirror;
-using TMPro;
-using UnityEngine.UI;
-public class NetworkSpawner : MonoBehaviour // ← MonoBehaviour만 상속!
+using UnityEngine;
+
+public class NetworkSpawner : NetworkBehaviour
 {
     public GameObject chatFieldPrefab;
     public Transform chatParent;
 
-    // 서버에서만 호출할 것!
-    public void SpawnChatField()
+    public override void OnStartServer()
     {
-        if (NetworkServer.active) // 서버에서만!
-        {
-            var chat = Instantiate(chatFieldPrefab, chatParent, false); // false: 부모 위치계에 맞게 생성
-
-            NetworkServer.Spawn(chat);
-
-        }
-    }
-
-    // 필요시 Start나 커스텀 메서드에서 SpawnChatField() 호출
-    private void Start()
-    {
-        if (NetworkServer.active)
-        {
-            SpawnChatField();
-        }
+        // 씬이 서버에서 완전히 로딩된 이후에 호출됨!
+        Debug.Log("[NetworkSpawner] OnStartServer 호출!");
+        var chat = Instantiate(chatFieldPrefab, chatParent, false);
+        NetworkServer.Spawn(chat);
+        Debug.Log("[NetworkSpawner] ChatField 스폰 완료!");
     }
 }
