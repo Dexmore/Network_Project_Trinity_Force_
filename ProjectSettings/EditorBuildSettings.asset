@@ -5,37 +5,10 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
-    path: Assets/1.Scene/EDITScenes/KSScene/LobbyScene.unity
-    guid: 929cf2414cd42364f8009569bb83247f
-  - enabled: 0
-    path: Assets/1.Scene/EDITScenes/SooHyunScenes/DrawScene.unity
-    guid: b1224bf8d34c9954a877698917f39fa6
-  - enabled: 1
-    path: Assets/1.Scene/EDITScenes/KSScene/RoomSelectScene.unity
-    guid: 7b7b944f29d2e6142adefd9f766065fa
-  - enabled: 0
-    path: Assets/1.Scene/EDITScenes/SooHyunScenes/TestScene.unity
-    guid: 4be45f88c8fc5bc46aa122ea0bc24cb9
-  - enabled: 0
-    path: Assets/1.Scene/EDITScenes/SooHyunScenes/ResultScene.unity
-    guid: 15d4b24d72cd69a45a345ee88cc1259b
   - enabled: 0
     path: Assets/1.Scene/EDITScenes/SooHyunScenes/Lee_Server.unity
     guid: 3f8944f85d7340a46abc51879c110661
   - enabled: 1
-    path: Assets/1.Scene/EDITScenes/Server/SelectScene.unity
-    guid: d5958643f39ffac41b7e624e95435afb
-  - enabled: 1
-    path: Assets/1.Scene/EDITScenes/Server/Register.unity
-    guid: f9fe796100b22034e86eef9b43c1fb20
-  - enabled: 1
-    path: Assets/1.Scene/EDITScenes/Server/Update.unity
-    guid: 3434c5cf61084c64cb9a37905f63be3e
-  - enabled: 1
-    path: Assets/1.Scene/EDITScenes/Server/Delete.unity
-    guid: 975f4ef53df43f34da9f39f552b494a8
-  - enabled: 0
-    path: Assets/1.Scene/EDITScenes/Server/NetworkManager.unity
-    guid: 0690e1705896b0144870bd287ab56545
+    path: Assets/1.Scene/EDITScenes/SooHyunScenes/DrawScene.unity
+    guid: b1224bf8d34c9954a877698917f39fa6
   m_configObjects: {}

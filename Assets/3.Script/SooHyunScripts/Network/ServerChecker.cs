@@ -1,4 +1,4 @@
-using Mirror;
+﻿using Mirror;
 using System.Collections.Generic;
 using UnityEngine;
 using LitJson;
@@ -13,17 +13,6 @@ public enum Type
     Server
 }
 
-/*
- 
- [
-    {
-        "License": "2",
-        "Server_IP": "3.36.74.143",
-        "Port": "7777"
-    }
-]
- */
-
 public class Item
 {
     public string Lisence;
@@ -37,10 +26,10 @@ public class Item
         Port = port;
     }
 }
+
 public class ServerChecker : MonoBehaviour
 {
     public Type type;
-
     private NetworkManager manager;
     private KcpTransport kcp;
 
@@ -48,22 +37,38 @@ public class ServerChecker : MonoBehaviour
 
     public string ServerIP { get; private set; }
     public string Port { get; private set; }
+    private List<NetworkConnectionToClient> players = new List<NetworkConnectionToClient>();
+
+    private List<string> submittedSentences = new List<string>();
+    private List<NetworkPlayer> submittedPlayers = new List<NetworkPlayer>();
 
     private void OnEnable()
     {
         path = Application.dataPath + "/License";
-
         if (!File.Exists(path))
         {
             Directory.CreateDirectory(path);
         }
-
         if (!File.Exists(path + "/License.Json"))
         {
             DefaultData(path);
         }
         manager = GetComponent<NetworkManager>();
         kcp = (KcpTransport)manager.transport;
+    }
+
+    private void Start()
+    {
+        type = License_Type();
+
+        if (type.Equals(Type.Server))
+        {
+            Start_Server();
+        }
+        else
+        {
+            Start_Client();
+        }
     }
 
     private void DefaultData(string path)
@@ -102,40 +107,44 @@ public class ServerChecker : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        type = License_Type();
-
-        if (type.Equals(Type.Server))
-        {
-            Start_Server();
-        }
-        else
-        {
-            Start_Client();
-        }
-    }
-
     public void Start_Server()
     {
-        if (Application.platform == RuntimePlatform.WebGLPlayer)
-        {
-            Debug.Log("WebGL cannot be Server");
-        }
-        else
-        {
-            manager.StartServer();
-            Debug.Log($"{manager.networkAddress} Start Server");
-            NetworkServer.OnConnectedEvent += (NetworkConnectionToClient) =>
-            {
-                Debug.Log($"Network Client Connect : {NetworkConnectionToClient.address}");
-            };
+        manager.StartServer();
+        Debug.Log($"{manager.networkAddress} Start Server");
 
-            NetworkServer.OnDisconnectedEvent += (NetworkConnectionToClient) =>
+        NetworkServer.OnConnectedEvent += (conn) =>
+        {
+            if (players.Count >= 4)
             {
-                Debug.Log($"Network Client DisConnect : {NetworkConnectionToClient.address}");
-            };
-        }
+                Debug.LogWarning("Max player reached. Connection rejected.");
+                conn.Disconnect();
+                return;
+            }
+
+            if (!players.Contains(conn))
+            {
+                players.Add(conn);
+                Debug.Log($"Network Client Connected : {conn.address} // Current Player Count : {players.Count}");
+            }
+
+            if (players.Count == 4)
+            {
+                Debug.Log("Game START!");
+                foreach (var c in players)
+                {
+                    c.Send(new GameStartMsg());
+                }
+            }
+        };
+
+        NetworkServer.OnDisconnectedEvent += (conn) =>
+        {
+            if (players.Contains(conn))
+            {
+                players.Remove(conn);
+                Debug.Log($"Network Client Disconnected : {conn.address} // Current Player Count : {players.Count}");
+            }
+        };
     }
 
     public void Start_Client()
@@ -144,13 +153,73 @@ public class ServerChecker : MonoBehaviour
         Debug.Log($"{manager.networkAddress} : Start Client...");
     }
 
+    // Assign playerIndex in the order they submit
+    public void AddSentence(NetworkPlayer player, string sentence)
+    {
+        if (!submittedPlayers.Contains(player))
+        {
+            player.playerIndex = submittedPlayers.Count;
+            submittedPlayers.Add(player);
+            submittedSentences.Add(sentence);
+            Debug.Log($"Player {player.playerIndex} registered. Sentence: {sentence}");
+        }
+    }
+
+    public void CheckAllSubmitted()
+    {
+        var allPlayers = GameObject.FindObjectsOfType<NetworkPlayer>();
+        foreach (var p in allPlayers)
+        {
+            if (!p.HasSubmitted)
+                return;
+        }
+
+        Debug.Log("All players submitted / Next Phase");
+
+        ShowSentencesToEachPlayer();
+
+        foreach (var conn in NetworkServer.connections.Values)
+        {
+            conn.Send(new ProceedToNextPhaseMsg());
+        }
+
+        foreach (var p in allPlayers)
+        {
+            p.HasSubmitted = false;
+        }
+
+        submittedPlayers.Clear();
+        submittedSentences.Clear();
+    }
+
+    // Distribute messages one to the right (circle)
+    public void ShowSentencesToEachPlayer()
+    {
+        int count = submittedPlayers.Count;
+        Debug.Log("===== [Server] Sentence Distribution Begin =====");
+        for (int i = 0; i < count; i++)
+        {
+            int targetIndex = (i+1) % count;
+            NetworkPlayer targetPlayer = submittedPlayers[targetIndex];
+            string sentence = submittedSentences[i];
+            Debug.Log($"{i}th sentence({sentence}) -> {targetIndex}th player (playerIndex:{targetPlayer.playerIndex}) netId:{targetPlayer.netId}");
+
+            // Debug network object status
+            if (targetPlayer == null)
+                Debug.LogError($"targetPlayer is null: {targetIndex}");
+            else if (targetPlayer.connectionToClient == null)
+                Debug.LogError($"connectionToClient is null: {targetIndex}");
+
+            targetPlayer.TargetShowSentence(targetPlayer.connectionToClient, sentence);
+        }
+    }
+
     private void OnApplicationQuit()
     {
         if (NetworkClient.isConnected)
         {
             manager.StopClient();
         }
-
         if (NetworkServer.active)
         {
             manager.StopServer();

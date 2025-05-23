@@ -9,32 +9,36 @@ public class Palette : MonoBehaviour, IPointerDownHandler
     public Image RGB;                  // 팔레트 이미지 (Sprite가 들어간 Image)
     public RawImage colorPreview;      // 선택된 색상 미리보기 (선택사항)
     public TexturePainter painter;
+
+    private bool isOpen;
     private void Start()
     {
-        RGB.gameObject.SetActive(false);
-        colorPreview.gameObject.SetActive(false);
+        isOpen = false;
+        RGB.gameObject.SetActive(isOpen);
+        colorPreview.gameObject.SetActive(isOpen);
 
         // 버튼 클릭 시 팔레트 활성화
         PaletteButton.onClick.AddListener(() =>
         {
-            RGB.gameObject.SetActive(true);
-            colorPreview.gameObject.SetActive(true);
+            isOpen = !isOpen;
+            RGB.gameObject.SetActive(isOpen);
+            colorPreview.gameObject.SetActive(isOpen);
         });
     }
 
-    private void Update()
-    {
-        // 팔레트 켜져 있고 마우스 클릭했을 때
-        if (RGB.gameObject.activeSelf && Input.GetMouseButtonDown(0))
-        {
-            // UI 바깥 클릭 시 비활성화
-            if (!EventSystem.current.IsPointerOverGameObject())
-            {
-                RGB.gameObject.SetActive(false);
-                colorPreview.gameObject.SetActive(false);
-            }
-        }
-    }
+    //private void Update()
+    //{
+    //    // 팔레트 켜져 있고 마우스 클릭했을 때
+    //    if (RGB.gameObject.activeSelf && Input.GetMouseButtonDown(0))
+    //    {
+    //        // UI 바깥 클릭 시 비활성화
+    //        if (!EventSystem.current.IsPointerOverGameObject())
+    //        {
+    //            RGB.gameObject.SetActive(false);
+    //            colorPreview.gameObject.SetActive(false);
+    //        }
+    //    }
+    //}
 
     public void OnPointerDown(PointerEventData eventData)
     {

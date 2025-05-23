@@ -233,6 +233,19 @@ public class TexturePainter : MonoBehaviour
         EraseButton.gameObject.SetActive(true);
     }
 
+    public void EraseAll()
+    {
+        // fullColorBuffer 전체를 흰색으로 바꿈
+        for (int i = 0; i < fullColorBuffer.Length; i++)
+            fullColorBuffer[i] = White;
+
+        // Texture2D에 반영
+        ApplyTexture(fullColorBuffer);
+
+        // Undo/Redo 스택도 비우는 게 일반적
+        undoStack.Clear();
+        redoStack.Clear();
+    }
     public void ClearTexture()
     {
         // 텍스처 초기화 (예시)
