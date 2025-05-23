@@ -871,10 +871,10 @@ MonoBehaviour:
   editorAutoStart: 0
   sendRate: 60
   offlineScene: Assets/1.Scene/EDITScenes/HJScene/HyejeongScene_Login.unity
-  onlineScene: Assets/1.Scene/EDITScenes/KSScene/RoomSelectScene.unity
+  onlineScene: Assets/1.Scene/EDITScenes/KSScene/LobbyScene.unity
   offlineSceneLoadDelay: 5
   transport: {fileID: 189792041}
-  networkAddress: 3.38.169.196
+  networkAddress: 3.36.126.156
   maxConnections: 100
   disconnectInactiveConnections: 0
   disconnectInactiveTimeout: 60

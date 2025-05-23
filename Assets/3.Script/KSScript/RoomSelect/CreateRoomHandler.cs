@@ -38,28 +38,20 @@ public class CreateRoomHandler : MonoBehaviour
     }
 
     public void ConfirmCreateRoom()
+{
+    if (!NetworkServer.active && !NetworkClient.active)
     {
-        // string title = roomNameInput.text.Trim();
-        // if (string.IsNullOrEmpty(title))
-        // {
-        //     Debug.LogWarning("방 제목을 입력해주세요.");
-        //     return;
-        // }
-
-        // RoomInfoName.CurrentRoomTitle = title;
-
-        // // **호스트/클라/서버 모두 동작중이 아니면만 StartHost 실행**
-        // if (!NetworkServer.active && !NetworkClient.active)
-        // {
-        //     netMgr.networkAddress = serverIp;
-        //     netMgr.StartHost()
-        // }
-        // else
-        // {
-        //     Debug.LogWarning("이미 네트워크가 활성화되어 있습니다.");
-        // }
-
-        // createRoomPopup.SetActive(false);
-        SceneManager.LoadScene("LobbyScene");
+        netMgr.networkAddress = serverIp;
+        netMgr.StartHost(); // 여기까지만!
     }
+    else
+    {
+        Debug.LogWarning("이미 네트워크가 활성화되어 있습니다.");
+    }
+
+    createRoomPopup.SetActive(false);
+
+    // ServerChangeScene 호출 X!!
+}
+
 }
