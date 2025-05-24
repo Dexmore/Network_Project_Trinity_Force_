@@ -50,12 +50,14 @@ public class TexturePainter : MonoBehaviour
         drawAreaCollider = GetComponent<BoxCollider2D>();
         drawAreaCollider.size = spriteRenderer.bounds.size;
 
-        brushSizeSlider.onValueChanged.AddListener(val => brushSize = Mathf.Clamp(Mathf.RoundToInt(val), 1, 15));
-        FillButton.onClick.AddListener(() =>
-        {
-            isFillMode = !isFillMode;
-            if (!isFillMode) SetPencil();
-        });
+        if (brushSizeSlider != null)
+            brushSizeSlider.onValueChanged.AddListener(val => brushSize = Mathf.Clamp(Mathf.RoundToInt(val), 1, 15));
+        if (FillButton != null)
+            FillButton.onClick.AddListener(() =>
+            {
+                isFillMode = !isFillMode;
+                if (!isFillMode) SetPencil();
+            });
 
         SetPencil();
     }
@@ -220,60 +222,42 @@ public class TexturePainter : MonoBehaviour
 
     bool IsValidPixel(int x, int y) => x >= 0 && x < textureWidth && y >= 0 && y < textureHeight;
     public void SetBrushColor(Color color) => brushColor = color;
+
     public void SetEraser()
     {
         isEraser = true;
-        PencilButton.gameObject.SetActive(true);
-        EraseButton.gameObject.SetActive(false);
+        if (PencilButton != null) PencilButton.gameObject.SetActive(true);
+        if (EraseButton != null) EraseButton.gameObject.SetActive(false);
     }
     public void SetPencil()
     {
         isEraser = false;
-        PencilButton.gameObject.SetActive(false);
-        EraseButton.gameObject.SetActive(true);
+        if (PencilButton != null) PencilButton.gameObject.SetActive(false);
+        if (EraseButton != null) EraseButton.gameObject.SetActive(true);
     }
 
     public void EraseAll()
     {
-        // fullColorBuffer 전체를 흰색으로 바꿈
         for (int i = 0; i < fullColorBuffer.Length; i++)
             fullColorBuffer[i] = White;
-
-        // Texture2D에 반영
         ApplyTexture(fullColorBuffer);
-
-        // Undo/Redo 스택도 비우는 게 일반적
         undoStack.Clear();
         redoStack.Clear();
-    }
-    public void ClearTexture()
-    {
-        // 텍스처 초기화 (예시)
-        Texture2D tex = GetTextureCopy();
-        Color32[] pixels = tex.GetPixels32();
-        for (int i = 0; i < pixels.Length; i++)
-            pixels[i] = Color.white;
-        tex.SetPixels32(pixels);
-        tex.Apply();
-
-        GetComponent<RawImage>().texture = tex;
-    }
-
-    public Texture2D GetTextureCopy()
-    {
-        RenderTexture rt = RenderTexture.active;
-        RenderTexture.active = GetComponent<RawImage>().texture as RenderTexture;
-
-        Texture2D tex = new Texture2D(512, 512, TextureFormat.RGBA32, false);
-        tex.ReadPixels(new Rect(0, 0, 512, 512), 0, 0);
-        tex.Apply();
-
-        RenderTexture.active = rt;
-        return tex;
     }
 
     public byte[] GetPNG()
     {
-        return GetTextureCopy().EncodeToPNG();
+        ApplyTexture(fullColorBuffer);
+        return texture.EncodeToPNG();
+    }
+
+    public void SetTextureFromPNG(byte[] pngData)
+    {
+        texture.LoadImage(pngData);
+        texture.Apply();
+        var pixels = texture.GetPixels32();
+        for (int i = 0; i < pixels.Length; i++)
+            fullColorBuffer[i] = pixels[i];
+        ApplyTexture(fullColorBuffer);
     }
 }

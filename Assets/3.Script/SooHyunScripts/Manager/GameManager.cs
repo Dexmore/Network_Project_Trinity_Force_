@@ -2,29 +2,33 @@
 using UnityEngine.UI;
 using TMPro;
 using Mirror;
+using UnityEngine.SceneManagement;
 
 public struct GameStartMsg : NetworkMessage { }
 public struct ProceedToNextPhaseMsg : NetworkMessage { }
-
 public enum CanvasType { Text, Draw, Guess }
 
 public class GameManager : MonoBehaviour
 {
     public CanvasType type;
-    public GameObject TextCanvas, DrawCanvas, GuessCanvas, WaitingCanvas;
+    public GameObject TextCanvas, DrawCanvas, GuessCanvas, WaitingCanvas, ResultCanvas;
     public TMP_InputField TextCanvasInput, GuessCanvasInput;
-    public Button TextSubmitButton, DrawSubmitButton, GuessSubmitButton;
+    public Button TextSubmitButton, DrawSubmitButton, GuessSubmitButton, NextResultButton;
     public Image Timer_Image_filled;
     public float TimeLimit = 20f;
-
     public TextMeshProUGUI text;
-    public TextMeshProUGUI playerIndexText; // For displaying my playerIndex
+    public RawImage guessRawImage;
+
+    [SerializeField] private TexturePainter texturePainter;
 
     private float timeElapsed = 0f;
     private bool isTiming = false;
-    private int drawGuessPhaseCount = 0;
-    private int maxPhaseCount = 0;
-    [SerializeField] private TexturePainter texturePainter;
+    private bool hasSubmitted = false;
+    private int currentPhaseIndex = 0;
+    private int maxPhases = 4; // 문장, 그림, 추측, 그림
+
+    private string lastReceivedSentence = "";
+    private string lastReceivedGuess = "";
 
     private void Start()
     {
@@ -39,35 +43,19 @@ public class GameManager : MonoBehaviour
         if (texturePainter == null)
             texturePainter = FindObjectOfType<TexturePainter>();
 
-        TextSubmitButton.onClick.AddListener(SubmitToServer);
-        DrawSubmitButton.onClick.AddListener(SubmitToServer);
-        GuessSubmitButton.onClick.AddListener(SubmitToServer);
+        TextSubmitButton.onClick.AddListener(SubmitTextToServer);
+        DrawSubmitButton.onClick.AddListener(SubmitDrawingToServer);
+        GuessSubmitButton.onClick.AddListener(SubmitGuessToServer);
 
-        Invoke(nameof(DisplayMyPlayerIndex), 0.5f); // Wait for network sync
+        if (NextResultButton != null)
+            NextResultButton.onClick.AddListener(ShowNextResult);
+
+        if (ResultCanvas != null)
+            ResultCanvas.SetActive(false);
     }
 
-    private void DisplayMyPlayerIndex()
-    {
-        if (NetworkClient.connection?.identity?.GetComponent<NetworkPlayer>() is NetworkPlayer np)
-        {
-            playerIndexText.text = $"My Network Index: {np.playerIndex + 1}";
-            Debug.Log($"[GameManager] My Network Index: {np.playerIndex + 1}");
-        }
-        else
-        {
-            playerIndexText.text = $"My Network Index: ???";
-        }
-    }
-
-    void OnGameStart(GameStartMsg msg)
-    {
-        BeginGame();
-    }
-
-    void OnProceedToNextPhase(ProceedToNextPhaseMsg msg)
-    {
-        ProceedToNextPhase();
-    }
+    void OnGameStart(GameStartMsg msg) { BeginGame(); }
+    void OnProceedToNextPhase(ProceedToNextPhaseMsg msg) { ProceedToNextPhase(); }
 
     private void Update()
     {
@@ -78,9 +66,7 @@ public class GameManager : MonoBehaviour
             Timer_Image_filled.fillAmount = (timeElapsed / TimeLimit);
 
         if (timeElapsed >= TimeLimit)
-        {
             SubmitToServer();
-        }
     }
 
     public void BeginGame()
@@ -91,26 +77,48 @@ public class GameManager : MonoBehaviour
         StartTimer();
     }
 
-    private void SubmitToServer()
+    private void SubmitTextToServer()
     {
+        if (hasSubmitted) return;
+        hasSubmitted = true;
         if (NetworkClient.connection?.identity?.GetComponent<NetworkPlayer>() is NetworkPlayer player)
         {
             player.CmdSetSubmitted(true);
-
-            switch (type)
-            {
-                case CanvasType.Text:
-                    player.CmdSetText(TextCanvasInput.text);
-                    break;
-                case CanvasType.Draw:
-                    // Drawing data submit
-                    break;
-                case CanvasType.Guess:
-                    // Guess data submit
-                    break;
-            }
-
+            player.CmdSetText(TextCanvasInput.text);
             ShowWaitingCanvas();
+        }
+    }
+
+    private void SubmitDrawingToServer()
+    {
+        if (hasSubmitted) return;
+        hasSubmitted = true;
+        if (NetworkClient.connection?.identity?.GetComponent<NetworkPlayer>() is NetworkPlayer player)
+        {
+            byte[] pngData = texturePainter.GetPNG();
+            player.CmdSubmitDrawing(pngData);
+            ShowWaitingCanvas();
+        }
+    }
+
+    private void SubmitGuessToServer()
+    {
+        if (hasSubmitted) return;
+        hasSubmitted = true;
+        if (NetworkClient.connection?.identity?.GetComponent<NetworkPlayer>() is NetworkPlayer player)
+        {
+            player.CmdSetGuess(GuessCanvasInput.text);
+            ShowWaitingCanvas();
+        }
+    }
+
+    private void SubmitToServer()
+    {
+        switch (type)
+        {
+            case CanvasType.Text: SubmitTextToServer(); break;
+            case CanvasType.Draw: SubmitDrawingToServer(); break;
+            case CanvasType.Guess: SubmitGuessToServer(); break;
         }
     }
 
@@ -119,6 +127,7 @@ public class GameManager : MonoBehaviour
         isTiming = true;
         timeElapsed = 0f;
         if (Timer_Image_filled) Timer_Image_filled.fillAmount = 1f;
+        hasSubmitted = false;
     }
 
     private void ShowWaitingCanvas()
@@ -127,6 +136,7 @@ public class GameManager : MonoBehaviour
         DrawCanvas.SetActive(false);
         GuessCanvas.SetActive(false);
         WaitingCanvas.SetActive(true);
+        isTiming = false;
     }
 
     public void ProceedToNextPhase()
@@ -136,33 +146,63 @@ public class GameManager : MonoBehaviour
         GuessCanvas.SetActive(false);
         WaitingCanvas.SetActive(false);
 
-        switch (type)
+        currentPhaseIndex++;
+
+        if (currentPhaseIndex >= maxPhases)
         {
-            case CanvasType.Text:
-                type = CanvasType.Draw;
-                DrawCanvas.SetActive(true);
-                break;
-            case CanvasType.Draw:
-                type = CanvasType.Guess;
-                GuessCanvas.SetActive(true);
-                break;
-            case CanvasType.Guess:
-                drawGuessPhaseCount++;
-                if (drawGuessPhaseCount >= maxPhaseCount)
-                {
-                    return;
-                }
-                type = CanvasType.Draw;
-                DrawCanvas.SetActive(true);
-                break;
+            GoToResultScene();
+            return;
+        }
+
+        if (currentPhaseIndex == 0)
+        {
+            type = CanvasType.Text;
+            TextCanvas.SetActive(true);
+        }
+        else if (currentPhaseIndex == 1 || currentPhaseIndex == 3)
+        {
+            type = CanvasType.Draw;
+            DrawCanvas.SetActive(true);
+            if (texturePainter != null) texturePainter.EraseAll();
+        }
+        else if (currentPhaseIndex == 2)
+        {
+            type = CanvasType.Guess;
+            GuessCanvas.SetActive(true);
+            GuessCanvasInput.text = "";
         }
 
         StartTimer();
     }
 
-    // Display received message and player index on UI
     public void ShowReceivedSentence(string message, int playerIndex)
     {
         text.text = $"My Network Index: {playerIndex + 1}\nReceived Message: {message}";
+        lastReceivedSentence = message;
+    }
+
+    public void ShowReceivedDrawing(byte[] pngData, int playerIndex)
+    {
+        Texture2D receivedDrawing = new Texture2D(2, 2);
+        receivedDrawing.LoadImage(pngData);
+        if (guessRawImage != null)
+            guessRawImage.texture = receivedDrawing;
+        text.text = $"My Network Index: {playerIndex + 1}\nReceived Drawing!";
+    }
+
+    public void ShowReceivedGuess(string guess, int playerIndex)
+    {
+        text.text = $"My Network Index: {playerIndex + 1}\nReceived Guess: {guess}";
+        lastReceivedGuess = guess;
+    }
+
+    private void GoToResultScene()
+    {
+        SceneManager.LoadScene("ResultScene");
+    }
+
+    public void ShowNextResult()
+    {
+        // ResultCanvas에서 순차적으로 결과 보여주는 로직(필요시 구현)
     }
 }

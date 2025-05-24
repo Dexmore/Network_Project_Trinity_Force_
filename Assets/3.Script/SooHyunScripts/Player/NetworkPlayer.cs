@@ -5,15 +5,12 @@ public class NetworkPlayer : NetworkBehaviour
 {
     [SyncVar] public bool HasSubmitted = false;
     [SyncVar] public string lastText = "";
-    [SyncVar] public int playerIndex = -1; // Player index (network order)
+    [SyncVar] public int playerIndex = -1;
 
     [Command]
     public void CmdSetSubmitted(bool value)
     {
         HasSubmitted = value;
-        var serverChecker = FindObjectOfType<ServerChecker>();
-        if (serverChecker != null)
-            serverChecker.CheckAllSubmitted();
     }
 
     [Command]
@@ -28,9 +25,40 @@ public class NetworkPlayer : NetworkBehaviour
     [TargetRpc]
     public void TargetShowSentence(NetworkConnection target, string message)
     {
-        Debug.Log($"[Client] My playerIndex={playerIndex}, Received message={message}");
         var gm = FindObjectOfType<GameManager>();
         if (gm != null)
             gm.ShowReceivedSentence(message, playerIndex);
+    }
+
+    [Command]
+    public void CmdSubmitDrawing(byte[] pngData)
+    {
+        var serverChecker = FindObjectOfType<ServerChecker>();
+        if (serverChecker != null)
+            serverChecker.AddDrawing(this, pngData);
+    }
+
+    [TargetRpc]
+    public void TargetReceiveDrawing(NetworkConnection target, byte[] pngData)
+    {
+        var gm = FindObjectOfType<GameManager>();
+        if (gm != null)
+            gm.ShowReceivedDrawing(pngData, playerIndex);
+    }
+
+    [Command]
+    public void CmdSetGuess(string guessText)
+    {
+        var serverChecker = FindObjectOfType<ServerChecker>();
+        if (serverChecker != null)
+            serverChecker.AddGuess(this, guessText);
+    }
+
+    [TargetRpc]
+    public void TargetShowGuess(NetworkConnection target, string guess)
+    {
+        var gm = FindObjectOfType<GameManager>();
+        if (gm != null)
+            gm.ShowReceivedGuess(guess, playerIndex);
     }
 }
