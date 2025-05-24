@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using Mirror;
 using UnityEngine.SceneManagement;
+using System.Collections.Generic;
 
 public struct GameStartMsg : NetworkMessage { }
 public struct ProceedToNextPhaseMsg : NetworkMessage { }
@@ -18,6 +19,15 @@ public class GameManager : MonoBehaviour
     public float TimeLimit = 20f;
     public TextMeshProUGUI text;
     public RawImage guessRawImage;
+
+    public TextMeshProUGUI resultDescriptionText;
+    public RawImage resultDrawingImage;
+    public Button resultPrevButton;
+    public Button resultNextButton;
+    public Button resultCloseButton;
+
+    private List<ServerChecker.GameTurn> resultList;
+    private int resultIndex = 0;
 
     [SerializeField] private TexturePainter texturePainter;
 
@@ -175,6 +185,53 @@ public class GameManager : MonoBehaviour
         StartTimer();
     }
 
+    public void ShowResultCanvas(List<ServerChecker.GameTurn> resultLog)
+    {
+        if (resultLog == null || resultLog.Count == 0) return;
+
+        resultList = resultLog;
+        resultIndex = 0;
+        ResultCanvas.SetActive(true);
+        ShowSingleResult(resultIndex);
+
+        resultPrevButton.onClick.RemoveAllListeners();
+        resultNextButton.onClick.RemoveAllListeners();
+        resultCloseButton.onClick.RemoveAllListeners();
+
+        resultPrevButton.onClick.AddListener(() => {
+            if (resultIndex > 0) { resultIndex--; ShowSingleResult(resultIndex); }
+        });
+        resultNextButton.onClick.AddListener(() => {
+            if (resultIndex < resultList.Count - 1) { resultIndex++; ShowSingleResult(resultIndex); }
+        });
+        resultCloseButton.onClick.AddListener(() => {
+            ResultCanvas.SetActive(false);
+            // 게임 재시작/방 나가기 등 추가 동작 필요시 여기서!
+        });
+    }
+
+    private void ShowSingleResult(int index)
+    {
+        if (resultList == null || index < 0 || index >= resultList.Count) return;
+        var turn = resultList[index];
+
+        if (turn.isText)
+        {
+            resultDescriptionText.text = $"Step {index + 1}: {turn.sentence}";
+            resultDrawingImage.gameObject.SetActive(false);
+        }
+        else
+        {
+            resultDescriptionText.text = $"Step {index + 1}: Drawing";
+            resultDrawingImage.gameObject.SetActive(true);
+            Texture2D tex = new Texture2D(2, 2);
+            tex.LoadImage(turn.drawing);
+            resultDrawingImage.texture = tex;
+        }
+        resultPrevButton.interactable = (index > 0);
+        resultNextButton.interactable = (index < resultList.Count - 1);
+    }
+
     public void ShowReceivedSentence(string message, int playerIndex)
     {
         text.text = $"My Network Index: {playerIndex + 1}\nReceived Message: {message}";
@@ -198,8 +255,11 @@ public class GameManager : MonoBehaviour
 
     private void GoToResultScene()
     {
-        SceneManager.LoadScene("ResultScene");
+        var checker = FindObjectOfType<ServerChecker>();
+        if (checker != null)
+            ShowResultCanvas(checker.gameLog);
     }
+
 
     public void ShowNextResult()
     {
