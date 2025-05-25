@@ -5,46 +5,46 @@ using UnityEngine.UI;
 
 public class LoginingController : MonoBehaviour
 {
-    //ÆäÀÌµå ¾Æ¿ô
+    //ï¿½ï¿½ï¿½Ìµï¿½ ï¿½Æ¿ï¿½
     [SerializeField] private UIFade fade;
 
-    [Header("·Î±×¾Æ¿ô ÇÏ±â À§ÇØ LoginController¸¦ °¡Á®¿È")]
+    [Header("ï¿½Î±×¾Æ¿ï¿½ ï¿½Ï±ï¿½ ï¿½ï¿½ï¿½ï¿½ LoginControllerï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½")]
     [SerializeField] private LoginController login;
 
-    [Header("·Î±×ÀÎ ÈÄ È¸¿øÁ¤º¸ ÆÐ³Î")]
-    public GameObject userPannel;   // À¯Àú ´Ð³×ÀÓ ÆÐ³ÎÃ¢
-    public Text userNickname;   // À¯Àú ´Ð³×ÀÓ
-    public GameObject loginingPannel;   // ·Î±×¾Æ¿ô, È¸¿øÁ¤º¸¼öÁ¤, È¸¿øÅ»Åð ÆÐ³ÎÃ¢
+    [Header("ï¿½Î±ï¿½ï¿½ï¿½ ï¿½ï¿½ È¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½")]
+    public GameObject userPannel;   // ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½Ã¢
+    public Text userNickname;   // ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½ï¿½ï¿½
+    public GameObject loginingPannel;   // ï¿½Î±×¾Æ¿ï¿½, È¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, È¸ï¿½ï¿½Å»ï¿½ï¿½ ï¿½Ð³ï¿½Ã¢
 
-    [Header("È¸¿øÁ¤º¸ º¯°æÃ¢")]
-    [SerializeField] private GameObject Update_pannel;  // È¸¿øÁ¤º¸ ¼öÁ¤ ¼±ÅÃ ÆÐ³Î -> ´Ð³×ÀÓ, ºñ¹Ð¹øÈ£ Áß 1°³ ¼±ÅÃ
+    [Header("È¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ã¢")]
+    [SerializeField] private GameObject Update_pannel;  // È¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½ -> ï¿½Ð³ï¿½ï¿½ï¿½, ï¿½ï¿½Ð¹ï¿½È£ ï¿½ï¿½ 1ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-    [Header("È¸¿øÁ¤º¸ º¯°æÃ¢ - ´Ð³×ÀÓ")]
-    [SerializeField] private GameObject Updatename_pannel;  // ´Ð³×ÀÓ Á¤º¸ ¼öÁ¤ ÆÐ³Î
+    [Header("È¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ã¢ - ï¿½Ð³ï¿½ï¿½ï¿½")]
+    [SerializeField] private GameObject Updatename_pannel;  // ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½
     public InputField name_new;
-    [SerializeField] private Text updatenamelog;   // ´Ð³×ÀÓ º¯°æ °æ°í ¹®±¸
+    [SerializeField] private Text updatenamelog;   // ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-    [Header("´Ð³×ÀÓ º¯°æ ÈÄ ÆË¾÷Ã¢")]
-    [SerializeField] private GameObject NoticeNickname_pannel;  // ´Ð³×ÀÓ º¯°æ ÆÐ³ÎÃ¢
-    [SerializeField] private Text NoticeNicknamelog;    // ´Ð³×ÀÓ º¯°æ ¾Ë¸²
+    [Header("ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ë¾ï¿½Ã¢")]
+    [SerializeField] private GameObject NoticeNickname_pannel;  // ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½Ã¢
+    [SerializeField] private Text NoticeNicknamelog;    // ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ë¸ï¿½
 
-    [Header("È¸¿øÁ¤º¸ º¯°æÃ¢ - ºñ¹Ð¹øÈ£")]
-    [SerializeField] private GameObject Updatepwd_pannel;  // ºñ¹Ð¹øÈ£ Á¤º¸ ¼öÁ¤ ÆÐ³Î
+    [Header("È¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ã¢ - ï¿½ï¿½Ð¹ï¿½È£")]
+    [SerializeField] private GameObject Updatepwd_pannel;  // ï¿½ï¿½Ð¹ï¿½È£ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½
     public InputField pwd_new;
-    [SerializeField] private Text updatepwdlog;   // ºñ¹Ð¹øÈ£ º¯°æ °æ°í ¹®±¸
+    [SerializeField] private Text updatepwdlog;   // ï¿½ï¿½Ð¹ï¿½È£ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-    [Header("ºñ¹Ð¹øÈ£ º¯°æÈÄ ÆË¾÷Ã¢")]
-    [SerializeField] private GameObject NoticePWD_pannel;  // ºñ¹Ð¹øÈ£ º¯°æ ÆÐ³ÎÃ¢
-    [SerializeField] private Text NoticePWDlog;    // ºñ¹Ð¹øÈ£ º¯°æ ¾Ë¸²
+    [Header("ï¿½ï¿½Ð¹ï¿½È£ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ë¾ï¿½Ã¢")]
+    [SerializeField] private GameObject NoticePWD_pannel;  // ï¿½ï¿½Ð¹ï¿½È£ ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½Ã¢
+    [SerializeField] private Text NoticePWDlog;    // ï¿½ï¿½Ð¹ï¿½È£ ï¿½ï¿½ï¿½ï¿½ ï¿½Ë¸ï¿½
 
-    [Header("È¸¿øÅ»Åð")]
-    public GameObject Delete_Pannel;    // È¸¿øÅ»Åð ÆÐ³ÎÃ¢
+    [Header("È¸ï¿½ï¿½Å»ï¿½ï¿½")]
+    public GameObject Delete_Pannel;    // È¸ï¿½ï¿½Å»ï¿½ï¿½ ï¿½Ð³ï¿½Ã¢
 
-    [Header("È¸¿øÅ»Åð ¾Ë¸²Ã¢")]
-    [SerializeField] private GameObject NoticeDelete_pannel;  // È¸¿øÅ»Åð ¾Ë¸² ÆÐ³ÎÃ¢
-    [SerializeField] private Text Deletelog;   // È¸¿øÅ»Åð ¾Ë¸²¹®±¸
+    [Header("È¸ï¿½ï¿½Å»ï¿½ï¿½ ï¿½Ë¸ï¿½Ã¢")]
+    [SerializeField] private GameObject NoticeDelete_pannel;  // È¸ï¿½ï¿½Å»ï¿½ï¿½ ï¿½Ë¸ï¿½ ï¿½Ð³ï¿½Ã¢
+    [SerializeField] private Text Deletelog;   // È¸ï¿½ï¿½Å»ï¿½ï¿½ ï¿½Ë¸ï¿½ï¿½ï¿½ï¿½ï¿½
 
-    //·Î±×¾Æ¿ô
+    //ï¿½Î±×¾Æ¿ï¿½
     public void LogoutBtn()
     {
         loginingPannel.SetActive(false);
@@ -54,7 +54,7 @@ public class LoginingController : MonoBehaviour
         EmptyLoginField();
     }
 
-    #region È¸¿øÁ¤º¸ ¼öÁ¤
+    #region È¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     public void OpenUpdatePannel()
     {
         Update_pannel.SetActive(true);
@@ -70,7 +70,7 @@ public class LoginingController : MonoBehaviour
         Update_pannel.SetActive(false);
         Updatename_pannel.SetActive(true);
 
-        //ÀÔ·ÂÃ¢ ÃÊ±âÈ­
+        //ï¿½Ô·ï¿½Ã¢ ï¿½Ê±ï¿½È­
         name_new.text = string.Empty;
         updatenamelog.text = string.Empty;
     }
@@ -80,7 +80,7 @@ public class LoginingController : MonoBehaviour
         Update_pannel.SetActive(false);
         Updatepwd_pannel.SetActive(true);
 
-        //ÀÔ·ÂÃ¢ ÃÊ±âÈ­
+        //ï¿½Ô·ï¿½Ã¢ ï¿½Ê±ï¿½È­
         pwd_new.text = string.Empty;
         updatepwdlog.text = string.Empty;
     }
@@ -119,35 +119,35 @@ public class LoginingController : MonoBehaviour
         string id = SQLManager.instance.info?.User_name;
         string currentname = SQLManager.instance.info?.User_Nickname;
         string newname = name_new.text.Trim();
-        //Trim() : °ø¹éÁ¦°Å
+        //Trim() : ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
         if(name_new.text.Equals(string.Empty))
         {
-            updatenamelog.text = "º¯°æÇÒ ´Ð³×ÀÓÀ» ÀÔ·ÂÇÏ¼¼¿ä";
+            updatenamelog.text = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½";
             return;
         }
 
         if (SQLManager.instance.UpdateNicknameinfo(id, currentname, newname))
         {
-            // ´Ð³×ÀÓ º¯°æ ¾Ë¸²Ã¢ »ý¼º
+            // ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ë¸ï¿½Ã¢ ï¿½ï¿½ï¿½ï¿½
             Updatename_pannel.SetActive(false);
-            NoticeNicknamelog.text = $"´Ð³×ÀÓÀÌ <color=yellow>{newname}</color>(À¸)·Î º¯°æµÇ¾ú½À´Ï´Ù.";
+            NoticeNicknamelog.text = $"ï¿½Ð³ï¿½ï¿½ï¿½ï¿½ï¿½ <color=yellow>{newname}</color>(ï¿½ï¿½)ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.";
             userNickname.text = newname;
 
-            // ÆäÀÌµåÀÎ µîÀå
+            // ï¿½ï¿½ï¿½Ìµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             fade.FadeIn(NoticeNickname_pannel);
             //NoticeNickname_pannel.SetActive(true);
             
-            //½Ã°£ Áö³ª¸é ÆäÀÌµå ¾Æ¿ô
+            //ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ìµï¿½ ï¿½Æ¿ï¿½
             StartCoroutine(fade.AutoFade(NoticeNickname_pannel, 1.5f));
 
-            // 1.5ÃÊ ÈÄ »ç¶óÁü
+            // 1.5ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
             //Invoke("CloseNoticeNicknamePannel", 1.5f);
         }
 
         else
         {
-            updatenamelog.text = "ÀÌ¹Ì Á¸ÀçÇÏ´Â ´Ð³×ÀÓÀÔ´Ï´Ù.";
+            updatenamelog.text = "ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½Ð³ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½.";
         }
     }
 
@@ -163,35 +163,35 @@ public class LoginingController : MonoBehaviour
 
         if(pwd_new.text.Equals(string.Empty))
         {
-            updatepwdlog.text = "º¯°æÇÒ ºñ¹Ð¹øÈ£¸¦ ÀÔ·ÂÇÏ¼¼¿ä";
+            updatepwdlog.text = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ð¹ï¿½È£ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½";
             return;
         }
 
         if(SQLManager.instance.Updatepasswordinfo(id, newpwd))
         {
-            // ºñ¹Ð¹øÈ£ º¯°æ ¾Ë¸²Ã¢ »ý¼º
-            NoticePWDlog.text = "ºñ¹Ð¹øÈ£°¡ º¯°æµÇ¾ú½À´Ï´Ù.";
+            // ï¿½ï¿½Ð¹ï¿½È£ ï¿½ï¿½ï¿½ï¿½ ï¿½Ë¸ï¿½Ã¢ ï¿½ï¿½ï¿½ï¿½
+            NoticePWDlog.text = "ï¿½ï¿½Ð¹ï¿½È£ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.";
             Updatepwd_pannel.SetActive(false);
 
-            // ÆäÀÌµåÀÎ µîÀå
+            // ï¿½ï¿½ï¿½Ìµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             fade.FadeIn(NoticePWD_pannel);
             //NoticePWD_pannel.SetActive(true);
             
-            //½Ã°£ Áö³ª¸é ÆäÀÌµå ¾Æ¿ô
+            //ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ìµï¿½ ï¿½Æ¿ï¿½
             StartCoroutine(fade.AutoFade(NoticePWD_pannel, 1.5f));
 
-            // 1.5ÃÊ ÈÄ »ç¶óÁü
+            // 1.5ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
             //Invoke("CloseNoticePWDPannel", 1.5f);
         }
 
         else
         {
-            updatepwdlog.text = "´Ù½Ã ÀÔ·ÂÇÏ¼¼¿ä";
+            updatepwdlog.text = "ï¿½Ù½ï¿½ ï¿½Ô·ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½";
         }
     }
     #endregion
 
-    #region È¸¿øÅ»Åð
+    #region È¸ï¿½ï¿½Å»ï¿½ï¿½
     public void OpenDeletePannel()
     {
         Delete_Pannel.SetActive(true);
@@ -215,14 +215,14 @@ public class LoginingController : MonoBehaviour
 
         if(SQLManager.instance.Deleteinfo(id, pwd, nickname))
         {
-            // È¸¿ø Å»Åð ¾Ë¸²Ã¢ »ý¼º
-            Deletelog.text = "È¸¿øÅ»Åð°¡ ¿Ï·áµÇ¾ú½À´Ï´Ù. ±×µ¿¾È ÀÌ¿ëÇØÁÖ¼Å¼­ °¨»çÇÕ´Ï´Ù.";
+            // È¸ï¿½ï¿½ Å»ï¿½ï¿½ ï¿½Ë¸ï¿½Ã¢ ï¿½ï¿½ï¿½ï¿½
+            Deletelog.text = "È¸ï¿½ï¿½Å»ï¿½ï¿½ ï¿½Ï·ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½Ï´ï¿½. ï¿½×µï¿½ï¿½ï¿½ ï¿½Ì¿ï¿½ï¿½ï¿½ï¿½Ö¼Å¼ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.";
 
-            // ÆäÀÌµåÀÎ µîÀå
+            // ï¿½ï¿½ï¿½Ìµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             fade.FadeIn(NoticeDelete_pannel);
             //NoticeDelete_pannel.SetActive(true);
 
-            //½Ã°£ Áö³ª¸é ÆäÀÌµå ¾Æ¿ô
+            //ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ìµï¿½ ï¿½Æ¿ï¿½
             StartCoroutine(fade.AutoFade(NoticeDelete_pannel, 1.5f));
 
             loginingPannel.SetActive(false);
@@ -232,13 +232,13 @@ public class LoginingController : MonoBehaviour
 
             EmptyLoginField();
 
-            //1.5ÃÊ ÈÄ »ç¶óÁü
+            //1.5ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
             //Invoke("CloseNoticeDeletePannel", 1.5f);
         }
     }
     #endregion
 
-    // ·Î±×ÀÎ ÀÔ·ÂÃ¢ ÃÊ±âÈ­
+    // ï¿½Î±ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½Ã¢ ï¿½Ê±ï¿½È­
     public void EmptyLoginField()
     {
         login.id_i.text = string.Empty;

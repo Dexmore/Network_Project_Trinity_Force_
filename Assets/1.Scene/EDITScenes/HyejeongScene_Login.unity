@@ -8774,7 +8774,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eea2bb42c1ce5c7488ed2be009238024, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DB_Path: 
 --- !u!4 &1408798082
 Transform:
   m_ObjectHideFlags: 0

@@ -1,65 +1,59 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using TMPro;
 using Mirror;
+using System;
 
 public class ChatUIManager : MonoBehaviour
 {
     public TMP_InputField chatInput;
     public RectTransform contentTransform;
     public GameObject messagePrefab;
-    private NetworkChat _localChat;
 
     void Start()
     {
         NetworkChat.OnChatMessage += HandleChatMessage;
 
-        // ① onSubmit 으로 교체
+        // onEndEdit 대신 onSubmit
         chatInput.onSubmit.AddListener(SubmitText);
 
-        // ② 한 번만 포커스 잡아 주기
-        chatInput.Select();
         chatInput.ActivateInputField();
     }
-
-
-    void OnGUI()
+    void OnEndEditSubmit(string text)
     {
-        // Event.current는 에디터, 빌드 구분 없이 키 이벤트를 줍니다
-        if (Event.current.type == EventType.KeyDown &&
-            (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter))
-        {
-            SubmitText(chatInput.text);
-            // 이벤트 소비 방지
-            Event.current.Use();
-        }
-    }
-
-    void SubmitText(string text)
-    {
-        if (string.IsNullOrWhiteSpace(text)) return;
-        if (!NetworkClient.active || NetworkClient.connection?.identity == null) return;
-
-        NetworkClient.connection.identity
-            .GetComponent<NetworkChat>()
-            .CmdSendMessage(text);
-
-        chatInput.text = "";
-        chatInput.ActivateInputField();
-    }
-
-    void HandleChatMessage(string message, int senderId)
-    {
-        var go = Instantiate(messagePrefab, contentTransform);
-        go.GetComponent<TMP_Text>().text = $"[Player{senderId}]: {message}";
-        Canvas.ForceUpdateCanvases();
-        var sv = contentTransform.GetComponentInParent<ScrollRect>();
-        sv.verticalNormalizedPosition = 0f;
+        // Enter키로 입력 마쳤을 때만
+        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+            SubmitText(text);
     }
 
     void OnDestroy()
     {
         NetworkChat.OnChatMessage -= HandleChatMessage;
+    }
+
+    void SubmitText(string text)
+    {
+        Debug.Log($"[ChatUIManager] SubmitText 호출 → “{text}”");
+        if (string.IsNullOrWhiteSpace(text)) return;
+        if (!NetworkClient.active || NetworkClient.connection?.identity == null) return;
+
+        Debug.Log($"[ChatUIManager] CmdSendMessage 전송, nick={SQLManager.instance.info.User_Nickname}");
+        var nc = NetworkClient.connection.identity.GetComponent<NetworkChat>();
+        nc.CmdSendMessage(text, SQLManager.instance.info.User_Nickname);
+
+        chatInput.text = "";
+        chatInput.ActivateInputField();
+    }
+
+    void HandleChatMessage(string message, string senderName)
+    {
+        var go = Instantiate(messagePrefab, contentTransform);
+        var tmp = go.GetComponent<TMP_Text>();
+
+        string timeStamp = DateTime.Now.ToString("HH:mm");
+        tmp.text = $"[{senderName}]: {message} <size=70%><color=#BBBBBB>({timeStamp})</color></size>";
+
+        Canvas.ForceUpdateCanvases();
+        contentTransform.GetComponentInParent<ScrollRect>().verticalNormalizedPosition = 0f;
     }
 }

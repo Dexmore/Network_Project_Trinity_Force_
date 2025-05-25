@@ -1,43 +1,35 @@
 using System;
 using System.IO;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-//¿ÜºÎ Dll ºÒ·¯¿À±â...
-using MySql.Data;
 using MySql.Data.MySqlClient;
 using LitJson;
 
-// DBÀÇ µ¥ÀÌÅÍ Å×ÀÌºí ClassÈ­
 public class User_info
 {
-    public string User_name { get; private set; }
+    public string User_name     { get; private set; }
     public string User_Password { get; set; }
     public string User_Nickname { get; set; }
 
     public User_info(string name, string password, string nickname)
     {
-        User_name = name;
+        User_name     = name;
         User_Password = password;
         User_Nickname = nickname;
     }
 }
+
 public class SQLManager : MonoBehaviour
 {
-    public User_info info;
+    public static SQLManager instance { get; private set; }
+    public User_info info { get; private set; }
 
-    //SQL ¿¬°áÇÏ±â À§ÇÑ º¯¼öµé
-    //¿¬°áÀ» Á÷Á¢ÀûÀ¸·Î ÇÏ´Â ³ðÀÌ¸ç, ¿¬°á »óÅÂ¸¦ È®ÀÎÇÒ ¶§ »ç¿ë
-    public MySqlConnection con;
-    //µ¥ÀÌÅÍ¸¦ Á÷Á¢ÀûÀ¸·Î ÀÐ¾î¿À´Â ³ðÀÔ´Ï´Ù... reader´Â ÇÑ¹ø »ç¿ëÇÏ¸é ¹Ýµå½Ã ´Ý¾ÆÁà¾ß ´ÙÀ½ Äõ¸®¹®ÀÌ µ¿ÀÛÇÔ.
-    public MySqlDataReader reader;
+    private MySqlConnection con;
+    private string dbFolder;
+    private string jsonPath;
 
-    public string DB_Path = string.Empty;
-
-    public static SQLManager instance = null;
-
-    private void Awake()
+    void Awake()
     {
+        // ì‹±ê¸€í†¤
         if (instance == null)
         {
             instance = this;
@@ -48,447 +40,324 @@ public class SQLManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-        DB_Path = Application.dataPath + "/Database";
-        string serverinfo = DBserverSet(DB_Path);
+
+        // Database í´ë”/íŒŒì¼ ì²´í¬
+        dbFolder = Path.Combine(Application.dataPath, "Database");
+        if (!Directory.Exists(dbFolder))
+            Directory.CreateDirectory(dbFolder);
+
+        jsonPath = Path.Combine(dbFolder, "LoginJson.json");
+        if (!File.Exists(jsonPath))
+        {
+            Debug.LogError($"LoginJson.json íŒŒì¼ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤: {jsonPath}");
+            return;
+        }
+
+        // ì ‘ì† ë¬¸ìžì—´ ì½ê¸°
+        string json = File.ReadAllText(jsonPath);
+        JsonData jd  = JsonMapper.ToObject(json);
+        string connStr =
+            $"Server={jd[0]["IP"]};" +
+            $"Database={jd[0]["TableName"]};" +
+            $"Uid={jd[0]["ID"]};" +
+            $"Pwd={jd[0]["PW"]};" +
+            $"Port={jd[0]["PORT"]};" +
+            "Charset=utf8;";
 
         try
         {
-            if (serverinfo.Equals(string.Empty))
-            {
-                Debug.Log("SQL server Json Error!");
-                return;
-            }
-            con = new MySqlConnection(serverinfo);  // ¼­¹ö Á¤º¸ »ý¼º
-            con.Open(); // ¼­¹ö Á¢±Ù
+            con = new MySqlConnection(connStr);
+            con.Open();
             Debug.Log("SQL server Open complete!");
         }
         catch (Exception e)
         {
-            Debug.Log(e.Message);
+            Debug.LogError($"SQL connection error: {e.Message}");
         }
     }
 
-    private string DBserverSet(string path)
+    // ì—°ê²° ìƒíƒœ ë³´ìž¥
+    private bool EnsureConnection()
     {
-        /*
-         [{"IP":"192.168.100.31",
-         "TableName":"programming",
-        "ID":"root",
-        "PW":"1234",
-        "PORT":"3306"}]
-         */
-        if (!File.Exists(path))  //±× °æ·Î¿¡ ÆÄÀÏÀÌ ÀÖ³ª¿ä?
-        {
-            Directory.CreateDirectory(path);    // Æú´õ »ý¼º
-        }
-        string jsonstring = File.ReadAllText(path + "/LoginJson.json");
-        JsonData data = JsonMapper.ToObject(jsonstring);
-        string serverinfo =
-            $"Server = {data[0]["IP"]};" +
-            $"Database = {data[0]["TableName"]};" +
-            $"Uid = {data[0]["ID"]};" +
-            $"Pwd = {data[0]["PW"]};" +
-            $"Port = {data[0]["PORT"]};" +
-            "Charset = utf8;";
-
-        return serverinfo;
+        if (con == null) return false;
+        if (con.State != System.Data.ConnectionState.Open)
+            con.Open();
+        return con.State == System.Data.ConnectionState.Open;
     }
 
-    private bool connection_check(MySqlConnection c)
+    #region ë¡œê·¸ì¸
+    public bool Login(string id, string password)
     {
-        if (c.State != System.Data.ConnectionState.Open)
-        {
-            c.Open();
-            if (c.State != System.Data.ConnectionState.Open)
-            {
-                Debug.Log("MySqlConnection is no open...");
-                return false;
-            }
-        }
-        return true;
-    }
+        if (!EnsureConnection()) return false;
 
-    #region ·Î±×ÀÎ
-    public bool Login(string id, string passwoard)
-    {
-        // Á÷Á¢ÀûÀ¸·Î DB¿¡¼­ µ¥ÀÌÅÍ¸¦ °¡Áö°í ¿À´Â ¸Þ¼Òµå
-        // Á¶È¸µÇ´Â µ¥ÀÌÅÍ°¡ ¾ø´Ù¸é false
-        // Á¶È¸µÇ´Â µ¥ÀÌÅÍ°¡ ÀÖ´Ù¸é true ´øÁö´Âµ¥
-        // À§¿¡¼­ Ä³½ÌÇØ³í info¿¡´Ù°¡ ´ã¾Æ¼­ Ä³½ÌÇØ³õÀ» °Ì´Ï´Ù...
-        /*
-         1. connectÀ» È®ÀÎ -> ¸Þ¼ÒµåÈ­
-         2. reader »óÅÂ°¡ ÀÐ°í ÀÖ´Â »óÈ²ÀÎÁö È®ÀÎ
-            - ÇÑ Äõ¸®¹®´ç ÇÑ°³½Ä
-         3. µ¥ÀÌÅÍ¸¦ ´ÙÀÐ¾úÀ¸¸é readerÀÇ »óÅÂ¸¦ È®ÀÎ ÈÄ close ²À!! ÇØ¾ßÇÕ´Ï´Ù. 
-         */
+        const string sql = @"
+            SELECT Name, Password, Nickname
+            FROM user_info
+            WHERE Name = @id AND Password = @pw;
+        ";
+
         try
         {
-            //1. connectÀ» È®ÀÎ -> ¸Þ¼ÒµåÈ­
-            if (!connection_check(con))
+            using (var cmd = new MySqlCommand(sql, con))
             {
-                return false;
-            }
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.Parameters.AddWithValue("@pw", password);
 
-            // Äõ¸®¹®
-            //SELECT User_Name, User_Password, User_PhoneNum FROM user_info WHERE User_Name='¿ÁÇýÁ¤' AND user_password='1234';
-            string sqlcommend =
-                string.Format(@"SELECT Name, Password, Nickname  FROM user_info WHERE Name='{0}' AND Password='{1}';", id, passwoard);
-
-            MySqlCommand cmd = new MySqlCommand(sqlcommend, con);   // Äõ¸®¹®À» ¿¬°áµÈ DB¿¡ ³¯¸®±â À§ÇÑ °´Ã¼
-            reader = cmd.ExecuteReader();
-            // reader°¡ ÀÐÀº µ¥ÀÌÅÍ°¡ 1°³ ÀÌ»ó Á¸ÀçÇØ?
-            if (reader.HasRows)
-            {
-                // ÀÐÀº µ¥ÀÌÅÍ¸¦ ³ª¿­
-                while (reader.Read())
+                using (var reader = cmd.ExecuteReader())
                 {
-                    /*»ïÇ×¿¬»êÀÚ*/
-                    string name = (reader.IsDBNull(0)) ? string.Empty : reader["Name"].ToString();
-                    string pwd = (reader.IsDBNull(1)) ? string.Empty : reader["Password"].ToString();
-                    string nickname = (reader.IsDBNull(2)) ? null : reader["Nickname"].ToString();
-
-                    if (!name.Equals(string.Empty) || !pwd.Equals(string.Empty) || nickname.Equals(string.Empty))
+                    if (reader.Read())
                     {
-                        info = new User_info(name, pwd, nickname);
+                        string name = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                        string pwd  = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                        string nick = reader.IsDBNull(2) ? "" : reader.GetString(2);
 
-                        //if(nickname == null)
-                        //{
-                        //    return false;
-                        //}
+                        if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(pwd))
+                            return false;
 
-                        if (!reader.IsClosed) reader.Close();
+                        info = new User_info(name, pwd, nick);
                         return true;
                     }
-                    else
-                    {
-                        break;
-                    }
-                }//while¹® ³¡
-            }//if ³¡
-            if (!reader.IsClosed) reader.Close();
-            return false;
+                }
+            }
         }
         catch (Exception e)
         {
-            Debug.Log(e.Message);
-            if (!reader.IsClosed) reader.Close();
-            return false;
+            Debug.LogError($"Login error: {e.Message}");
         }
+        return false;
     }
     #endregion
 
-    #region ´Ð³×ÀÓÀÌ ¾øÀ» ¶§ ·Î±×ÀÎ
-    public bool CompleteLoginwithName(string id, string nickname)
+    #region ë¡œê·¸ì¸ ì¤‘ ë‹‰ë„¤ìž„ ì„¤ì •
+    public bool CompleteLoginwithName(string id, string newNickname)
     {
+        if (!EnsureConnection()) return false;
+
+        // 1) ì¤‘ë³µ ê²€ì‚¬
+        const string checkSql = @"SELECT COUNT(*) FROM user_info WHERE Nickname = @nick;";
         try
         {
-            if(!connection_check(con))
+            using (var checkCmd = new MySqlCommand(checkSql, con))
             {
-                return false;
+                checkCmd.Parameters.AddWithValue("@nick", newNickname);
+                var cnt = Convert.ToInt64(checkCmd.ExecuteScalar());
+                if (cnt > 0) return false;
             }
 
-            // ´Ð³×ÀÓ Áßº¹ È®ÀÎ
-            string sqlcheckname =
-                string.Format(@"SELECT COUNT(*) FROM user_info WHERE Nickname = '{0}';", nickname);
-            MySqlCommand cmdcheck = new MySqlCommand(sqlcheckname, con);
-            object resultObj = cmdcheck.ExecuteScalar();
-            int count = Convert.ToInt32(resultObj);
-
-            if (count > 0)   // ´Ð³×ÀÓ Áßº¹
+            // 2) ë‹‰ë„¤ìž„ ì—…ë°ì´íŠ¸
+            const string updSql = @"
+                UPDATE user_info
+                SET Nickname = @nick
+                WHERE Name = @id;
+            ";
+            using (var updCmd = new MySqlCommand(updSql, con))
             {
-                return false;
-            }
-
-            // ´Ð³×ÀÓ Ãß°¡ : ¾ÆÀÌµð, ºñ¹Ð¹øÈ£¸¦ ¸¸µé¸é ´Ð³×ÀÓÀÌ NULL -> NULL¿¡¼­ ´Ù¸¥ ÀÌ¸§À¸·Î ¹Ù²Ù±â ¶§¹®¿¡ Update¸¦ »ç¿ëÇÑ´Ù.
-            string sqlnickname =
-                string.Format(@"UPDATE user_info SET Nickname = '{0}' WHERE Name='{1}';", nickname, id);
-            MySqlCommand cmd = new MySqlCommand(sqlnickname, con);
-
-            int result = cmd.ExecuteNonQuery();
-
-            if (result > 0) // ´Ð³×ÀÓ ¸¸µé±â ¼º°øÇÏ°í ·Î±×ÀÎ ¼º°ø
-            {
-                // info ¾÷µ¥ÀÌÆ®
-                string sqlinfo =
-                string.Format(@"SELECT Name, Password, Nickname  FROM user_info WHERE Name='{0}';", id);
-                MySqlCommand cmdinfo = new MySqlCommand(sqlinfo, con);
-                reader = cmdinfo.ExecuteReader();
-
-                // ÀÐÀº µ¥ÀÌÅÍ¸¦ ³ª¿­
-                while (reader.Read())
-                {
-                    /*»ïÇ×¿¬»êÀÚ*/
-                    string name = (reader.IsDBNull(0)) ? string.Empty : reader["Name"].ToString();
-                    string pwd = (reader.IsDBNull(1)) ? string.Empty : reader["Password"].ToString();
-                    string Nick = (reader.IsDBNull(2)) ? string.Empty : reader["Nickname"].ToString();
-
-                    info = new User_info(name, pwd, Nick);
-                }
-                if (!reader.IsClosed) reader.Close();
-                return true;
-            }
-
-            else
-            {
-                return false;
-            }
-        }
-
-        catch(Exception e)
-        {
-            Debug.Log(e.Message);
-            return false;
-        }
-    }
-    #endregion
-
-    #region È¸¿ø°¡ÀÔ
-    // 1´Ü°è : ¾ÆÀÌµð , ºñ¹Ð¹øÈ£¸¦ ÀÔ·ÂÇÑ´Ù. ¾ÆÀÌµð Áßº¹ÀÌ ¾ÈµÉ ½Ã 2´Ü°è·Î ÀÌµ¿ÇÑ´Ù
-    // 2´Ü°è : ´Ð³×ÀÓÀ» ÀÔ·ÂÇÑ´Ù. ´Ð³×ÀÓµµ Áßº¹ÀÌ Çã¿ëµÇÁö ¾Ê´Â´Ù. Áßº¹ÀÌ ¾ÈµÇ¸é È¸¿ø°¡ÀÔ ¿Ï·á
-
-    //1´Ü°è : ¾ÆÀÌµð, ºñ¹Ð¹øÈ£ ¸¸µé±â
-    public bool SignupStep1(string id, string password) 
-    {
-        try
-        {
-            if (!connection_check(con))
-            {
-                return false;
-            }
-
-            //1. ¾ÆÀÌµð Áßº¹ È®ÀÎ
-            // ´Ð³×ÀÓÀÌ nulllÀÎÁö ¾Æ´ÑÁö  -> °¡ÀÔ ¿©ºÎ
-            string sqlcheck =
-                string.Format(@"SELECT Nickname FROM user_info WHERE Name = '{0}';", id);
-            MySqlCommand checkcmd = new MySqlCommand(sqlcheck, con);
-
-            //ExecuteScalar() : °á°ú·Î ¹ÝÈ¯µÈ Ã¹ ¹øÂ° ÇàÀÇ Ã¹ ¹øÂ° ¿­ °ªÀ» ¹ÝÈ¯ÇÏ´Â ¸Þ¼Òµå -> °ª 1°³¸¸ °¡Á®¿Ã ¶§ ¾´´Ù
-            // ¼º´ÉÀÌ »¡¶ó ºÒÇÊ¿äÇÑ µ¥ÀÌÅÍ¸¦ °¡Á®¿ÀÁö ¾ÊÀ½
-            // ExecuteScalar()´Â ¹ÝÈ¯µÇ´Â °ªÀÌ object
-            object resultObj = checkcmd.ExecuteScalar();
-
-            //2.  ¾ÆÀÌµð°¡ ¾Æ¿¹ ¾ø´Ù¸é? »õ·Î Insert
-            //INSERT INTO user_info VALUES("È«±æµ¿","1234","01000000000");
-            if(resultObj == null)  
-            {
-                string sqlsignup =
-                     string.Format(@"INSERT INTO user_info VALUES('{0}','{1}', NULL)", id, password);
-                MySqlCommand cmd = new MySqlCommand(sqlsignup, con);
-            
-                // ExecuteNonQuery() : ¿µÇâÀ» ¹ÞÀº ÇàÀÇ ¼ö¸¦ ¹ÝÈ¯ (°á°ú¸¦ ¹ÝÈ¯ÇÏÁö ¾Ê´Â Äõ¸®¿¡ »ç¿ë)
-                // insert -> 1(1°³ÀÇ Çà Ãß°¡)
-                // update -> n(n°³ÀÇ Çà º¯°æ) 
-                // delete -> n (n°³ÀÇ Çà »èÁ¦)
-                int result = cmd.ExecuteNonQuery(); // ¼º°ø½Ã 1 ¹ÝÈ¯
-                
-                if(result > 0)  // ¾ÆÀÌµð µî·Ï ¿Ï·á
-                {
-                    return true;
-                }
-
-                else
-                {
+                updCmd.Parameters.AddWithValue("@nick", newNickname);
+                updCmd.Parameters.AddWithValue("@id",   id);
+                if (updCmd.ExecuteNonQuery() == 0)
                     return false;
+            }
+
+            // 3) ì •ë³´ ë¦¬ë¡œë”©
+            const string fetchSql = @"
+                SELECT Name, Password, Nickname
+                FROM user_info
+                WHERE Name = @id;
+            ";
+            using (var fetchCmd = new MySqlCommand(fetchSql, con))
+            {
+                fetchCmd.Parameters.AddWithValue("@id", id);
+                using (var reader = fetchCmd.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        string name = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                        string pwd  = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                        string nick = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                        info = new User_info(name, pwd, nick);
+                        return true;
+                    }
                 }
             }
-
-            //3. ¾ÆÀÌµð´Â ÀÖ´Âµ¥ NicknameÀÌ null -> Àç°¡ÀÔÀ¸·Î °£ÁÖ, ºñ¹ø¸¸ ¾÷µ¥ÀÌÆ® °¡´É
-            // DBNull.ValueÀº SQL¿¡¼­ NULL
-            if (resultObj is DBNull)  //is´Â Å¸ÀÔ °Ë»ç
-            {
-                string sqlupdate =
-                    string.Format(@"UPDATE user_info SET Password = '{0}' WHERE Name = '{1}';", password, id);
-                MySqlCommand cmdupdate = new MySqlCommand(sqlupdate, con);
-                int updateresult = cmdupdate.ExecuteNonQuery();
-                return updateresult > 0;
-            }
-
-            //4. ¾ÆÀÌµð ÀÖ°í, ´Ð³×ÀÓ ÀÖ´Ù -> Áßº¹À¸·Î °£ÁÖ
-                return false;
         }
-
         catch (Exception e)
         {
-            Debug.Log(e.Message);
-            if (!reader.IsClosed) reader.Close();
-            return false;
+            Debug.LogError($"CompleteLoginwithName error: {e.Message}");
         }
+        return false;
     }
+    #endregion
 
-    // 2´Ü°è : ´Ð³×ÀÓ ¸¸µé±â
-    public bool SignupStep2(string nickname, string id)
+    #region íšŒì›ê°€ìž…
+    public bool SignupStep1(string id, string password)
     {
+        if (!EnsureConnection()) return false;
+
+        const string checkSql = @"SELECT Nickname FROM user_info WHERE Name = @id;";
         try
         {
-            if (!connection_check(con))
+            using (var cmd = new MySqlCommand(checkSql, con))
             {
-                return false;
-            }
-
-            // ´Ð³×ÀÓ Áßº¹ È®ÀÎ
-            string sqlcheckname =
-                string.Format(@"SELECT COUNT(*) FROM user_info WHERE Nickname = '{0}';", nickname);
-            MySqlCommand cmdcheck = new MySqlCommand(sqlcheckname, con);
-            object resultObj = cmdcheck.ExecuteScalar();
-            int count = Convert.ToInt32(resultObj);
-
-            if(count > 0)   // ´Ð³×ÀÓ Áßº¹
-            {
-                return false;
-            }
-
-
-            // ´Ð³×ÀÓ Ãß°¡ : ¾ÆÀÌµð, ºñ¹Ð¹øÈ£¸¦ ¸¸µé¸é ´Ð³×ÀÓÀÌ NULL -> NULL¿¡¼­ ´Ù¸¥ ÀÌ¸§À¸·Î ¹Ù²Ù±â ¶§¹®¿¡ Update¸¦ »ç¿ëÇÑ´Ù.
-            string sqlnickname =
-                string.Format(@"UPDATE user_info SET Nickname = '{0}' WHERE Name='{1}';", nickname, id);
-            MySqlCommand cmd = new MySqlCommand(sqlnickname, con);
-
-            int result = cmd.ExecuteNonQuery();
-
-            if (result > 0) // È¸¿ø°¡ÀÔ ¼º°ø
-            {
-                return true;
-            }
-
-            else //È¸¿ø °¡ÀÔ ½ÇÆÐ
-            {
-                return false;
+                cmd.Parameters.AddWithValue("@id", id);
+                var result = cmd.ExecuteScalar();
+                if (result == null || result is DBNull)
+                {
+                    const string insSql = @"
+                        INSERT INTO user_info (Name, Password, Nickname)
+                        VALUES (@id, @pw, NULL);
+                    ";
+                    using (var ins = new MySqlCommand(insSql, con))
+                    {
+                        ins.Parameters.AddWithValue("@id", id);
+                        ins.Parameters.AddWithValue("@pw", password);
+                        return ins.ExecuteNonQuery() > 0;
+                    }
+                }
             }
         }
-
-        catch(Exception e)
+        catch (Exception e)
         {
-            Debug.Log(e.Message);
+            Debug.LogError($"SignupStep1 error: {e.Message}");
+        }
+        return false;
+    }
+
+    public bool SignupStep2(string id, string newNickname)
+    {
+        if (!EnsureConnection()) return false;
+
+        const string checkSql = @"SELECT COUNT(*) FROM user_info WHERE Nickname = @nick;";
+        try
+        {
+            using (var cmd = new MySqlCommand(checkSql, con))
+            {
+                cmd.Parameters.AddWithValue("@nick", newNickname);
+                var cnt = Convert.ToInt64(cmd.ExecuteScalar());
+                if (cnt > 0) return false;
+            }
+
+            const string updSql = @"
+                UPDATE user_info
+                SET Nickname = @nick
+                WHERE Name = @id;
+            ";
+            using (var upd = new MySqlCommand(updSql, con))
+            {
+                upd.Parameters.AddWithValue("@nick", newNickname);
+                upd.Parameters.AddWithValue("@id",   id);
+                return upd.ExecuteNonQuery() > 0;
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"SignupStep2 error: {e.Message}");
+        }
+        return false;
+    }
+    #endregion
+
+    #region ë‹‰ë„¤ìž„ ë³€ê²½
+    public bool UpdateNicknameinfo(string id, string currentName, string newName)
+    {
+        if (!EnsureConnection()) return false;
+
+        // 1) ì¤‘ë³µ ê²€ì‚¬
+        const string chk = @"SELECT COUNT(*) FROM user_info WHERE Nickname = @new;";
+        try
+        {
+            using (var cmd = new MySqlCommand(chk, con))
+            {
+                cmd.Parameters.AddWithValue("@new", newName);
+                if (Convert.ToInt64(cmd.ExecuteScalar()) > 0)
+                    return false;
+            }
+
+            // 2) ì—…ë°ì´íŠ¸
+            const string upd = @"
+                UPDATE user_info
+                SET Nickname = @new
+                WHERE Name = @id;
+            ";
+            using (var cmd = new MySqlCommand(upd, con))
+            {
+                cmd.Parameters.AddWithValue("@new", newName);
+                cmd.Parameters.AddWithValue("@id",  id);
+                if (cmd.ExecuteNonQuery() == 0) return false;
+            }
+
+            // 3) ë©”ëª¨ë¦¬ ê°’ ê°±ì‹ 
+            info.User_Nickname = newName;
+            return true;
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"UpdateNicknameinfo error: {e.Message}");
             return false;
         }
     }
     #endregion
 
-    #region È¸¿øÁ¤º¸ ¼öÁ¤
-    // 1´Ü°è : ´Ð³×ÀÓ°ú ºñ¹Ð¹øÈ£ Áß ÇÑ °³¸¦ ¼±ÅÃÇÑ´Ù.
-    // 2´Ü°è : ´Ð³×ÀÓ ¼±ÅÃÇÏ¸é ´Ð³×ÀÓ¸¸ º¯°æ, ºñ¹Ð¹øÈ£¸¦ ¼±ÅÃÇÏ¸é ºñ¹Ð¹øÈ£¸¸ º¯°æ
-
-    // ´Ð³×ÀÓ º¯°æ ÇÔ¼ö
-    public bool UpdateNicknameinfo(string id, string currentname, string newname)
+    #region ë¹„ë°€ë²ˆí˜¸ ë³€ê²½
+    public bool Updatepasswordinfo(string id, string newPassword)
     {
+        if (!EnsureConnection()) return false;
+
+        const string upd = @"
+            UPDATE user_info
+            SET Password = @pw
+            WHERE Name = @id;
+        ";
         try
         {
-            if (!connection_check(con))
+            using (var cmd = new MySqlCommand(upd, con))
             {
-                return false;
-            }
-            //´Ð³×ÀÓ Áßº¹ È®ÀÎ
-            string sqlcheckname =
-                string.Format(@"SELECT COUNT(*) FROM user_info WHERE Nickname = '{0}';", newname);
-            MySqlCommand checkcmd = new MySqlCommand(sqlcheckname, con);
-            object resultObj = checkcmd.ExecuteScalar();
-            int count = Convert.ToInt32(resultObj);
-
-            if(count > 0)   // ´Ð³×ÀÓ Áßº¹ ½Ã
-            {
-                return false;
+                cmd.Parameters.AddWithValue("@pw", newPassword);
+                cmd.Parameters.AddWithValue("@id", id);
+                if (cmd.ExecuteNonQuery() == 0) return false;
             }
 
-            //Äõ¸®¹®
-            //UPDATE user_info SET User_Password='4696' WHERE User_Name='¿ÁÇýÁ¤';
-            string sqlupdatename =
-                string.Format(@"UPDATE user_info SET Nickname = '{0}' WHERE Name ='{1}';", newname, id);
-            MySqlCommand cmd = new MySqlCommand(sqlupdatename, con);
-
-            int result = cmd.ExecuteNonQuery(); // ¼º°ø½Ã n°³ ¹ÝÈ¯
-
-            if (result > 0) // ´Ð³×ÀÓ º¯°æ ¿Ï·á
-            {
-                info.User_Nickname = newname;
-                return true;
-            }
-
-            else //º¯°æ ½ÇÆÐ
-            {
-                return false;
-            }
+            info.User_Password = newPassword;
+            return true;
         }
-
         catch (Exception e)
         {
-            Debug.Log(e.Message);
-            return false;
-        }
-    }
-
-    // ºñ¹Ð¹øÈ£ º¯°æ
-    public bool Updatepasswordinfo(string id, string newpassword)
-    {
-        try
-        {
-            if (!connection_check(con))
-            {
-                return false;
-            }
-
-            //Äõ¸®¹®
-            //UPDATE user_info SET User_Password='4696' WHERE User_Name='¿ÁÇýÁ¤';
-            string sqlupdatepwd =
-                string.Format(@"UPDATE user_info SET Password = '{0}' WHERE Name ='{1}';", newpassword, id);
-            MySqlCommand cmd = new MySqlCommand(sqlupdatepwd, con);
-
-            int result = cmd.ExecuteNonQuery(); // ¼º°ø½Ã n°³ ¹ÝÈ¯
-
-            if (result > 0) //ºñ¹Ð¹øÈ£ º¯°æ ¿Ï·á
-            {
-                info.User_Password = newpassword;
-                return true;
-            }
-
-            else // º¯°æ½ÇÆÐ
-            {
-                return false;
-            }
-        }
-
-        catch (Exception e)
-        {
-            Debug.Log(e.Message);
+            Debug.LogError($"Updatepasswordinfo error: {e.Message}");
             return false;
         }
     }
     #endregion
 
-    #region È¸¿øÅ»Åð
+    #region íšŒì› íƒˆí‡´
     public bool Deleteinfo(string id, string password, string nickname)
     {
+        if (!EnsureConnection()) return false;
+
+        const string del = @"
+            DELETE FROM user_info
+            WHERE Name = @id
+              AND Password = @pw
+              AND Nickname = @nick;
+        ";
         try
         {
-            if (!connection_check(con))
+            using (var cmd = new MySqlCommand(del, con))
             {
-                return false;
+                cmd.Parameters.AddWithValue("@id",   id);
+                cmd.Parameters.AddWithValue("@pw",   password);
+                cmd.Parameters.AddWithValue("@nick", nickname);
+
+                if (cmd.ExecuteNonQuery() == 0) return false;
             }
 
-            //Äõ¸®¹®
-            //DELETE FROM user_info WHERE User_Name='¿ÁÇýÁ¤';
-            string deletesql =
-                string.Format(@"DELETE FROM user_info WHERE Name='{0}' And Password = '{1}' AND Nickname = '{2}';", id, password, nickname);
-            MySqlCommand cmd = new MySqlCommand(deletesql, con);
-
-            int result = cmd.ExecuteNonQuery(); //»èÁ¦ÇÑ n°³ ¼ö
-
-            if (result > 0)
-            {
-                info = null;
-                return true;
-            }
-
-            else
-            {
-                return false;
-            }
+            // íƒˆí‡´ ì„±ê³µ ì‹œ ë©”ëª¨ë¦¬ ì´ˆê¸°í™”
+            info = null;
+            return true;
         }
-
         catch (Exception e)
         {
-            Debug.Log(e.Message);
+            Debug.LogError($"Deleteinfo error: {e.Message}");
             return false;
         }
     }
- #endregion
+    #endregion
 }
