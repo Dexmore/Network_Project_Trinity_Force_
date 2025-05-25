@@ -6,6 +6,7 @@ public class NetworkPlayer : NetworkBehaviour
     [SyncVar] public bool HasSubmitted = false;
     [SyncVar] public string lastText = "";
     [SyncVar] public int playerIndex = -1;
+    [SyncVar] public string playerName; // 필수
 
     [Command]
     public void CmdSetSubmitted(bool value)

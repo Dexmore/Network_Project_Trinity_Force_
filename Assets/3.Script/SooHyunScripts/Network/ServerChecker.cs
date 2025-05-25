@@ -34,9 +34,11 @@ public class ServerChecker : MonoBehaviour
 
     public class GameTurn
     {
+        public string playerName;
         public string sentence;
         public byte[] drawing;
         public bool isText;
+        public string guess;
     }
     public List<GameTurn> gameLog = new List<GameTurn>();
 
@@ -47,10 +49,7 @@ public class ServerChecker : MonoBehaviour
     private List<string> submittedGuesses = new List<string>();
     private List<NetworkPlayer> guessPlayers = new List<NetworkPlayer>();
 
-    private int currentPhaseIndex = 0;
-    private int maxPhases = 4; // 문장-그림-추측-그림
-
-    private int playerCount = 0;
+    private int playerCount = 4;
 
     private void OnEnable()
     {
@@ -95,9 +94,8 @@ public class ServerChecker : MonoBehaviour
 
             return type;
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            Debug.Log(e.Message);
             return Type.Empty;
         }
     }
@@ -116,7 +114,6 @@ public class ServerChecker : MonoBehaviour
 
             if (players.Count == 4)
             {
-                playerCount = 4;
                 foreach (var c in players) c.Send(new GameStartMsg());
             }
         };
@@ -130,21 +127,29 @@ public class ServerChecker : MonoBehaviour
 
     public void AddSentence(NetworkPlayer player, string sentence)
     {
-        var allPlayers = GameObject.FindObjectsOfType<NetworkPlayer>();
         if (!submittedPlayers.Contains(player))
         {
             player.playerIndex = submittedPlayers.Count;
             submittedPlayers.Add(player);
             submittedSentences.Add(sentence);
         }
-        if (submittedPlayers.Count == allPlayers.Length)
+        if (submittedPlayers.Count == playerCount)
         {
-            gameLog.Add(new GameTurn { isText = true, sentence = submittedSentences[0], drawing = null });
+            for (int i = 0; i < playerCount; i++)
+            {
+                string pn = submittedPlayers[i]?.playerName ?? $"Player{i + 1}";
+                string st = !string.IsNullOrEmpty(submittedSentences[i]) ? submittedSentences[i] : $"문장{i + 1}";
+                gameLog.Add(new GameTurn
+                {
+                    isText = true,
+                    sentence = st,
+                    playerName = pn
+                });
+            }
             ShowSentencesToEachPlayer();
             NextPhaseToAll();
             submittedPlayers.Clear();
             submittedSentences.Clear();
-            currentPhaseIndex++;
         }
     }
 
@@ -162,21 +167,29 @@ public class ServerChecker : MonoBehaviour
 
     public void AddDrawing(NetworkPlayer player, byte[] pngData)
     {
-        var allPlayers = GameObject.FindObjectsOfType<NetworkPlayer>();
         if (!drawingPlayers.Contains(player))
         {
             player.playerIndex = drawingPlayers.Count;
             drawingPlayers.Add(player);
             submittedDrawings.Add(pngData);
         }
-        if (drawingPlayers.Count == allPlayers.Length)
+        if (drawingPlayers.Count == playerCount)
         {
-            gameLog.Add(new GameTurn { isText = false, sentence = null, drawing = submittedDrawings[0] });
+            for (int i = 0; i < playerCount; i++)
+            {
+                string pn = drawingPlayers[i]?.playerName ?? $"Player{i + 1}";
+                byte[] dr = submittedDrawings[i] != null ? submittedDrawings[i] : new byte[0];
+                gameLog.Add(new GameTurn
+                {
+                    isText = false,
+                    drawing = dr,
+                    playerName = pn
+                });
+            }
             DistributeDrawings();
             NextPhaseToAll();
             drawingPlayers.Clear();
             submittedDrawings.Clear();
-            currentPhaseIndex++;
         }
     }
 
@@ -194,21 +207,30 @@ public class ServerChecker : MonoBehaviour
 
     public void AddGuess(NetworkPlayer player, string guessText)
     {
-        var allPlayers = GameObject.FindObjectsOfType<NetworkPlayer>();
         if (!guessPlayers.Contains(player))
         {
             player.playerIndex = guessPlayers.Count;
             guessPlayers.Add(player);
             submittedGuesses.Add(guessText);
         }
-        if (guessPlayers.Count == allPlayers.Length)
+        if (guessPlayers.Count == playerCount)
         {
-            gameLog.Add(new GameTurn { isText = true, sentence = submittedGuesses[0], drawing = null });
+            for (int i = 0; i < playerCount; i++)
+            {
+                string pn = guessPlayers[i]?.playerName ?? $"Player{i + 1}";
+                string gs = !string.IsNullOrEmpty(submittedGuesses[i]) ? submittedGuesses[i] : $"추측{i + 1}";
+                gameLog.Add(new GameTurn
+                {
+                    isText = true,
+                    sentence = gs,
+                    playerName = pn,
+                    guess = gs
+                });
+            }
             ShowGuessesToEachPlayer();
             NextPhaseToAll();
             guessPlayers.Clear();
             submittedGuesses.Clear();
-            currentPhaseIndex++;
         }
     }
 
@@ -230,6 +252,39 @@ public class ServerChecker : MonoBehaviour
         {
             conn.Send(new ProceedToNextPhaseMsg());
         }
+    }
+
+    public List<PlayerResult> ConvertGameLogToPlayerResults()
+    {
+        var result = new List<PlayerResult>();
+        int bundle = 4;
+        int playerCountLocal = gameLog.Count / bundle;
+        for (int i = 0; i < playerCountLocal; i++)
+        {
+            int offset = i * bundle;
+            var playerResult = new PlayerResult
+            {
+                playerName = gameLog[offset + 0].playerName,
+                sentence = gameLog[offset + 0].sentence,
+                drawing1 = gameLog[offset + 1].drawing,
+                guess = gameLog[offset + 2].guess ?? gameLog[offset + 2].sentence,
+                drawing2 = gameLog[offset + 3].drawing
+            };
+            result.Add(playerResult);
+        }
+        // 부족하면 더미라도 4개 채워서 빈 결과 방지
+        while (result.Count < 4)
+        {
+            result.Add(new PlayerResult
+            {
+                playerName = $"Player{result.Count + 1}",
+                sentence = "(비어있음)",
+                drawing1 = new byte[0],
+                guess = "(비어있음)",
+                drawing2 = new byte[0]
+            });
+        }
+        return result;
     }
 
     private void OnApplicationQuit()
