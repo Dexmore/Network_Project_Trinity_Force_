@@ -38,14 +38,11 @@ public class NetworkChat : NetworkBehaviour
 
     public override void OnStopClient()
     {
-        if (!string.IsNullOrEmpty(playerName))
-        {
-            if (LobbyUserManager.Instance != null)
-                LobbyUserManager.Instance.RemoveUser(playerName);
+        if (LobbyUserManager.Instance != null && !string.IsNullOrEmpty(playerName))
+            LobbyUserManager.Instance.RemoveUser(playerName);
 
-            if (LobbyPopupUIManager.Instance != null)
-                LobbyPopupUIManager.Instance.ShowPopup($"{playerName}님이 퇴장했습니다.");
-        }
+        if (!string.IsNullOrEmpty(playerName))
+            LobbyPopupUIManager.Instance?.ShowPopup($"{playerName}님이 퇴장했습니다.");
     }
 
     private IEnumerator WaitAndRegister()
