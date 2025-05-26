@@ -6,10 +6,10 @@ using System.Collections.Generic;
 
 public struct GameStartMsg : NetworkMessage { }
 public struct ProceedToNextPhaseMsg : NetworkMessage { }
-//public struct GameResultMsg : NetworkMessage
-//{
-//    public List<PlayerResultData> results;
-//}
+public struct GameResultMsg : NetworkMessage
+{
+    public List<PlayerResultData> results;
+}
 public enum CanvasType { Text, Draw, Guess }
 public struct PlayerResultData
 {
@@ -68,7 +68,7 @@ public class GameManager : MonoBehaviour
     {
         NetworkClient.RegisterHandler<GameStartMsg>(OnGameStart);
         NetworkClient.RegisterHandler<ProceedToNextPhaseMsg>(OnProceedToNextPhase);
-        //NetworkClient.RegisterHandler<GameResultMsg>(OnReceiveResultFromServer);
+        NetworkClient.RegisterHandler<GameResultMsg>(OnReceiveResultFromServer);
 
         TextCanvas.SetActive(false);
         DrawCanvas.SetActive(false);
@@ -229,26 +229,25 @@ public class GameManager : MonoBehaviour
         lastReceivedGuess = guess;
     }
 
-    //private void OnReceiveResultFromServer(GameResultMsg msg)
-    //{
-    //    receivedResults.Clear();
-    //    if (msg.results != null)
-    //    {
-    //        foreach (var r in msg.results)
-    //        {
-    //            receivedResults.Add(new PlayerResult
-    //            {
-    //                playerName = r.playerName,
-    //                sentence = r.sentence,
-    //                drawing1 = r.drawing1,
-    //                guess = r.guess,
-    //                drawing2 = r.drawing2
-    //            });
-    //        }
-    //    }
-    //    ShowAllResults(receivedResults);
-    //    if (ResultCanvas != null) ResultCanvas.SetActive(true);
-    //}
+    private void OnReceiveResultFromServer(GameResultMsg msg)
+    {
+        receivedResults.Clear();
+        if (msg.results != null)
+        {
+            foreach (var r in msg.results)
+            {
+                receivedResults.Add(new PlayerResult
+                {
+                    playerName = r.playerName,
+                    sentence = r.sentence,
+                    drawing1 = r.drawing1,
+                    guess = r.guess,
+                    drawing2 = r.drawing2
+                });
+            }
+        }
+        if (ResultCanvas != null) ResultCanvas.SetActive(true);
+    }
 
     // 서버가 결과 메시지를 안보내는 경우 (백업)
     private void GoToResultScene()
