@@ -37,17 +37,20 @@ public class ServerChecker : MonoBehaviour
         public string playerName;
         public string sentence;
         public byte[] drawing;
-        public bool isText;
         public string guess;
+        public string ownerName;
     }
     public List<GameTurn> gameLog = new List<GameTurn>();
 
-    private List<string> submittedSentences = new List<string>();
     private List<NetworkPlayer> submittedPlayers = new List<NetworkPlayer>();
-    private List<byte[]> submittedDrawings = new List<byte[]>();
+    private List<string> submittedSentences = new List<string>();
     private List<NetworkPlayer> drawingPlayers = new List<NetworkPlayer>();
-    private List<string> submittedGuesses = new List<string>();
+    private List<byte[]> submittedDrawings = new List<byte[]>();
     private List<NetworkPlayer> guessPlayers = new List<NetworkPlayer>();
+    private List<string> submittedGuesses = new List<string>();
+
+    // 문장 phase에서의 playerName(문장 주인) 저장
+    private List<string> sentenceOwners = new List<string>();
 
     private int playerCount = 4;
 
@@ -105,14 +108,14 @@ public class ServerChecker : MonoBehaviour
         manager.StartServer();
         NetworkServer.OnConnectedEvent += (conn) =>
         {
-            if (players.Count >= 4)
+            if (players.Count >= playerCount)
             {
                 conn.Disconnect();
                 return;
             }
             if (!players.Contains(conn)) players.Add(conn);
 
-            if (players.Count == 4)
+            if (players.Count == playerCount)
             {
                 foreach (var c in players) c.Send(new GameStartMsg());
             }
@@ -125,25 +128,25 @@ public class ServerChecker : MonoBehaviour
 
     public void Start_Client() { manager.StartClient(); }
 
+    // 1. 문장 제출 (owner=본인)
     public void AddSentence(NetworkPlayer player, string sentence)
     {
         if (!submittedPlayers.Contains(player))
         {
-            player.playerIndex = submittedPlayers.Count;
             submittedPlayers.Add(player);
             submittedSentences.Add(sentence);
         }
         if (submittedPlayers.Count == playerCount)
         {
+            sentenceOwners.Clear();
             for (int i = 0; i < playerCount; i++)
             {
-                string pn = submittedPlayers[i]?.playerName ?? $"Player{i + 1}";
-                string st = !string.IsNullOrEmpty(submittedSentences[i]) ? submittedSentences[i] : $"문장{i + 1}";
+                sentenceOwners.Add(submittedPlayers[i].playerName);
                 gameLog.Add(new GameTurn
                 {
-                    isText = true,
-                    sentence = st,
-                    playerName = pn
+                    playerName = submittedPlayers[i].playerName,
+                    sentence = submittedSentences[i],
+                    ownerName = submittedPlayers[i].playerName
                 });
             }
             ShowSentencesToEachPlayer();
@@ -152,6 +155,63 @@ public class ServerChecker : MonoBehaviour
             submittedSentences.Clear();
         }
     }
+
+    // 2. 그림 phase (ownerName = sentenceOwners[(i + playerCount - 1) % playerCount])
+    public void AddDrawing(NetworkPlayer player, byte[] pngData)
+    {
+        if (!drawingPlayers.Contains(player))
+        {
+            drawingPlayers.Add(player);
+            submittedDrawings.Add(pngData);
+        }
+        if (drawingPlayers.Count == playerCount)
+        {
+            for (int i = 0; i < playerCount; i++)
+            {
+                int ownerIdx = (i + playerCount - 1) % playerCount;
+                string ownerName = sentenceOwners[ownerIdx];
+                gameLog.Add(new GameTurn
+                {
+                    playerName = drawingPlayers[i].playerName,
+                    drawing = submittedDrawings[i],
+                    ownerName = ownerName
+                });
+            }
+            DistributeDrawings();
+            NextPhaseToAll();
+            drawingPlayers.Clear();
+            submittedDrawings.Clear();
+        }
+    }
+
+    // 3. 추측 phase (ownerName = sentenceOwners[(i + playerCount - 2) % playerCount])
+    public void AddGuess(NetworkPlayer player, string guessText)
+    {
+        if (!guessPlayers.Contains(player))
+        {
+            guessPlayers.Add(player);
+            submittedGuesses.Add(guessText);
+        }
+        if (guessPlayers.Count == playerCount)
+        {
+            for (int i = 0; i < playerCount; i++)
+            {
+                int ownerIdx = (i + playerCount - 2) % playerCount;
+                string ownerName = sentenceOwners[ownerIdx];
+                gameLog.Add(new GameTurn
+                {
+                    playerName = guessPlayers[i].playerName,
+                    guess = submittedGuesses[i],
+                    ownerName = ownerName
+                });
+            }
+            ShowGuessesToEachPlayer();
+            NextPhaseToAll();
+            guessPlayers.Clear();
+            submittedGuesses.Clear();
+        }
+    }
+
 
     public void ShowSentencesToEachPlayer()
     {
@@ -165,34 +225,6 @@ public class ServerChecker : MonoBehaviour
         }
     }
 
-    public void AddDrawing(NetworkPlayer player, byte[] pngData)
-    {
-        if (!drawingPlayers.Contains(player))
-        {
-            player.playerIndex = drawingPlayers.Count;
-            drawingPlayers.Add(player);
-            submittedDrawings.Add(pngData);
-        }
-        if (drawingPlayers.Count == playerCount)
-        {
-            for (int i = 0; i < playerCount; i++)
-            {
-                string pn = drawingPlayers[i]?.playerName ?? $"Player{i + 1}";
-                byte[] dr = submittedDrawings[i] != null ? submittedDrawings[i] : new byte[0];
-                gameLog.Add(new GameTurn
-                {
-                    isText = false,
-                    drawing = dr,
-                    playerName = pn
-                });
-            }
-            DistributeDrawings();
-            NextPhaseToAll();
-            drawingPlayers.Clear();
-            submittedDrawings.Clear();
-        }
-    }
-
     public void DistributeDrawings()
     {
         int count = drawingPlayers.Count;
@@ -202,35 +234,6 @@ public class ServerChecker : MonoBehaviour
             NetworkPlayer receiver = drawingPlayers[targetIndex];
             byte[] pngData = submittedDrawings[i];
             receiver.TargetReceiveDrawing(receiver.connectionToClient, pngData);
-        }
-    }
-
-    public void AddGuess(NetworkPlayer player, string guessText)
-    {
-        if (!guessPlayers.Contains(player))
-        {
-            player.playerIndex = guessPlayers.Count;
-            guessPlayers.Add(player);
-            submittedGuesses.Add(guessText);
-        }
-        if (guessPlayers.Count == playerCount)
-        {
-            for (int i = 0; i < playerCount; i++)
-            {
-                string pn = guessPlayers[i]?.playerName ?? $"Player{i + 1}";
-                string gs = !string.IsNullOrEmpty(submittedGuesses[i]) ? submittedGuesses[i] : $"추측{i + 1}";
-                gameLog.Add(new GameTurn
-                {
-                    isText = true,
-                    sentence = gs,
-                    playerName = pn,
-                    guess = gs
-                });
-            }
-            ShowGuessesToEachPlayer();
-            NextPhaseToAll();
-            guessPlayers.Clear();
-            submittedGuesses.Clear();
         }
     }
 
@@ -254,34 +257,31 @@ public class ServerChecker : MonoBehaviour
         }
     }
 
+    // ownerName(문장 최초 제출자)별로 묶어서 결과 생성
     public List<PlayerResult> ConvertGameLogToPlayerResults()
     {
         var result = new List<PlayerResult>();
-        int bundle = 4;
-        int playerCountLocal = gameLog.Count / bundle;
-        for (int i = 0; i < playerCountLocal; i++)
+        HashSet<string> ownerNames = new HashSet<string>();
+        foreach (var log in gameLog)
         {
-            int offset = i * bundle;
-            var playerResult = new PlayerResult
-            {
-                playerName = gameLog[offset + 0].playerName,
-                sentence = gameLog[offset + 0].sentence,
-                drawing1 = gameLog[offset + 1].drawing,
-                guess = gameLog[offset + 2].guess ?? gameLog[offset + 2].sentence,
-                drawing2 = gameLog[offset + 3].drawing
-            };
-            result.Add(playerResult);
+            if (!string.IsNullOrEmpty(log.ownerName))
+                ownerNames.Add(log.ownerName);
         }
-        // 부족하면 더미라도 4개 채워서 빈 결과 방지
-        while (result.Count < 4)
+
+        foreach (var owner in ownerNames)
         {
+            var sentenceObj = gameLog.Find(x => x.ownerName == owner && !string.IsNullOrEmpty(x.sentence));
+            var drawing1Obj = gameLog.Find(x => x.ownerName == owner && x.drawing != null && string.IsNullOrEmpty(x.guess));
+            var guessObj = gameLog.Find(x => x.ownerName == owner && !string.IsNullOrEmpty(x.guess));
+            var drawing2Obj = gameLog.FindLast(x => x.ownerName == owner && x.drawing != null && !string.IsNullOrEmpty(x.guess));
+
             result.Add(new PlayerResult
             {
-                playerName = $"Player{result.Count + 1}",
-                sentence = "(비어있음)",
-                drawing1 = new byte[0],
-                guess = "(비어있음)",
-                drawing2 = new byte[0]
+                playerName = owner,
+                sentence = sentenceObj?.sentence ?? "",
+                drawing1 = drawing1Obj?.drawing,
+                guess = guessObj?.guess ?? "",
+                drawing2 = drawing2Obj?.drawing
             });
         }
         return result;

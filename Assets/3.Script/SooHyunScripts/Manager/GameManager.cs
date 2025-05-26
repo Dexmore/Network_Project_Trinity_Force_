@@ -6,8 +6,13 @@ using System.Collections.Generic;
 
 public struct GameStartMsg : NetworkMessage { }
 public struct ProceedToNextPhaseMsg : NetworkMessage { }
+public struct GameResultMsg : NetworkMessage
+{
+    public List<PlayerResultData> results;
+}
 public enum CanvasType { Text, Draw, Guess }
 
+[System.Serializable]
 public class PlayerResult
 {
     public string playerName;
@@ -16,6 +21,26 @@ public class PlayerResult
     public string guess;
     public byte[] drawing2;
 }
+
+[System.Serializable]
+public struct PlayerResultData
+{
+    public string playerName;
+    public string sentence;
+    public byte[] drawing1;
+    public string guess;
+    public byte[] drawing2;
+}
+
+public class GameTurn
+{
+    public string playerName;
+    public string sentence;
+    public byte[] drawing;
+    public string guess;
+    public string ownerName; // 추가
+}
+
 
 public class GameManager : MonoBehaviour
 {
@@ -40,6 +65,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TexturePainter texturePainter;
 
     private List<PlayerResult> allResults = new List<PlayerResult>();
+    private List<PlayerResult> receivedResults = new List<PlayerResult>();
     private int playerResultIndex = 0;
     private float timeElapsed = 0f;
     private bool isTiming = false;
@@ -54,6 +80,7 @@ public class GameManager : MonoBehaviour
     {
         NetworkClient.RegisterHandler<GameStartMsg>(OnGameStart);
         NetworkClient.RegisterHandler<ProceedToNextPhaseMsg>(OnProceedToNextPhase);
+        NetworkClient.RegisterHandler<GameResultMsg>(OnReceiveResultFromServer);
 
         TextCanvas.SetActive(false);
         DrawCanvas.SetActive(false);
@@ -214,45 +241,55 @@ public class GameManager : MonoBehaviour
         lastReceivedGuess = guess;
     }
 
+    private void OnReceiveResultFromServer(GameResultMsg msg)
+    {
+        receivedResults.Clear();
+        if (msg.results != null)
+        {
+            foreach (var r in msg.results)
+            {
+                receivedResults.Add(new PlayerResult
+                {
+                    playerName = r.playerName,
+                    sentence = r.sentence,
+                    drawing1 = r.drawing1,
+                    guess = r.guess,
+                    drawing2 = r.drawing2
+                });
+            }
+        }
+        ShowAllResults(receivedResults);
+        if (ResultCanvas != null) ResultCanvas.SetActive(true);
+    }
+
+    // 서버가 결과 메시지를 안보내는 경우 (백업)
     private void GoToResultScene()
     {
-        var checker = FindObjectOfType<ServerChecker>();
-        if (checker != null)
+        if (receivedResults != null && receivedResults.Count > 0)
         {
-            List<PlayerResult> playerResults = checker.ConvertGameLogToPlayerResults();
-            if (playerResults == null || playerResults.Count == 0)
-            {
-                playerResults = new List<PlayerResult>();
-                for (int i = 0; i < 4; ++i)
-                {
-                    playerResults.Add(new PlayerResult
-                    {
-                        playerName = $"Player{i + 1}",
-                        sentence = $"(값없음) 문장{i + 1}",
-                        drawing1 = new byte[0],
-                        guess = $"(값없음) 추측{i + 1}",
-                        drawing2 = new byte[0]
-                    });
-                }
-            }
-            ShowAllResults(playerResults);
+            ShowAllResults(receivedResults);
         }
         else
         {
-            var dummyResults = new List<PlayerResult>();
-            for (int i = 0; i < 4; ++i)
-            {
-                dummyResults.Add(new PlayerResult
-                {
-                    playerName = $"Player{i + 1}",
-                    sentence = $"(Server없음) 문장{i + 1}",
-                    drawing1 = new byte[0],
-                    guess = $"(Server없음) 추측{i + 1}",
-                    drawing2 = new byte[0]
-                });
-            }
-            ShowAllResults(dummyResults);
+            ShowNoResultMessage();
         }
+    }
+
+    private void ShowNoResultMessage()
+    {
+        playerNameText.text = "";
+        sentenceText.text = "<b>저장된 결과 데이터가 없습니다.</b>";
+        drawingImage.gameObject.SetActive(false);
+        guessText.text = "";
+        guessDrawingImage.gameObject.SetActive(false);
+
+        prevButton.interactable = false;
+        nextButton.interactable = false;
+        closeButton.onClick.RemoveAllListeners();
+        closeButton.onClick.AddListener(() => {
+            ResultCanvas.SetActive(false);
+        });
+        ResultCanvas.SetActive(true);
     }
 
     public void ShowAllResults(List<PlayerResult> results)
@@ -260,6 +297,12 @@ public class GameManager : MonoBehaviour
         allResults = results;
         playerResultIndex = 0;
         ResultCanvas.SetActive(true);
+
+        if (allResults == null || allResults.Count == 0)
+        {
+            ShowNoResultMessage();
+            return;
+        }
         ShowSinglePlayerResult(playerResultIndex);
 
         prevButton.onClick.RemoveAllListeners();
@@ -294,9 +337,8 @@ public class GameManager : MonoBehaviour
         if (allResults == null || index < 0 || index >= allResults.Count) return;
 
         var res = allResults[index];
-        playerNameText.text = $"Player: {res.playerName}";
-        sentenceText.text = $"문장: {res.sentence}";
-
+        playerNameText.text = !string.IsNullOrEmpty(res.playerName) ? $"Player: {res.playerName}" : "";
+        sentenceText.text = !string.IsNullOrEmpty(res.sentence) ? $"문장: {res.sentence}" : "";
         if (res.drawing1 != null && res.drawing1.Length > 0)
         {
             Texture2D tex1 = new Texture2D(2, 2);
@@ -309,8 +351,7 @@ public class GameManager : MonoBehaviour
             drawingImage.gameObject.SetActive(false);
         }
 
-        guessText.text = $"추측: {res.guess}";
-
+        guessText.text = !string.IsNullOrEmpty(res.guess) ? $"추측: {res.guess}" : "";
         if (res.drawing2 != null && res.drawing2.Length > 0)
         {
             Texture2D tex2 = new Texture2D(2, 2);
