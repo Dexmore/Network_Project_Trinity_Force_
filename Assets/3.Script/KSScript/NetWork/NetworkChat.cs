@@ -46,6 +46,10 @@ public class NetworkChat : NetworkBehaviour
         {
             LobbyUserManager.Instance.AddUser(newName, isReady);
         }
+        else
+        {
+            Debug.LogWarning("[NetworkChat] LobbyUserManager.Instance is null during OnNicknameChanged");
+        }
     }
 
     void OnReadyChanged(bool _, bool newVal)
