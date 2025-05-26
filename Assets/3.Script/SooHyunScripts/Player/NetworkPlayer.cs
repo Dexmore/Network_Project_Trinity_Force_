@@ -8,6 +8,15 @@ public class NetworkPlayer : NetworkBehaviour
     [SyncVar] public int playerIndex = -1;
     [SyncVar] public string playerName;
 
+
+    [Command]
+    public void CmdReadyForGame()
+    {
+        var checker = FindObjectOfType<ServerChecker1>();
+        if (checker != null)
+            checker.PlayerReady(connectionToClient);
+    }
+
     [Command]
     public void CmdSetSubmitted(bool value) { HasSubmitted = value; }
 

@@ -31,8 +31,6 @@ public class PlayerResult
     public byte[] drawing2;
 }
 
-// NetworkPlayer는 따로 존재
-
 public class ServerChecker1 : MonoBehaviour
 {
     public LicenseType type;
@@ -62,10 +60,10 @@ public class ServerChecker1 : MonoBehaviour
     private List<string> submittedGuesses = new List<string>();
     private List<string> sentenceOwners = new List<string>();
 
-    // <<<<<<<<<<<< 여기를 4로 반드시 고정 >>>>>>>>>>
     private int playerCount = 4;
+    private bool eventsRegistered = false;
+    private HashSet<NetworkConnectionToClient> readyPlayers = new HashSet<NetworkConnectionToClient>();
 
-    private bool eventsRegistered = false; // 이벤트 중복 등록 방지용
     private void OnEnable()
     {
         path = Application.dataPath + "/License";
@@ -82,7 +80,6 @@ public class ServerChecker1 : MonoBehaviour
         }
     }
 
-
     private void OnDisable()
     {
         if (eventsRegistered)
@@ -96,39 +93,42 @@ public class ServerChecker1 : MonoBehaviour
     private void OnPlayerConnected(NetworkConnectionToClient conn)
     {
         if (players.Contains(conn)) return;
-        if (players.Count >= playerCount)
-        {
-            conn.Disconnect();
-            return;
-        }
-        players.Add(conn);
-
+        if (!players.Contains(conn)) players.Add(conn);
         if (players.Count == playerCount)
         {
+            readyPlayers.Clear();
             NetworkManager.singleton.ServerChangeScene("GameScene");
+        }
+    }
+
+    public void PlayerReady(NetworkConnectionToClient conn)
+    {
+        if (!readyPlayers.Contains(conn)) readyPlayers.Add(conn);
+        if (readyPlayers.Count == playerCount)
+        {
             StartCoroutine(WaitAndSendGameStart());
         }
     }
 
     private IEnumerator WaitAndSendGameStart()
     {
-        yield return new WaitForSeconds(1.0f);
+        yield return new WaitForSeconds(0.5f);
         foreach (var c in players)
             c.Send(new GameStartMsg());
     }
 
+
     private void OnPlayerDisconnected(NetworkConnectionToClient conn)
     {
         if (players.Contains(conn)) players.Remove(conn);
-        Debug.Log($"플레이어 이탈: {players.Count} / {playerCount}");
 
-        // 필요하다면, 모든 클라이언트에게 결과나 종료 메시지
         if (players.Count < playerCount)
         {
             foreach (var c in players)
                 c.Send(new GameResultMsg { results = new List<PlayerResultData>() });
         }
     }
+
     private void Start()
     {
         type = LoadLicenseType();
@@ -166,9 +166,8 @@ public class ServerChecker1 : MonoBehaviour
 
             return parsedType;
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            Debug.LogError("License Load Error: " + e.Message);
             return LicenseType.Empty;
         }
     }
@@ -176,46 +175,14 @@ public class ServerChecker1 : MonoBehaviour
     public void Start_Server()
     {
         if (Application.platform == RuntimePlatform.WebGLPlayer)
-        {
-            Debug.Log("WebGL cannot be Server");
             return;
-        }
+
         manager.StartServer();
-        Debug.Log($"{manager.networkAddress} Start Server");
-
-        //NetworkServer.OnConnectedEvent += (conn) =>
-        //{
-        //    if (players.Count > playerCount)
-        //    {
-        //        conn.Disconnect();
-        //        return;
-        //    }
-        //    if (!players.Contains(conn)) players.Add(conn);
-
-        //    if (players.Count == playerCount)
-        //    {
-        //        foreach (var c in players)
-        //            c.Send(new GameStartMsg());
-        //    }
-        //};
-        //NetworkServer.OnDisconnectedEvent += (conn) =>
-        //{
-        //    if (players.Contains(conn)) players.Remove(conn);
-
-        //    if (players.Count < playerCount)
-        //    {
-        //        foreach (var c in players)
-        //        {
-        //            c.Send(new GameResultMsg { results = new List<PlayerResultData>() });
-        //        }
-        //    }
-        //};
     }
 
     public void Start_Client()
     {
         manager.StartClient();
-        Debug.Log($"{manager.networkAddress} : Start Client...");
     }
 
     // --- 게임 데이터 관리 (playerCount=4 적용) ---
