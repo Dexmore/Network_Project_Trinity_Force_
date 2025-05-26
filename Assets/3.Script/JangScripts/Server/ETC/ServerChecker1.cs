@@ -66,7 +66,7 @@ public class ServerChecker1 : MonoBehaviour
     private List<string> submittedGuesses = new List<string>();
     private List<string> sentenceOwners = new List<string>();
 
-    private int playerCount = 3;
+    private int playerCount = 5;
 
     private void OnEnable()
     {
@@ -140,7 +140,7 @@ public class ServerChecker1 : MonoBehaviour
             }
             if (!players.Contains(conn)) players.Add(conn);
 
-            if (players.Count == playerCount)
+            if (players.Count == playerCount - 1)
             {
                 foreach (var c in players)
                     c.Send(new GameStartMsg());
