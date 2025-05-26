@@ -28,9 +28,9 @@ public class GameTurn
     public string sentence;
     public byte[] drawing;
     public string guess;
-    public string ownerName;
-    public bool isText;
+    public string ownerName; // 추가
 }
+
 
 public class GameManager : MonoBehaviour
 {
@@ -88,8 +88,8 @@ public class GameManager : MonoBehaviour
             ResultCanvas.SetActive(false);
     }
 
-    void OnGameStart(GameStartMsg msg) => BeginGame();
-    void OnProceedToNextPhase(ProceedToNextPhaseMsg msg) => ProceedToNextPhase();
+    void OnGameStart(GameStartMsg msg) { BeginGame(); }
+    void OnProceedToNextPhase(ProceedToNextPhaseMsg msg) { ProceedToNextPhase(); }
 
     private void Update()
     {
@@ -184,7 +184,6 @@ public class GameManager : MonoBehaviour
 
         if (currentPhaseIndex >= maxPhases)
         {
-           
             ResultCanvas.SetActive(true);
             GoToResultScene();
             return;
@@ -253,25 +252,23 @@ public class GameManager : MonoBehaviour
         if (ResultCanvas != null) ResultCanvas.SetActive(true);
     }
 
+    // 서버가 결과 메시지를 안보내는 경우 (백업)
     private void GoToResultScene()
     {
-       var checker = FindObjectOfType<ServerChecker1>();
-
-        if (checker != null)
+        if (receivedResults != null && receivedResults.Count > 0)
         {
-            List<PlayerResult> playerResults = checker.ConvertGameLogToPlayerResults();
-            ShowAllResults(playerResults);
+            ShowAllResults(receivedResults);
         }
         else
         {
-            Debug.LogError("ServerChecker not found!");
+            ShowNoResultMessage();
         }
     }
 
     private void ShowNoResultMessage()
     {
         playerNameText.text = "";
-        sentenceText.text = "<b>\uC800\uC7A5\uB41C \uACB0\uACFC \uB370\uC774\uD130\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.</b>";
+        sentenceText.text = "<b>저장된 결과 데이터가 없습니다.</b>";
         drawingImage.gameObject.SetActive(false);
         guessText.text = "";
         guessDrawingImage.gameObject.SetActive(false);
@@ -279,7 +276,8 @@ public class GameManager : MonoBehaviour
         prevButton.interactable = false;
         nextButton.interactable = false;
         closeButton.onClick.RemoveAllListeners();
-        closeButton.onClick.AddListener(() => {
+        closeButton.onClick.AddListener(() =>
+        {
             ResultCanvas.SetActive(false);
         });
         ResultCanvas.SetActive(true);
@@ -302,14 +300,16 @@ public class GameManager : MonoBehaviour
         nextButton.onClick.RemoveAllListeners();
         closeButton.onClick.RemoveAllListeners();
 
-        prevButton.onClick.AddListener(() => {
+        prevButton.onClick.AddListener(() =>
+        {
             if (playerResultIndex > 0)
             {
                 playerResultIndex--;
                 ShowSinglePlayerResult(playerResultIndex);
             }
         });
-        nextButton.onClick.AddListener(() => {
+        nextButton.onClick.AddListener(() =>
+        {
             if (playerResultIndex < allResults.Count - 1)
             {
                 playerResultIndex++;
@@ -320,7 +320,8 @@ public class GameManager : MonoBehaviour
                 EndGame();
             }
         });
-        closeButton.onClick.AddListener(() => {
+        closeButton.onClick.AddListener(() =>
+        {
             ResultCanvas.SetActive(false);
         });
     }
@@ -331,7 +332,7 @@ public class GameManager : MonoBehaviour
 
         var res = allResults[index];
         playerNameText.text = !string.IsNullOrEmpty(res.playerName) ? $"Player: {res.playerName}" : "";
-        sentenceText.text = !string.IsNullOrEmpty(res.sentence) ? $"\uBB38\uC7A5: {res.sentence}" : "";
+        sentenceText.text = !string.IsNullOrEmpty(res.sentence) ? $"문장: {res.sentence}" : "";
         if (res.drawing1 != null && res.drawing1.Length > 0)
         {
             Texture2D tex1 = new Texture2D(2, 2);
@@ -344,7 +345,7 @@ public class GameManager : MonoBehaviour
             drawingImage.gameObject.SetActive(false);
         }
 
-        guessText.text = !string.IsNullOrEmpty(res.guess) ? $"\uCD94\uCE21: {res.guess}" : "";
+        guessText.text = !string.IsNullOrEmpty(res.guess) ? $"추측: {res.guess}" : "";
         if (res.drawing2 != null && res.drawing2.Length > 0)
         {
             Texture2D tex2 = new Texture2D(2, 2);
@@ -364,6 +365,6 @@ public class GameManager : MonoBehaviour
     private void EndGame()
     {
         ResultCanvas.SetActive(false);
-        // TODO: Game 종료 처리 추가
+        // 게임 종료 추가 처리
     }
 }
