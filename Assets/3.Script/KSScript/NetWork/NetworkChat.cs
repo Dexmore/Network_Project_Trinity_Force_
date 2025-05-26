@@ -4,6 +4,11 @@ using System.Collections; // ← 코루틴 쓰려면 필요
 
 public class NetworkChat : NetworkBehaviour
 {
+    public Transform userListParent => userListParentSerialized;
+    public GameObject userSlotPrefab => userSlotPrefabSerialized;
+
+    [SerializeField] private Transform userListParentSerialized;
+    [SerializeField] private GameObject userSlotPrefabSerialized;
     public delegate void ChatMessageHandler(string message, string senderName);
     public static event ChatMessageHandler OnChatMessage;
 
@@ -31,13 +36,20 @@ public class NetworkChat : NetworkBehaviour
 
     private IEnumerator WaitAndRegister()
     {
-        // ① 로비 매니저가 준비될 때까지 기다림
+        // 1) LobbyUserManager 살아날 때까지 기다림
         yield return new WaitUntil(() => LobbyUserManager.Instance != null);
 
-        // ② playerName이 유효해질 때까지 기다림
+        // 2) playerName까지 세팅될 때까지 기다림
         yield return new WaitUntil(() => !string.IsNullOrEmpty(playerName));
 
-        // ③ 이제 안전하게 호출
+        // 3) LobbyUserManager 안에 슬롯 프리팹/부모가 연결되어 있는지 확인
+        yield return new WaitUntil(() =>
+            LobbyUserManager.Instance != null &&
+            LobbyUserManager.Instance.userSlotPrefab != null &&
+            LobbyUserManager.Instance.userListParent != null
+        );
+
+        // 4) 안전하게 생성
         LobbyUserManager.Instance.AddUser(playerName, isReady);
     }
 
