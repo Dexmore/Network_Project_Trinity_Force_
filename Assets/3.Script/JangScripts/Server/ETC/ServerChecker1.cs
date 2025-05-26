@@ -129,7 +129,7 @@ public class ServerChecker1 : MonoBehaviour
 
         NetworkServer.OnConnectedEvent += (conn) =>
         {
-            if (players.Count >= playerCount)
+            if (players.Count > playerCount)
             {
                 conn.Disconnect();
                 return;
