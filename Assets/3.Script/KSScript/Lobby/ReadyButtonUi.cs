@@ -8,7 +8,7 @@ public class ReadyButtonUI : MonoBehaviour
         if (NetworkClient.connection != null &&
             NetworkClient.connection.identity != null)
         {
-            NetworkPlayer player = NetworkClient.connection.identity.GetComponent<NetworkPlayer>();
+            NetworkChat player = NetworkClient.connection.identity.GetComponent<NetworkChat>();
             if (player != null)
             {
                 player.CmdToggleReady();

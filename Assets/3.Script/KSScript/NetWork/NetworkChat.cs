@@ -3,19 +3,21 @@ using UnityEngine;
 
 public class NetworkChat : NetworkBehaviour
 {
+    // 채팅 이벤트
     public delegate void ChatMessageHandler(string message, string senderName);
     public static event ChatMessageHandler OnChatMessage;
 
-    // SyncVar 완전 삭제!
-    // [SyncVar] public string playerName;
+    // 로비 정보
+    [SyncVar(hook = nameof(OnNicknameChanged))]
+    public string playerName;
 
-    // 더 이상 OnStartLocalPlayer도 필요없습니다.
+    [SyncVar(hook = nameof(OnReadyChanged))]
+    public bool isReady;
 
-    // 메시지와 보낸 사람 이름을 같이 커맨드로!
+    // ✅ 채팅 커맨드
     [Command]
     public void CmdSendMessage(string message, string senderName)
     {
-        // 서버 → 모든 클라이언트에게 메시지와 이름을 바로 뿌려줍니다.
         RpcReceiveMessage(message, senderName);
     }
 
@@ -23,5 +25,40 @@ public class NetworkChat : NetworkBehaviour
     void RpcReceiveMessage(string message, string senderName)
     {
         OnChatMessage?.Invoke(message, senderName);
+    }
+
+    // ✅ 닉네임 전달
+    public override void OnStartLocalPlayer()
+    {
+        string nick = SQLManager.instance?.info?.User_Nickname ?? "Unknown";
+        CmdSetNickname(nick);
+    }
+
+    [Command]
+    public void CmdSetNickname(string nick)
+    {
+        playerName = nick;
+    }
+
+    void OnNicknameChanged(string _, string newName)
+    {
+        if (LobbyUserManager.Instance != null)
+        {
+            LobbyUserManager.Instance.AddUser(newName, isReady);
+        }
+    }
+
+    void OnReadyChanged(bool _, bool newVal)
+    {
+        if (LobbyUserManager.Instance != null)
+        {
+            LobbyUserManager.Instance.UpdateNicknameReady(playerName, newVal);
+        }
+    }
+
+    [Command]
+    public void CmdToggleReady()
+    {
+        isReady = !isReady;
     }
 }
