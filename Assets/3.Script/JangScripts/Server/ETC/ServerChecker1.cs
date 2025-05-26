@@ -284,34 +284,34 @@ public class ServerChecker1 : MonoBehaviour
         }
     }
 
-    public List<PlayerResult> ConvertGameLogToPlayerResults()
-    {
-        var result = new List<PlayerResult>();
-        HashSet<string> ownerNames = new HashSet<string>();
-        foreach (var log in gameLog)
-        {
-            if (!string.IsNullOrEmpty(log.ownerName))
-                ownerNames.Add(log.ownerName);
-        }
+    //public List<PlayerResult> ConvertGameLogToPlayerResults()
+    //{
+    //    var result = new List<PlayerResult>();
+    //    HashSet<string> ownerNames = new HashSet<string>();
+    //    foreach (var log in gameLog)
+    //    {
+    //        if (!string.IsNullOrEmpty(log.ownerName))
+    //            ownerNames.Add(log.ownerName);
+    //    }
 
-        foreach (var owner in ownerNames)
-        {
-            var sentenceObj = gameLog.Find(x => x.ownerName == owner && !string.IsNullOrEmpty(x.sentence));
-            var drawing1Obj = gameLog.Find(x => x.ownerName == owner && x.drawing != null && string.IsNullOrEmpty(x.guess));
-            var guessObj = gameLog.Find(x => x.ownerName == owner && !string.IsNullOrEmpty(x.guess));
-            var drawing2Obj = gameLog.FindLast(x => x.ownerName == owner && x.drawing != null && !string.IsNullOrEmpty(x.guess));
+    //    foreach (var owner in ownerNames)
+    //    {
+    //        var sentenceObj = gameLog.Find(x => x.ownerName == owner && !string.IsNullOrEmpty(x.sentence));
+    //        var drawing1Obj = gameLog.Find(x => x.ownerName == owner && x.drawing != null && string.IsNullOrEmpty(x.guess));
+    //        var guessObj = gameLog.Find(x => x.ownerName == owner && !string.IsNullOrEmpty(x.guess));
+    //        var drawing2Obj = gameLog.FindLast(x => x.ownerName == owner && x.drawing != null && !string.IsNullOrEmpty(x.guess));
 
-            result.Add(new PlayerResult
-            {
-                playerName = owner,
-                sentence = sentenceObj?.sentence ?? "",
-                drawing1 = drawing1Obj?.drawing,
-                guess = guessObj?.guess ?? "",
-                drawing2 = drawing2Obj?.drawing
-            });
-        }
-        return result;
-    }
+    //        result.Add(new PlayerResult
+    //        {
+    //            playerName = owner,
+    //            sentence = sentenceObj?.sentence ?? "",
+    //            drawing1 = drawing1Obj?.drawing,
+    //            guess = guessObj?.guess ?? "",
+    //            drawing2 = drawing2Obj?.drawing
+    //        });
+    //    }
+    //    return result;
+    //}
 
     private void OnApplicationQuit()
     {
