@@ -113,7 +113,7 @@ public class NetworkChat : NetworkBehaviour
 
         if (isServer)
         {
-            NetworkManager.singleton.ServerChangeScene("GameScene");
+            NetworkManager.singleton.ServerChangeScene("DrawScene");
         }
     }
 
