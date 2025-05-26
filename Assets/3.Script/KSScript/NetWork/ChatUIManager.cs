@@ -33,11 +33,11 @@ public class ChatUIManager : MonoBehaviour
 
     void SubmitText(string text)
     {
-        Debug.Log($"[ChatUIManager] SubmitText 호출 → “{text}”");
+       // Debug.Log($"[ChatUIManager] SubmitText 호출 → “{text}”");
         if (string.IsNullOrWhiteSpace(text)) return;
         if (!NetworkClient.active || NetworkClient.connection?.identity == null) return;
 
-        Debug.Log($"[ChatUIManager] CmdSendMessage 전송, nick={SQLManager.instance.info.User_Nickname}");
+        //Debug.Log($"[ChatUIManager] CmdSendMessage 전송, nick={SQLManager.instance.info.User_Nickname}");
         var nc = NetworkClient.connection.identity.GetComponent<NetworkChat>();
         nc.CmdSendMessage(text, SQLManager.instance.info.User_Nickname);
 

@@ -43,7 +43,7 @@ public class LobbyUserManager : MonoBehaviour
         slot.SetUserInfo(nickname, isReady);
         slots[nickname] = slot;
 
-        Debug.Log($"[LobbyUserManager] 사용자 추가됨: {nickname}, 상태: {(isReady ? "준비 완료" : "준비 중")}");
+        Debug.Log($"[LobbyUserManager] 사용자 추가됨: {nickname}, 상태: {(isReady ? "준비 완료" : "대기 중")}");
     }
 
     public void UpdateNicknameReady(string nickname, bool isReady)
