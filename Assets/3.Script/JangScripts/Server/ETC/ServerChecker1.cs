@@ -92,7 +92,6 @@ public class ServerChecker1 : MonoBehaviour
             eventsRegistered = false;
         }
     }
-
     private HashSet<NetworkConnectionToClient> readyInGameClients = new();
 
     public void OnClientReadyInGame(NetworkConnectionToClient conn)
@@ -100,14 +99,14 @@ public class ServerChecker1 : MonoBehaviour
         if (!readyInGameClients.Contains(conn))
             readyInGameClients.Add(conn);
 
-        Debug.Log($"[ServerChecker1] 준비 완료: {readyInGameClients.Count}/{playerCount}");
+        Debug.Log($"[ServerChecker1] Ready : {readyInGameClients.Count}/{playerCount}");
 
         if (readyInGameClients.Count == playerCount)
         {
             foreach (var c in readyInGameClients)
                 c.Send(new GameStartMsg());
 
-            Debug.Log("[ServerChecker1] 모든 클라이언트에게 GameStartMsg 전송 완료");
+            Debug.Log("[ServerChecker1] Send All Clients");
         }
     }
 
@@ -130,7 +129,7 @@ public class ServerChecker1 : MonoBehaviour
     private void OnPlayerDisconnected(NetworkConnectionToClient conn)
     {
         if (players.Contains(conn)) players.Remove(conn);
-        Debug.Log($"플레이어 이탈: {players.Count} / {playerCount}");
+        Debug.Log($"Player Out: {players.Count} / {playerCount}");
 
         // 필요하다면, 모든 클라이언트에게 결과나 종료 메시지
         if (players.Count < playerCount)
