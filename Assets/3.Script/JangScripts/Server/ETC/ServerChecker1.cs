@@ -93,38 +93,28 @@ public class ServerChecker1 : MonoBehaviour
         }
     }
 
-    private HashSet<NetworkConnectionToClient> readyInGameClients = new();
-
-    public void OnClientReadyInGame(NetworkConnectionToClient conn)
-    {
-        if (!readyInGameClients.Contains(conn))
-            readyInGameClients.Add(conn);
-
-        Debug.Log($"[ServerChecker1] 준비 완료: {readyInGameClients.Count}/{playerCount}");
-
-        if (readyInGameClients.Count == playerCount)
-        {
-            foreach (var c in readyInGameClients)
-                c.Send(new GameStartMsg());
-
-            Debug.Log("[ServerChecker1] 모든 클라이언트에게 GameStartMsg 전송 완료");
-        }
-    }
-
     private void OnPlayerConnected(NetworkConnectionToClient conn)
     {
+        if (players.Contains(conn)) return;
         if (players.Count >= playerCount)
         {
             conn.Disconnect();
             return;
         }
-
         players.Add(conn);
 
         if (players.Count == playerCount)
         {
             NetworkManager.singleton.ServerChangeScene("GameScene");
+            StartCoroutine(WaitAndSendGameStart());
         }
+    }
+
+    private IEnumerator WaitAndSendGameStart()
+    {
+        yield return new WaitForSeconds(1.0f);
+        foreach (var c in players)
+            c.Send(new GameStartMsg());
     }
 
     private void OnPlayerDisconnected(NetworkConnectionToClient conn)
