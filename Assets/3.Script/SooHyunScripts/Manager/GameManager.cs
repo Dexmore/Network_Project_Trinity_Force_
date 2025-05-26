@@ -29,7 +29,6 @@ public class GameTurn
     public byte[] drawing;
     public string guess;
     public string ownerName; // 추가
-    public bool isText;
 }
 
 
@@ -185,15 +184,6 @@ public class GameManager : MonoBehaviour
 
         if (currentPhaseIndex >= maxPhases)
         {
-            if (NetworkServer.active)
-            {
-                var serverChecker = FindObjectOfType<ServerChecker1>();
-                if (serverChecker != null)
-                {
-                    serverChecker.SendResultsToClients();
-                }
-            }
-
             ResultCanvas.SetActive(true);
             GoToResultScene();
             return;
@@ -265,18 +255,15 @@ public class GameManager : MonoBehaviour
     // 서버가 결과 메시지를 안보내는 경우 (백업)
     private void GoToResultScene()
     {
-        var checker = FindObjectOfType<ServerChecker1>();
-        if (checker != null)
+        if (receivedResults != null && receivedResults.Count > 0)
         {
-            List<PlayerResult> playerResults = checker.ConvertGameLogToPlayerResults();
-            ShowAllResults(playerResults);
+            ShowAllResults(receivedResults);
         }
         else
         {
-            Debug.LogError("ServerChecker1 not found!");
+            ShowNoResultMessage();
         }
     }
-
 
     private void ShowNoResultMessage()
     {
