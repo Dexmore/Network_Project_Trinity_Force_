@@ -62,13 +62,14 @@ public class ServerChecker1 : MonoBehaviour
     private List<string> submittedGuesses = new List<string>();
     private List<string> sentenceOwners = new List<string>();
 
-    // <<<<<<<<<<<< 여기를 4로 반드시 고정 >>>>>>>>>>
     private int playerCount = 4;
-
     private bool eventsRegistered = false; // 이벤트 중복 등록 방지용
+
     private void OnEnable()
     {
         path = Application.dataPath + "/License";
+        Debug.Log("[ServerChecker1] OnEnable() 실행됨");
+
         if (!Directory.Exists(path)) Directory.CreateDirectory(path);
         if (!File.Exists(path + "/License.json")) CreateDefaultLicenseFile(path);
         manager = GetComponent<NetworkManager>();
@@ -79,9 +80,9 @@ public class ServerChecker1 : MonoBehaviour
             NetworkServer.OnConnectedEvent += OnPlayerConnected;
             NetworkServer.OnDisconnectedEvent += OnPlayerDisconnected;
             eventsRegistered = true;
+            Debug.Log("[ServerChecker1] NetworkServer 이벤트 등록 완료");
         }
     }
-
 
     private void OnDisable()
     {
@@ -90,60 +91,16 @@ public class ServerChecker1 : MonoBehaviour
             NetworkServer.OnConnectedEvent -= OnPlayerConnected;
             NetworkServer.OnDisconnectedEvent -= OnPlayerDisconnected;
             eventsRegistered = false;
+            Debug.Log("[ServerChecker1] NetworkServer 이벤트 해제 완료");
         }
     }
 
-    private void OnPlayerConnected(NetworkConnectionToClient conn)
-    {
-        if (players.Contains(conn)) return;
-        if (players.Count >= playerCount)
-        {
-            conn.Disconnect();
-            return;
-        }
-        players.Add(conn);
-
-        if (players.Count == playerCount)
-        {
-            NetworkManager.singleton.ServerChangeScene("GameScene");
-            StartCoroutine(WaitAndSendGameStart());
-        }
-    }
-
-    private IEnumerator WaitAndSendGameStart()
-    {
-        yield return new WaitForSeconds(1.0f);
-        foreach (var c in players)
-            c.Send(new GameStartMsg());
-    }
-
-    private void OnPlayerDisconnected(NetworkConnectionToClient conn)
-    {
-        if (players.Contains(conn)) players.Remove(conn);
-        Debug.Log($"플레이어 이탈: {players.Count} / {playerCount}");
-
-        // 필요하다면, 모든 클라이언트에게 결과나 종료 메시지
-        if (players.Count < playerCount)
-        {
-            foreach (var c in players)
-                c.Send(new GameResultMsg { results = new List<PlayerResultData>() });
-        }
-    }
     private void Start()
     {
+        Debug.Log("[ServerChecker1] Start() 실행됨");
         type = LoadLicenseType();
         if (type == LicenseType.Server) Start_Server();
         else Start_Client();
-    }
-
-    private void CreateDefaultLicenseFile(string dirPath)
-    {
-        List<LicenseItem> items = new List<LicenseItem>
-        {
-            new LicenseItem("0", "127.0.0.1", "7777")
-        };
-        JsonData data = JsonMapper.ToJson(items);
-        File.WriteAllText(dirPath + "/License.json", data.ToString());
     }
 
     private LicenseType LoadLicenseType()
@@ -164,13 +121,25 @@ public class ServerChecker1 : MonoBehaviour
             manager.networkAddress = ServerIP;
             kcp.port = ushort.Parse(Port);
 
+            Debug.Log($"[ServerChecker1] License 정보 로드됨: {ServerIP}:{Port}, 타입: {parsedType}");
             return parsedType;
         }
         catch (Exception e)
         {
-            Debug.LogError("License Load Error: " + e.Message);
+            Debug.LogError("[ServerChecker1] License Load Error: " + e.Message);
             return LicenseType.Empty;
         }
+    }
+
+    private void CreateDefaultLicenseFile(string dirPath)
+    {
+        List<LicenseItem> items = new List<LicenseItem>
+        {
+            new LicenseItem("0", "127.0.0.1", "7777")
+        };
+        JsonData data = JsonMapper.ToJson(items);
+        File.WriteAllText(dirPath + "/License.json", data.ToString());
+        Debug.Log("[ServerChecker1] 기본 라이선스 파일 생성");
     }
 
     public void Start_Server()
@@ -181,47 +150,67 @@ public class ServerChecker1 : MonoBehaviour
             return;
         }
         manager.StartServer();
-        Debug.Log($"{manager.networkAddress} Start Server");
-
-        //NetworkServer.OnConnectedEvent += (conn) =>
-        //{
-        //    if (players.Count > playerCount)
-        //    {
-        //        conn.Disconnect();
-        //        return;
-        //    }
-        //    if (!players.Contains(conn)) players.Add(conn);
-
-        //    if (players.Count == playerCount)
-        //    {
-        //        foreach (var c in players)
-        //            c.Send(new GameStartMsg());
-        //    }
-        //};
-        //NetworkServer.OnDisconnectedEvent += (conn) =>
-        //{
-        //    if (players.Contains(conn)) players.Remove(conn);
-
-        //    if (players.Count < playerCount)
-        //    {
-        //        foreach (var c in players)
-        //        {
-        //            c.Send(new GameResultMsg { results = new List<PlayerResultData>() });
-        //        }
-        //    }
-        //};
+        Debug.Log($"[ServerChecker1] {manager.networkAddress} Start Server");
     }
 
     public void Start_Client()
     {
         manager.StartClient();
-        Debug.Log($"{manager.networkAddress} : Start Client...");
+        Debug.Log($"[ServerChecker1] {manager.networkAddress} : Start Client...");
     }
 
-    // --- 게임 데이터 관리 (playerCount=4 적용) ---
+    private void OnPlayerConnected(NetworkConnectionToClient conn)
+    {
+        Debug.Log($"[ServerChecker1] Player connected! : {players.Count + 1}");
+
+        if (players.Contains(conn)) return;
+        if (players.Count >= playerCount)
+        {
+            conn.Disconnect();
+            Debug.Log("[ServerChecker1] Sry 4 Players");
+            return;
+        }
+        players.Add(conn);
+
+        Debug.Log($"[ServerChecker1] Player : {players.Count}");
+
+        if (players.Count == playerCount)
+        {
+            Debug.Log("[ServerChecker1] Get Ready...");
+            NetworkManager.singleton.ServerChangeScene("GameScene");
+            StartCoroutine(WaitAndSendGameStart());
+        }
+    }
+
+    private IEnumerator WaitAndSendGameStart()
+    {
+        yield return new WaitForSeconds(1.0f);
+        foreach (var c in players)
+        {
+            Debug.Log($"[ServerChecker1] GameStartMsg : connID={c.connectionId}");
+            c.Send(new GameStartMsg());
+        }
+    }
+
+    private void OnPlayerDisconnected(NetworkConnectionToClient conn)
+    {
+        if (players.Contains(conn)) players.Remove(conn);
+        Debug.Log($"[ServerChecker1] Player out: {players.Count} / {playerCount}");
+
+        if (players.Count < playerCount)
+        {
+            foreach (var c in players)
+                c.Send(new GameResultMsg { results = new List<PlayerResultData>() });
+            Debug.Log("[ServerChecker1] PLayer Out / Empty Message");
+        }
+    }
+
+    // ========================= 게임 진행 데이터 관리 =========================
 
     public void AddSentence(NetworkPlayer player, string sentence)
     {
+        Debug.Log($"[ServerChecker1] AddSentence : {player.playerName}, {sentence}");
+
         if (!submittedPlayers.Contains(player))
         {
             submittedPlayers.Add(player);
@@ -239,6 +228,7 @@ public class ServerChecker1 : MonoBehaviour
                     sentence = submittedSentences[i],
                     ownerName = submittedPlayers[i].playerName
                 });
+                Debug.Log($"[ServerChecker1] gameLog: {submittedPlayers[i].playerName}, {submittedSentences[i]}");
             }
             ShowSentencesToEachPlayer();
             NextPhaseToAll();
@@ -249,6 +239,8 @@ public class ServerChecker1 : MonoBehaviour
 
     public void AddDrawing(NetworkPlayer player, byte[] pngData)
     {
+        Debug.Log($"[ServerChecker1] AddDrawing : {player.playerName}, DataLen={pngData?.Length}");
+
         if (!drawingPlayers.Contains(player))
         {
             drawingPlayers.Add(player);
@@ -266,6 +258,7 @@ public class ServerChecker1 : MonoBehaviour
                     drawing = submittedDrawings[i],
                     ownerName = ownerName
                 });
+                Debug.Log($"[ServerChecker1] gameLog : {drawingPlayers[i].playerName}, ownerName={ownerName}");
             }
             DistributeDrawings();
             NextPhaseToAll();
@@ -276,6 +269,8 @@ public class ServerChecker1 : MonoBehaviour
 
     public void AddGuess(NetworkPlayer player, string guessText)
     {
+        Debug.Log($"[ServerChecker1] AddGuess / {player.playerName}, {guessText}");
+
         if (!guessPlayers.Contains(player))
         {
             guessPlayers.Add(player);
@@ -304,11 +299,13 @@ public class ServerChecker1 : MonoBehaviour
     public void ShowSentencesToEachPlayer()
     {
         int count = submittedPlayers.Count;
+        Debug.Log("[ServerChecker1] ShowSentencesToEachPlayer");
         for (int i = 0; i < count; i++)
         {
             int targetIndex = (i + 1) % count;
             NetworkPlayer receiver = submittedPlayers[targetIndex];
             string sentence = submittedSentences[i];
+            Debug.Log($"[ServerChecker1] -> {receiver.playerName} / {sentence}");
             receiver.TargetShowSentence(receiver.connectionToClient, sentence);
         }
     }
@@ -316,11 +313,13 @@ public class ServerChecker1 : MonoBehaviour
     public void DistributeDrawings()
     {
         int count = drawingPlayers.Count;
+        Debug.Log("[ServerChecker1] DistributeDrawings");
         for (int i = 0; i < count; i++)
         {
             int targetIndex = (i + 1) % count;
             NetworkPlayer receiver = drawingPlayers[targetIndex];
             byte[] pngData = submittedDrawings[i];
+            Debug.Log($"[ServerChecker1] -> {receiver.playerName} / {pngData?.Length}");
             receiver.TargetReceiveDrawing(receiver.connectionToClient, pngData);
         }
     }
@@ -328,19 +327,23 @@ public class ServerChecker1 : MonoBehaviour
     public void ShowGuessesToEachPlayer()
     {
         int count = guessPlayers.Count;
+        Debug.Log("[ServerChecker1] ShowGuessesToEachPlayer");
         for (int i = 0; i < count; i++)
         {
             int targetIndex = (i + 1) % count;
             NetworkPlayer receiver = guessPlayers[targetIndex];
             string guess = submittedGuesses[i];
+            Debug.Log($"[ServerChecker1] -> {receiver.playerName} -> {guess}");
             receiver.TargetShowGuess(receiver.connectionToClient, guess);
         }
     }
 
     private void NextPhaseToAll()
     {
+        Debug.Log("[ServerChecker1] NextPhaseToAll");
         foreach (var conn in NetworkServer.connections.Values)
         {
+            Debug.Log($"[ServerChecker1] ProceedToNextPhaseMsg : connID={conn.connectionId}");
             conn.Send(new ProceedToNextPhaseMsg());
         }
     }
@@ -370,12 +373,14 @@ public class ServerChecker1 : MonoBehaviour
                 guess = guessObj?.guess ?? "",
                 drawing2 = drawing2Obj?.drawing
             });
+            Debug.Log($"[ServerChecker1] 결과 변환: {owner}");
         }
         return result;
     }
 
     private void OnApplicationQuit()
     {
+        Debug.Log("[ServerChecker1] OnApplicationQuit 호출됨");
         if (NetworkClient.isConnected) manager.StopClient();
         if (NetworkServer.active) manager.StopServer();
     }
