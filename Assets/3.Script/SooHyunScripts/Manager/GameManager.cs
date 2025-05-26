@@ -11,8 +11,6 @@ public struct ProceedToNextPhaseMsg : NetworkMessage { }
 //    public List<PlayerResultData> results;
 //}
 public enum CanvasType { Text, Draw, Guess }
-
-[System.Serializable]
 public struct PlayerResultData
 {
     public string playerName;
