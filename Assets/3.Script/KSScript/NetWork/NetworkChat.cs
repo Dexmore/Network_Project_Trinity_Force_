@@ -101,6 +101,7 @@ public class NetworkChat : NetworkBehaviour
             {
                 StopCoroutine(startGameRoutine);
                 startGameRoutine = null;
+                LobbyPopupUIManager.Instance?.ShowPopup("게임 시작이 취소되었습니다.");
                 Debug.Log("[NetworkChat] 준비 취소됨 - 씬 전환 취소됨");
             }
         }
@@ -109,7 +110,15 @@ public class NetworkChat : NetworkBehaviour
     private IEnumerator StartGameAfterDelay()
     {
         Debug.Log("[NetworkChat] 모든 유저가 준비 완료됨 - 3초 후 게임 시작");
-        yield return new WaitForSeconds(3f);
+
+        if (LobbyPopupUIManager.Instance != null)
+            LobbyPopupUIManager.Instance.ShowPopup("3초 후 게임이 시작됩니다...");
+
+        yield return new WaitForSeconds(1f);
+        LobbyPopupUIManager.Instance?.ShowPopup("2...");
+        yield return new WaitForSeconds(1f);
+        LobbyPopupUIManager.Instance?.ShowPopup("1...");
+        yield return new WaitForSeconds(1f);
 
         if (isServer)
         {
