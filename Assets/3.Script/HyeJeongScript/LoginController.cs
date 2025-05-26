@@ -43,6 +43,8 @@ public class LoginController : MonoBehaviour
     [SerializeField] private GameObject NoticeSignup_pannel;  // 회원가입 알림 패널창
     [SerializeField] private Text NoticeSignuplog;   // 회원가입 알림문구
 
+    
+
     #region 로그인
     public void LoginBtn()
     {
@@ -120,7 +122,7 @@ public class LoginController : MonoBehaviour
             StartCoroutine(fade.AutoFade(NoticeLogin_pannel, 1.5f));
 
 
-            logining.loginingPannel.SetActive(true);    //로그아웃, 회원정보 변경, 회원탈퇴 패널창 나타남
+            logining.loginingPannel.SetActive(true);    //로그아웃, 회원정보 변경, 회원탈퇴, 서버연결 패널창 나타남
             logining.userNickname.text = SQLManager.instance.info.User_Nickname;
 
         }

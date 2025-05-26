@@ -5,46 +5,49 @@ using UnityEngine.UI;
 
 public class LoginingController : MonoBehaviour
 {
-    //���̵� �ƿ�
+    //페이드
     [SerializeField] private UIFade fade;
 
-    [Header("�α׾ƿ� �ϱ� ���� LoginController�� ������")]
+    [Header("로그인창 불러오기")]
     [SerializeField] private LoginController login;
 
-    [Header("�α��� �� ȸ������ �г�")]
-    public GameObject userPannel;   // ���� �г��� �г�â
-    public Text userNickname;   // ���� �г���
-    public GameObject loginingPannel;   // �α׾ƿ�, ȸ����������, ȸ��Ż�� �г�â
+    [Header("로그인 후")]
+    public GameObject userPannel;   // 사용자 닉네임이 든 패널 
+    public Text userNickname;   // 사용자 닉네임
+    public GameObject loginingPannel;   // 로그인 시 등장하는 패널
 
-    [Header("ȸ������ ����â")]
-    [SerializeField] private GameObject Update_pannel;  // ȸ������ ���� ���� �г� -> �г���, ��й�ȣ �� 1�� ����
+    [Header("회원정보 수정 패널")]
+    [SerializeField] private GameObject Update_pannel;  // 회원정보 수정 패널
 
-    [Header("ȸ������ ����â - �г���")]
-    [SerializeField] private GameObject Updatename_pannel;  // �г��� ���� ���� �г�
+    [Header("회원정보 수정 - 닉네임")]
+    [SerializeField] private GameObject Updatename_pannel;  // 닉네임 변경창 패널
     public InputField name_new;
-    [SerializeField] private Text updatenamelog;   // �г��� ���� ��� ����
+    [SerializeField] private Text updatenamelog;   // 닉네임 변경 시 경고 내용
 
-    [Header("�г��� ���� �� �˾�â")]
-    [SerializeField] private GameObject NoticeNickname_pannel;  // �г��� ���� �г�â
-    [SerializeField] private Text NoticeNicknamelog;    // �г��� ���� �˸�
+    [Header("닉네임 변경 알림창")]
+    [SerializeField] private GameObject NoticeNickname_pannel;  // 닉네임 변경 알림창
+    [SerializeField] private Text NoticeNicknamelog;    // 닉네임 변경 알림창 내용
 
-    [Header("ȸ������ ����â - ��й�ȣ")]
-    [SerializeField] private GameObject Updatepwd_pannel;  // ��й�ȣ ���� ���� �г�
+    [Header("회원정보 수정 - 비밀번호")]
+    [SerializeField] private GameObject Updatepwd_pannel;  // 비밀번호 변경창 패널
     public InputField pwd_new;
-    [SerializeField] private Text updatepwdlog;   // ��й�ȣ ���� ��� ����
+    [SerializeField] private Text updatepwdlog;   // 비밀번호 변경 시 경고 내용
 
-    [Header("��й�ȣ ������ �˾�â")]
-    [SerializeField] private GameObject NoticePWD_pannel;  // ��й�ȣ ���� �г�â
-    [SerializeField] private Text NoticePWDlog;    // ��й�ȣ ���� �˸�
+    [Header("비밀번호 변경 알림창")]
+    [SerializeField] private GameObject NoticePWD_pannel;  // 비밀번호 변경 알림창
+    [SerializeField] private Text NoticePWDlog;    // 비밀번호 변경 알림창 내용
 
-    [Header("ȸ��Ż��")]
-    public GameObject Delete_Pannel;    // ȸ��Ż�� �г�â
+    [Header("회원탈퇴")]
+    public GameObject Delete_Pannel;    // 회원탈퇴 패널
 
-    [Header("ȸ��Ż�� �˸�â")]
-    [SerializeField] private GameObject NoticeDelete_pannel;  // ȸ��Ż�� �˸� �г�â
-    [SerializeField] private Text Deletelog;   // ȸ��Ż�� �˸�����
+    [Header("회원탈퇴 완료")]
+    [SerializeField] private GameObject NoticeDelete_pannel;  // 회원탈퇴 완료 패널
+    [SerializeField] private Text Deletelog;   // 회원탈퇴 내용
 
-    //�α׾ƿ�
+    [Header("서버 연결하기")]
+    public GameObject ServerConnect;  //서버 연결
+
+    // 로그아웃
     public void LogoutBtn()
     {
         loginingPannel.SetActive(false);
@@ -54,7 +57,7 @@ public class LoginingController : MonoBehaviour
         EmptyLoginField();
     }
 
-    #region ȸ������ ����
+    #region 회원정보수정
     public void OpenUpdatePannel()
     {
         Update_pannel.SetActive(true);
@@ -70,7 +73,7 @@ public class LoginingController : MonoBehaviour
         Update_pannel.SetActive(false);
         Updatename_pannel.SetActive(true);
 
-        //�Է�â �ʱ�ȭ
+        //입력창 초기화
         name_new.text = string.Empty;
         updatenamelog.text = string.Empty;
     }
@@ -80,7 +83,7 @@ public class LoginingController : MonoBehaviour
         Update_pannel.SetActive(false);
         Updatepwd_pannel.SetActive(true);
 
-        //�Է�â �ʱ�ȭ
+        //입력창 초기화
         pwd_new.text = string.Empty;
         updatepwdlog.text = string.Empty;
     }
@@ -119,35 +122,32 @@ public class LoginingController : MonoBehaviour
         string id = SQLManager.instance.info?.User_name;
         string currentname = SQLManager.instance.info?.User_Nickname;
         string newname = name_new.text.Trim();
-        //Trim() : ��������
+        //Trim() : 앞뒤 공백 제거
 
         if(name_new.text.Equals(string.Empty))
         {
-            updatenamelog.text = "������ �г����� �Է��ϼ���";
+            updatenamelog.text = "변경할 닉네임을 입력하세요.";
             return;
         }
 
         if (SQLManager.instance.UpdateNicknameinfo(id, currentname, newname))
         {
-            // �г��� ���� �˸�â ����
+            // 닉네임 변경창 열기
             Updatename_pannel.SetActive(false);
-            NoticeNicknamelog.text = $"�г����� <color=yellow>{newname}</color>(��)�� ����Ǿ����ϴ�.";
+            NoticeNicknamelog.text = $"닉네임이 <color=yellow>{newname}</color>(으)로 변경되었습니다.";
             userNickname.text = newname;
 
-            // ���̵��� ����
+            // 페이드인
             fade.FadeIn(NoticeNickname_pannel);
             //NoticeNickname_pannel.SetActive(true);
             
-            //�ð� ������ ���̵� �ƿ�
+            //페이드 아웃
             StartCoroutine(fade.AutoFade(NoticeNickname_pannel, 1.5f));
-
-            // 1.5�� �� �����
-            //Invoke("CloseNoticeNicknamePannel", 1.5f);
         }
 
         else
         {
-            updatenamelog.text = "�̹� �����ϴ� �г����Դϴ�.";
+            updatenamelog.text = "이미 사용 중인 닉네임입니다.";
         }
     }
 
@@ -163,35 +163,32 @@ public class LoginingController : MonoBehaviour
 
         if(pwd_new.text.Equals(string.Empty))
         {
-            updatepwdlog.text = "������ ��й�ȣ�� �Է��ϼ���";
+            updatepwdlog.text = "변경할 비밀번호를 입력하세요.";
             return;
         }
 
         if(SQLManager.instance.Updatepasswordinfo(id, newpwd))
         {
-            // ��й�ȣ ���� �˸�â ����
-            NoticePWDlog.text = "��й�ȣ�� ����Ǿ����ϴ�.";
+            // 비밀번호 변경창 열기
+            NoticePWDlog.text = "비밀번호가 변경되었습니다.";
             Updatepwd_pannel.SetActive(false);
 
-            // ���̵��� ����
+            // 비밀번호 알림창 페이드인
             fade.FadeIn(NoticePWD_pannel);
             //NoticePWD_pannel.SetActive(true);
             
-            //�ð� ������ ���̵� �ƿ�
+            // 비밀번호 알림창 페이드 아웃
             StartCoroutine(fade.AutoFade(NoticePWD_pannel, 1.5f));
-
-            // 1.5�� �� �����
-            //Invoke("CloseNoticePWDPannel", 1.5f);
         }
 
         else
         {
-            updatepwdlog.text = "�ٽ� �Է��ϼ���";
+            updatepwdlog.text = "다시 입력하세요.";
         }
     }
     #endregion
 
-    #region ȸ��Ż��
+    #region 회원탈퇴
     public void OpenDeletePannel()
     {
         Delete_Pannel.SetActive(true);
@@ -215,14 +212,14 @@ public class LoginingController : MonoBehaviour
 
         if(SQLManager.instance.Deleteinfo(id, pwd, nickname))
         {
-            // ȸ�� Ż�� �˸�â ����
-            Deletelog.text = "ȸ��Ż�� �Ϸ�Ǿ����ϴ�. �׵��� �̿����ּż� �����մϴ�.";
+            // 회원탈퇴 시 알림창 내용
+            Deletelog.text = "회원탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사합니다.";
 
-            // ���̵��� ����
+            // 회원탈퇴 알림창 생성시 페이드 인
             fade.FadeIn(NoticeDelete_pannel);
             //NoticeDelete_pannel.SetActive(true);
 
-            //�ð� ������ ���̵� �ƿ�
+            // 회원탈퇴 알림창 페이드 아웃
             StartCoroutine(fade.AutoFade(NoticeDelete_pannel, 1.5f));
 
             loginingPannel.SetActive(false);
@@ -231,14 +228,11 @@ public class LoginingController : MonoBehaviour
             login.LoginPannel.SetActive(true);
 
             EmptyLoginField();
-
-            //1.5�� �� �����
-            //Invoke("CloseNoticeDeletePannel", 1.5f);
         }
     }
     #endregion
 
-    // �α��� �Է�â �ʱ�ȭ
+    //로그인 입력창 초기화
     public void EmptyLoginField()
     {
         login.id_i.text = string.Empty;

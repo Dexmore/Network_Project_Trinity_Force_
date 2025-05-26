@@ -1355,6 +1355,7 @@ RectTransform:
   m_Children:
   - {fileID: 120469580}
   - {fileID: 463065049}
+  - {fileID: 707364416}
   - {fileID: 2045906487}
   - {fileID: 704249206}
   - {fileID: 80706273}
@@ -3956,7 +3957,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1629008731}
-  m_Father: {fileID: 1396709326}
+  m_Father: {fileID: 279661986}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -8656,7 +8657,6 @@ RectTransform:
   - {fileID: 1113918928}
   - {fileID: 1980680577}
   - {fileID: 606372174}
-  - {fileID: 707364416}
   - {fileID: 332033908}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -10387,6 +10387,7 @@ MonoBehaviour:
   Delete_Pannel: {fileID: 1819464303}
   NoticeDelete_pannel: {fileID: 1980680576}
   Deletelog: {fileID: 1840998168}
+  ServerConnect: {fileID: 0}
 --- !u!4 &1703008898
 Transform:
   m_ObjectHideFlags: 0
