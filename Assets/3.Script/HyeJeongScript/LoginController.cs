@@ -176,7 +176,7 @@ public class LoginController : MonoBehaviour
 
         else
         {
-            log1_signup.text = "이미 존재하는 아이디입니다.";
+            log1_signup.text = "이미 사용 중인 아이디입니다.";
         }
     }
 
@@ -189,7 +189,7 @@ public class LoginController : MonoBehaviour
             return;
         }
 
-        if(SQLManager.instance.SignupStep2(nickname_Signup.text, cached_id))
+        if(SQLManager.instance.SignupStep2(cached_id, nickname_Signup.text))
         {
             // 2단계 성공 + 회원가입 완료
             NoticeSignuplog.text = $"<color=yellow>{nickname_Signup.text}</color>님 가입 완료";
@@ -207,7 +207,7 @@ public class LoginController : MonoBehaviour
 
         else
         {
-            log2_signup.text = "이미 존재하는 닉네임입니다.";
+            log2_signup.text = "이미 사용 중인 닉네임입니다.";
         }
     }
     #endregion

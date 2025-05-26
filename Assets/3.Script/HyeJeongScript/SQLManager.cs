@@ -200,9 +200,24 @@ public class SQLManager : MonoBehaviour
             {
                 cmd.Parameters.AddWithValue("@id", id);
                 var result = cmd.ExecuteScalar();
-                if (result == null || result is DBNull)
+
+                if(result != null)
                 {
-                    const string insSql = @"
+                    if (result == DBNull.Value)
+                    {
+                        // 아이디는 있지만 닉네임이 없을 때
+                        return true;
+                    }
+                    else
+                    {
+                        //아이디 + 닉네임 모두 있음 -> 중복된 아이디
+                        return false;
+                    }
+                }
+
+
+                // 1단계 : 아이디, 비밀번호 입력 -> DB에 Insert
+                const string insSql = @"
                         INSERT INTO user_info (Name, Password, Nickname)
                         VALUES (@id, @pw, NULL);
                     ";
@@ -212,7 +227,7 @@ public class SQLManager : MonoBehaviour
                         ins.Parameters.AddWithValue("@pw", password);
                         return ins.ExecuteNonQuery() > 0;
                     }
-                }
+                
             }
         }
         catch (Exception e)
@@ -226,12 +241,13 @@ public class SQLManager : MonoBehaviour
     {
         if (!EnsureConnection()) return false;
 
-        const string checkSql = @"SELECT COUNT(*) FROM user_info WHERE Nickname = @nick;";
+        const string checkSql = @"SELECT COUNT(*) FROM user_info WHERE Nickname = @nick AND Name != @id;";
         try
         {
             using (var cmd = new MySqlCommand(checkSql, con))
             {
                 cmd.Parameters.AddWithValue("@nick", newNickname);
+                cmd.Parameters.AddWithValue("@id", id);
                 var cnt = Convert.ToInt64(cmd.ExecuteScalar());
                 if (cnt > 0) return false;
             }
