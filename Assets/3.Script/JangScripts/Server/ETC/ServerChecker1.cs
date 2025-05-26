@@ -136,7 +136,7 @@ public class ServerChecker1 : MonoBehaviour
             }
             if (!players.Contains(conn)) players.Add(conn);
 
-            if (players.Count == playerCount)
+            if (players.Count == playerCount - 1)
             {
                 foreach (var c in players)
                     c.Send(new GameStartMsg());
