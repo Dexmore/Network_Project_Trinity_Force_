@@ -35,7 +35,7 @@ public class PlayerResult
     public byte[] drawing2;
 }
 
-// �� NetworkPlayer�� ���� ����! (���� �������� ����)
+//    NetworkPlayer            ! (                  )
 
 public class ServerChecker1 : MonoBehaviour
 {
@@ -158,7 +158,7 @@ public class ServerChecker1 : MonoBehaviour
         Debug.Log($"{manager.networkAddress} : Start Client...");
     }
 
-    // ��ƽ�� ���� ������ ���� �Լ���
+    //   ƽ                     Լ   
     public void AddSentence(NetworkPlayer player, string sentence)
     {
         if (!submittedPlayers.Contains(player))
