@@ -1,5 +1,6 @@
 ﻿using Mirror;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class NetworkPlayer : NetworkBehaviour
 {
@@ -28,8 +29,9 @@ public class NetworkPlayer : NetworkBehaviour
             gm.ShowReceivedSentence(message, playerIndex);
     }
 
+    // 변경: List<byte>로
     [Command]
-    public void CmdSubmitDrawing(byte[] pngData)
+    public void CmdSubmitDrawing(List<byte> pngData)
     {
         var serverChecker = FindObjectOfType<ServerChecker1>();
         if (serverChecker != null)
@@ -37,7 +39,7 @@ public class NetworkPlayer : NetworkBehaviour
     }
 
     [TargetRpc]
-    public void TargetReceiveDrawing(NetworkConnection target, byte[] pngData)
+    public void TargetReceiveDrawing(NetworkConnection target, List<byte> pngData)
     {
         var gm = FindObjectOfType<GameManager>();
         if (gm != null)
