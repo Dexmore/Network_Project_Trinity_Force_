@@ -1,33 +1,15 @@
 using Mirror;
 using UnityEngine;
+using System.Collections; // ← 코루틴 쓰려면 필요
 
 public class NetworkChat : NetworkBehaviour
 {
-    // 채팅 이벤트
     public delegate void ChatMessageHandler(string message, string senderName);
     public static event ChatMessageHandler OnChatMessage;
 
-    // 로비 정보
-    [SyncVar(hook = nameof(OnNicknameChanged))]
-    public string playerName;
+    [SyncVar(hook = nameof(OnReadyChanged))] public bool isReady;
+    [SyncVar(hook = nameof(OnNicknameChanged))] public string playerName;
 
-    [SyncVar(hook = nameof(OnReadyChanged))]
-    public bool isReady;
-
-    // ✅ 채팅 커맨드
-    [Command]
-    public void CmdSendMessage(string message, string senderName)
-    {
-        RpcReceiveMessage(message, senderName);
-    }
-
-    [ClientRpc]
-    void RpcReceiveMessage(string message, string senderName)
-    {
-        OnChatMessage?.Invoke(message, senderName);
-    }
-
-    // ✅ 닉네임 설정 (로컬 플레이어일 때 서버에 전달)
     public override void OnStartLocalPlayer()
     {
         string nick = SQLManager.instance?.info?.User_Nickname ?? "Unknown";
@@ -40,22 +22,25 @@ public class NetworkChat : NetworkBehaviour
         playerName = nick;
     }
 
-    // ✅ 로컬 플레이어가 클라이언트에 등장했을 때 UI 갱신 (안정적인 타이밍)
     public override void OnStartClient()
     {
         base.OnStartClient();
-
-        if (LobbyUserManager.Instance != null)
-        {
-            LobbyUserManager.Instance.AddUser(playerName, isReady);
-        }
-        else
-        {
-            Debug.LogWarning("[NetworkChat] LobbyUserManager.Instance is null in OnStartClient");
-        }
+        StartCoroutine(WaitAndRegister());
     }
 
-    // ✅ 준비 상태 변경 시 UI 갱신
+
+    private IEnumerator WaitAndRegister()
+    {
+        // ① 로비 매니저가 준비될 때까지 기다림
+        yield return new WaitUntil(() => LobbyUserManager.Instance != null);
+
+        // ② playerName이 유효해질 때까지 기다림
+        yield return new WaitUntil(() => !string.IsNullOrEmpty(playerName));
+
+        // ③ 이제 안전하게 호출
+        LobbyUserManager.Instance.AddUser(playerName, isReady);
+    }
+
     void OnReadyChanged(bool _, bool newVal)
     {
         if (LobbyUserManager.Instance != null)
@@ -64,17 +49,23 @@ public class NetworkChat : NetworkBehaviour
         }
     }
 
-    // ✅ 준비 상태 토글
+    void OnNicknameChanged(string _, string __) { }
+
     [Command]
     public void CmdToggleReady()
     {
         isReady = !isReady;
     }
 
-    // ❌ 제거된 부분: 너무 빠른 호출로 null 예외 발생
-    void OnNicknameChanged(string _, string newName)
+    [Command]
+    public void CmdSendMessage(string message, string senderName)
     {
-        // AddUser() 호출 제거됨
-        // 대신 OnStartClient에서 호출
+        RpcReceiveMessage(message, senderName);
+    }
+
+    [ClientRpc]
+    void RpcReceiveMessage(string message, string senderName)
+    {
+        OnChatMessage?.Invoke(message, senderName);
     }
 }

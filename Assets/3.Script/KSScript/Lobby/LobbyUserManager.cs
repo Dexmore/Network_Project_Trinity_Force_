@@ -12,7 +12,7 @@ public class LobbyUserManager : MonoBehaviour
 
     void Awake()
     {
-        LobbyUserManager.Instance = this;
+        Instance = this;
     }
 
     public void AddUser(string nickname, bool isReady)
