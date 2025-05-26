@@ -66,7 +66,7 @@ public class ServerChecker1 : MonoBehaviour
     private List<string> submittedGuesses = new List<string>();
     private List<string> sentenceOwners = new List<string>();
 
-    private int playerCount = 4;
+    private int playerCount = 2;
 
     private void OnEnable()
     {
