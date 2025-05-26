@@ -27,7 +27,7 @@ public class NetworkChat : NetworkBehaviour
         OnChatMessage?.Invoke(message, senderName);
     }
 
-    // ✅ 닉네임 전달
+    // ✅ 닉네임 설정 (로컬 플레이어일 때 서버에 전달)
     public override void OnStartLocalPlayer()
     {
         string nick = SQLManager.instance?.info?.User_Nickname ?? "Unknown";
@@ -40,18 +40,22 @@ public class NetworkChat : NetworkBehaviour
         playerName = nick;
     }
 
-    void OnNicknameChanged(string _, string newName)
+    // ✅ 로컬 플레이어가 클라이언트에 등장했을 때 UI 갱신 (안정적인 타이밍)
+    public override void OnStartClient()
     {
+        base.OnStartClient();
+
         if (LobbyUserManager.Instance != null)
         {
-            LobbyUserManager.Instance.AddUser(newName, isReady);
+            LobbyUserManager.Instance.AddUser(playerName, isReady);
         }
         else
         {
-            Debug.LogWarning("[NetworkChat] LobbyUserManager.Instance is null during OnNicknameChanged");
+            Debug.LogWarning("[NetworkChat] LobbyUserManager.Instance is null in OnStartClient");
         }
     }
 
+    // ✅ 준비 상태 변경 시 UI 갱신
     void OnReadyChanged(bool _, bool newVal)
     {
         if (LobbyUserManager.Instance != null)
@@ -60,9 +64,17 @@ public class NetworkChat : NetworkBehaviour
         }
     }
 
+    // ✅ 준비 상태 토글
     [Command]
     public void CmdToggleReady()
     {
         isReady = !isReady;
+    }
+
+    // ❌ 제거된 부분: 너무 빠른 호출로 null 예외 발생
+    void OnNicknameChanged(string _, string newName)
+    {
+        // AddUser() 호출 제거됨
+        // 대신 OnStartClient에서 호출
     }
 }
