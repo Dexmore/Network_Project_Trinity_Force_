@@ -6,7 +6,12 @@ public class NetworkPlayer : NetworkBehaviour
     [SyncVar] public bool HasSubmitted = false;
     [SyncVar] public string lastText = "";
     [SyncVar] public int playerIndex = -1;
-    [SyncVar] public string playerName; // 필수
+    [SyncVar] public string playerName; // SQLManager에서 가져올 이름
+
+    [SyncVar(hook = nameof(OnReadyChanged))]
+    public bool isReady = false;
+
+    #region 기존 커맨드/타겟 RPC
 
     [Command]
     public void CmdSetSubmitted(bool value)
@@ -62,4 +67,44 @@ public class NetworkPlayer : NetworkBehaviour
         if (gm != null)
             gm.ShowReceivedGuess(guess, playerIndex);
     }
+
+    #endregion
+
+    #region 로비: 닉네임 / 준비 상태
+
+    public override void OnStartLocalPlayer()
+    {
+        string myNick = SQLManager.instance?.info?.User_Nickname ?? "Unknown";
+        CmdSetNickname(myNick);
+    }
+
+    [Command]
+    void CmdSetNickname(string nick)
+    {
+        playerName = nick;
+    }
+
+    void OnReadyChanged(bool oldVal, bool newVal)
+    {
+        // 상태 업데이트 (UI 반영)
+        if (LobbyUserManager.Instance != null)
+            LobbyUserManager.Instance.UpdateNicknameReady(playerName, newVal);
+    }
+
+    public override void OnStartClient()
+    {
+        // 클라이언트 시작 시 AddUser 실행
+        if (LobbyUserManager.Instance != null)
+        {
+            LobbyUserManager.Instance.AddUser(playerName, isReady);
+        }
+    }
+
+    [Command]
+    public void CmdToggleReady()
+    {
+        isReady = !isReady;
+    }
+
+    #endregion
 }
