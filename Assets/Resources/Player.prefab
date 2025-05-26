@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6438621114045393500}
   - component: {fileID: 904175774757069297}
   - component: {fileID: 3041738262184577097}
+  - component: {fileID: 8087103538927843911}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -65,5 +66,26 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  playerName: 
+  userListParentSerialized: {fileID: 0}
+  userSlotPrefabSerialized: {fileID: 0}
   isReady: 0
+  playerName: 
+--- !u!114 &8087103538927843911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 988365978363433824}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bad268a029caa9c4b8b29e342d4c6853, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  HasSubmitted: 0
+  lastText: 
+  playerIndex: -1
+  playerName: 

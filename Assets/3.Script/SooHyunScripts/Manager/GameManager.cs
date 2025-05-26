@@ -13,16 +13,6 @@ public struct GameResultMsg : NetworkMessage
 public enum CanvasType { Text, Draw, Guess }
 
 [System.Serializable]
-public class PlayerResult
-{
-    public string playerName;
-    public string sentence;
-    public byte[] drawing1;
-    public string guess;
-    public byte[] drawing2;
-}
-
-[System.Serializable]
 public struct PlayerResultData
 {
     public string playerName;

@@ -15,7 +15,7 @@ public class NetworkPlayer : NetworkBehaviour
     public void CmdSetText(string value)
     {
         lastText = value;
-        var serverChecker = FindObjectOfType<ServerChecker>();
+        var serverChecker = FindObjectOfType<ServerChecker1>();
         if (serverChecker != null)
             serverChecker.AddSentence(this, value);
     }
@@ -31,7 +31,7 @@ public class NetworkPlayer : NetworkBehaviour
     [Command]
     public void CmdSubmitDrawing(byte[] pngData)
     {
-        var serverChecker = FindObjectOfType<ServerChecker>();
+        var serverChecker = FindObjectOfType<ServerChecker1>();
         if (serverChecker != null)
             serverChecker.AddDrawing(this, pngData);
     }
@@ -47,7 +47,7 @@ public class NetworkPlayer : NetworkBehaviour
     [Command]
     public void CmdSetGuess(string guessText)
     {
-        var serverChecker = FindObjectOfType<ServerChecker>();
+        var serverChecker = FindObjectOfType<ServerChecker1>();
         if (serverChecker != null)
             serverChecker.AddGuess(this, guessText);
     }
