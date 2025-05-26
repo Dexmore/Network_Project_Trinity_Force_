@@ -3,23 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using Mirror;
 using System.Collections.Generic;
-
-public struct GameStartMsg : NetworkMessage { }
-public struct ProceedToNextPhaseMsg : NetworkMessage { }
-public struct GameResultMsg : NetworkMessage
-{
-    public List<PlayerResultData> results;
-}
 public enum CanvasType { Text, Draw, Guess }
-public struct PlayerResultData
-{
-    public string playerName;
-    public string sentence;
-    public byte[] drawing1;
-    public string guess;
-    public byte[] drawing2;
-}
-
 public class GameTurn
 {
     public string playerName;
@@ -355,7 +339,6 @@ public class GameManager : MonoBehaviour
     //    prevButton.interactable = (index > 0);
     //    nextButton.interactable = (index < allResults.Count - 1);
     //}
-
     private void EndGame()
     {
         ResultCanvas.SetActive(false);

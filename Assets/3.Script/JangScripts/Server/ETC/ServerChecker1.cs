@@ -6,12 +6,7 @@ using System.IO;
 using kcp2k;
 using System;
 
-public enum LicenseType
-{
-    Empty = 0,
-    Client,
-    Server
-}
+public enum LicenseType { Empty = 0, Client, Server }
 
 public class LicenseItem
 {
@@ -35,7 +30,7 @@ public class PlayerResult
     public byte[] drawing2;
 }
 
-// ★ NetworkPlayer는 따로 존재! (여기 포함하지 않음)
+// NetworkPlayer는 따로 존재
 
 public class ServerChecker1 : MonoBehaviour
 {
@@ -66,7 +61,8 @@ public class ServerChecker1 : MonoBehaviour
     private List<string> submittedGuesses = new List<string>();
     private List<string> sentenceOwners = new List<string>();
 
-    private int playerCount = 5;
+    // <<<<<<<<<<<< 여기를 4로 반드시 고정 >>>>>>>>>>
+    private int playerCount = 4;
 
     private void OnEnable()
     {
@@ -140,7 +136,7 @@ public class ServerChecker1 : MonoBehaviour
             }
             if (!players.Contains(conn)) players.Add(conn);
 
-            if (players.Count == playerCount - 1)
+            if (players.Count == playerCount)
             {
                 foreach (var c in players)
                     c.Send(new GameStartMsg());
@@ -149,6 +145,14 @@ public class ServerChecker1 : MonoBehaviour
         NetworkServer.OnDisconnectedEvent += (conn) =>
         {
             if (players.Contains(conn)) players.Remove(conn);
+
+            if (players.Count < playerCount)
+            {
+                foreach (var c in players)
+                {
+                    c.Send(new GameResultMsg { results = new List<PlayerResultData>() });
+                }
+            }
         };
     }
 
@@ -158,7 +162,8 @@ public class ServerChecker1 : MonoBehaviour
         Debug.Log($"{manager.networkAddress} : Start Client...");
     }
 
-    // 갈틱폰 게임 데이터 관리 함수들
+    // --- 게임 데이터 관리 (playerCount=4 적용) ---
+
     public void AddSentence(NetworkPlayer player, string sentence)
     {
         if (!submittedPlayers.Contains(player))
@@ -284,34 +289,34 @@ public class ServerChecker1 : MonoBehaviour
         }
     }
 
-    //public List<PlayerResult> ConvertGameLogToPlayerResults()
-    //{
-    //    var result = new List<PlayerResult>();
-    //    HashSet<string> ownerNames = new HashSet<string>();
-    //    foreach (var log in gameLog)
-    //    {
-    //        if (!string.IsNullOrEmpty(log.ownerName))
-    //            ownerNames.Add(log.ownerName);
-    //    }
+    public List<PlayerResult> ConvertGameLogToPlayerResults()
+    {
+        var result = new List<PlayerResult>();
+        HashSet<string> ownerNames = new HashSet<string>();
+        foreach (var log in gameLog)
+        {
+            if (!string.IsNullOrEmpty(log.ownerName))
+                ownerNames.Add(log.ownerName);
+        }
 
-    //    foreach (var owner in ownerNames)
-    //    {
-    //        var sentenceObj = gameLog.Find(x => x.ownerName == owner && !string.IsNullOrEmpty(x.sentence));
-    //        var drawing1Obj = gameLog.Find(x => x.ownerName == owner && x.drawing != null && string.IsNullOrEmpty(x.guess));
-    //        var guessObj = gameLog.Find(x => x.ownerName == owner && !string.IsNullOrEmpty(x.guess));
-    //        var drawing2Obj = gameLog.FindLast(x => x.ownerName == owner && x.drawing != null && !string.IsNullOrEmpty(x.guess));
+        foreach (var owner in ownerNames)
+        {
+            var sentenceObj = gameLog.Find(x => x.ownerName == owner && !string.IsNullOrEmpty(x.sentence));
+            var drawing1Obj = gameLog.Find(x => x.ownerName == owner && x.drawing != null && string.IsNullOrEmpty(x.guess));
+            var guessObj = gameLog.Find(x => x.ownerName == owner && !string.IsNullOrEmpty(x.guess));
+            var drawing2Obj = gameLog.FindLast(x => x.ownerName == owner && x.drawing != null && !string.IsNullOrEmpty(x.guess));
 
-    //        result.Add(new PlayerResult
-    //        {
-    //            playerName = owner,
-    //            sentence = sentenceObj?.sentence ?? "",
-    //            drawing1 = drawing1Obj?.drawing,
-    //            guess = guessObj?.guess ?? "",
-    //            drawing2 = drawing2Obj?.drawing
-    //        });
-    //    }
-    //    return result;
-    //}
+            result.Add(new PlayerResult
+            {
+                playerName = owner,
+                sentence = sentenceObj?.sentence ?? "",
+                drawing1 = drawing1Obj?.drawing,
+                guess = guessObj?.guess ?? "",
+                drawing2 = drawing2Obj?.drawing
+            });
+        }
+        return result;
+    }
 
     private void OnApplicationQuit()
     {
