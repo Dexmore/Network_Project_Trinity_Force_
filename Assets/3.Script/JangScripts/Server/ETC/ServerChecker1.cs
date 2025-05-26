@@ -64,6 +64,7 @@ public class ServerChecker1 : MonoBehaviour
     // <<<<<<<<<<<< 여기를 4로 반드시 고정 >>>>>>>>>>
     private int playerCount = 4;
 
+    private bool eventsRegistered = false; // 이벤트 중복 등록 방지용
     private void OnEnable()
     {
         path = Application.dataPath + "/License";
@@ -71,8 +72,58 @@ public class ServerChecker1 : MonoBehaviour
         if (!File.Exists(path + "/License.json")) CreateDefaultLicenseFile(path);
         manager = GetComponent<NetworkManager>();
         kcp = (KcpTransport)manager.transport;
+
+        if (!eventsRegistered)
+        {
+            NetworkServer.OnConnectedEvent += OnPlayerConnected;
+            NetworkServer.OnDisconnectedEvent += OnPlayerDisconnected;
+            eventsRegistered = true;
+        }
     }
 
+
+    private void OnDisable()
+    {
+        if (eventsRegistered)
+        {
+            NetworkServer.OnConnectedEvent -= OnPlayerConnected;
+            NetworkServer.OnDisconnectedEvent -= OnPlayerDisconnected;
+            eventsRegistered = false;
+        }
+    }
+
+    private void OnPlayerConnected(NetworkConnectionToClient conn)
+    {
+        if (players.Count >= playerCount)
+        {
+            Debug.LogWarning($"접속 인원 초과: {players.Count} / {playerCount}. {conn.connectionId} 튕김.");
+            conn.Disconnect();
+            return;
+        }
+        if (!players.Contains(conn)) players.Add(conn);
+
+        Debug.Log($"플레이어 접속: {players.Count} / {playerCount}");
+
+        if (players.Count == playerCount)
+        {
+            foreach (var c in players)
+                c.Send(new GameStartMsg());
+            Debug.Log("4명 모두 접속. 게임 시작 메시지 전송.");
+        }
+    }
+
+    private void OnPlayerDisconnected(NetworkConnectionToClient conn)
+    {
+        if (players.Contains(conn)) players.Remove(conn);
+        Debug.Log($"플레이어 이탈: {players.Count} / {playerCount}");
+
+        // 필요하다면, 모든 클라이언트에게 결과나 종료 메시지
+        if (players.Count < playerCount)
+        {
+            foreach (var c in players)
+                c.Send(new GameResultMsg { results = new List<PlayerResultData>() });
+        }
+    }
     private void Start()
     {
         type = LoadLicenseType();
@@ -127,33 +178,33 @@ public class ServerChecker1 : MonoBehaviour
         manager.StartServer();
         Debug.Log($"{manager.networkAddress} Start Server");
 
-        NetworkServer.OnConnectedEvent += (conn) =>
-        {
-            if (players.Count > playerCount)
-            {
-                conn.Disconnect();
-                return;
-            }
-            if (!players.Contains(conn)) players.Add(conn);
+        //NetworkServer.OnConnectedEvent += (conn) =>
+        //{
+        //    if (players.Count > playerCount)
+        //    {
+        //        conn.Disconnect();
+        //        return;
+        //    }
+        //    if (!players.Contains(conn)) players.Add(conn);
 
-            if (players.Count == playerCount - 1)
-            {
-                foreach (var c in players)
-                    c.Send(new GameStartMsg());
-            }
-        };
-        NetworkServer.OnDisconnectedEvent += (conn) =>
-        {
-            if (players.Contains(conn)) players.Remove(conn);
+        //    if (players.Count == playerCount)
+        //    {
+        //        foreach (var c in players)
+        //            c.Send(new GameStartMsg());
+        //    }
+        //};
+        //NetworkServer.OnDisconnectedEvent += (conn) =>
+        //{
+        //    if (players.Contains(conn)) players.Remove(conn);
 
-            if (players.Count < playerCount)
-            {
-                foreach (var c in players)
-                {
-                    c.Send(new GameResultMsg { results = new List<PlayerResultData>() });
-                }
-            }
-        };
+        //    if (players.Count < playerCount)
+        //    {
+        //        foreach (var c in players)
+        //        {
+        //            c.Send(new GameResultMsg { results = new List<PlayerResultData>() });
+        //        }
+        //    }
+        //};
     }
 
     public void Start_Client()
