@@ -1,5 +1,4 @@
-﻿// GameManager.cs
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Mirror;
@@ -11,7 +10,6 @@ public struct GameResultMsg : NetworkMessage
 {
     public List<PlayerResultData> results;
 }
-
 public enum CanvasType { Text, Draw, Guess }
 
 [System.Serializable]
@@ -24,133 +22,128 @@ public struct PlayerResultData
     public byte[] drawing2;
 }
 
+public class GameTurn
+{
+    public string playerName;
+    public string sentence;
+    public byte[] drawing;
+    public string guess;
+    public string ownerName; // 추가
+}
+
+
 public class GameManager : MonoBehaviour
 {
-    // UI elements
     public CanvasType type;
     public GameObject TextCanvas, DrawCanvas, GuessCanvas, WaitingCanvas, ResultCanvas;
     public TMP_InputField TextCanvasInput, GuessCanvasInput;
     public Button TextSubmitButton, DrawSubmitButton, GuessSubmitButton;
     public Image Timer_Image_filled;
+    public float TimeLimit = 20f;
     public TextMeshProUGUI text;
     public RawImage guessRawImage;
-    public TextMeshProUGUI playerNameText, sentenceText, guessText;
-    public RawImage drawingImage, guessDrawingImage;
-    public Button prevButton, nextButton, closeButton;
+
+    public TextMeshProUGUI playerNameText;
+    public TextMeshProUGUI sentenceText;
+    public RawImage drawingImage;
+    public TextMeshProUGUI guessText;
+    public RawImage guessDrawingImage;
+    public Button prevButton;
+    public Button nextButton;
+    public Button closeButton;
 
     [SerializeField] private TexturePainter texturePainter;
 
-    private List<PlayerResult> allResults = new();
-    private List<PlayerResult> receivedResults = new();
+    private List<PlayerResult> allResults = new List<PlayerResult>();
+    private List<PlayerResult> receivedResults = new List<PlayerResult>();
     private int playerResultIndex = 0;
     private float timeElapsed = 0f;
     private bool isTiming = false;
     private bool hasSubmitted = false;
-    private int currentPhaseIndex = -1;
-    private const int maxPhases = 4;
+    private int currentPhaseIndex = 0;
+    private int maxPhases = 4;
 
     private string lastReceivedSentence = "";
     private string lastReceivedGuess = "";
 
-    void Start()
+    private void Start()
     {
-        NetworkClient.RegisterHandler<GameStartMsg>(_ => BeginGame());
-        NetworkClient.RegisterHandler<ProceedToNextPhaseMsg>(_ => ProceedToNextPhase());
+        NetworkClient.RegisterHandler<GameStartMsg>(OnGameStart);
+        NetworkClient.RegisterHandler<ProceedToNextPhaseMsg>(OnProceedToNextPhase);
         NetworkClient.RegisterHandler<GameResultMsg>(OnReceiveResultFromServer);
 
         TextCanvas.SetActive(false);
         DrawCanvas.SetActive(false);
         GuessCanvas.SetActive(false);
         WaitingCanvas.SetActive(true);
-        if (ResultCanvas != null) ResultCanvas.SetActive(false);
 
-        texturePainter ??= FindObjectOfType<TexturePainter>();
+        if (texturePainter == null)
+            texturePainter = FindObjectOfType<TexturePainter>();
 
         TextSubmitButton.onClick.AddListener(SubmitTextToServer);
         DrawSubmitButton.onClick.AddListener(SubmitDrawingToServer);
         GuessSubmitButton.onClick.AddListener(SubmitGuessToServer);
+
+        if (ResultCanvas != null)
+            ResultCanvas.SetActive(false);
     }
 
-    void Update()
+    void OnGameStart(GameStartMsg msg) { BeginGame(); }
+    void OnProceedToNextPhase(ProceedToNextPhaseMsg msg) { ProceedToNextPhase(); }
+
+    private void Update()
     {
         if (!isTiming) return;
 
         timeElapsed += Time.deltaTime;
         if (Timer_Image_filled)
-            Timer_Image_filled.fillAmount = timeElapsed / TimeLimit;
+            Timer_Image_filled.fillAmount = (timeElapsed / TimeLimit);
 
         if (timeElapsed >= TimeLimit)
             SubmitToServer();
     }
 
-    public float TimeLimit => 20f; // 기본 제한 시간
-
     public void BeginGame()
     {
-        currentPhaseIndex = 0;
-        SwitchPhase(CanvasType.Text);
-    }
-
-    public void ProceedToNextPhase()
-    {
-        currentPhaseIndex++;
-        if (currentPhaseIndex >= maxPhases)
-        {
-            if (NetworkServer.active)
-            {
-                var checker = FindObjectOfType<ServerChecker1>();
-                if (checker != null)
-                {
-                    var rawResults = checker.ConvertGameLogToPlayerResults();
-                    var data = new List<PlayerResultData>();
-                    foreach (var r in rawResults)
-                    {
-                        data.Add(new PlayerResultData
-                        {
-                            playerName = r.playerName,
-                            sentence = r.sentence,
-                            drawing1 = r.drawing1,
-                            guess = r.guess,
-                            drawing2 = r.drawing2
-                        });
-                    }
-                    NetworkServer.SendToAll(new GameResultMsg { results = data });
-                    Debug.Log("[서버] 결과 메시지 전송 완료");
-                }
-            }
-            ResultCanvas.SetActive(true);
-            GoToResultScene();
-            return;
-        }
-
-        SwitchPhase(currentPhaseIndex switch
-        {
-            1 or 3 => CanvasType.Draw,
-            2 => CanvasType.Guess,
-            _ => CanvasType.Text
-        });
-    }
-
-    private void SwitchPhase(CanvasType newType)
-    {
-        type = newType;
-        TextCanvas.SetActive(type == CanvasType.Text);
-        DrawCanvas.SetActive(type == CanvasType.Draw);
-        GuessCanvas.SetActive(type == CanvasType.Guess);
+        type = CanvasType.Text;
+        TextCanvas.SetActive(true);
         WaitingCanvas.SetActive(false);
-
-        if (type == CanvasType.Draw) texturePainter?.EraseAll();
-        if (type == CanvasType.Guess) GuessCanvasInput.text = "";
-
         StartTimer();
     }
 
-    private void StartTimer()
+    private void SubmitTextToServer()
     {
-        isTiming = true;
-        hasSubmitted = false;
-        timeElapsed = 0f;
-        if (Timer_Image_filled) Timer_Image_filled.fillAmount = 1f;
+        if (hasSubmitted) return;
+        hasSubmitted = true;
+        if (NetworkClient.connection?.identity?.GetComponent<NetworkPlayer>() is NetworkPlayer player)
+        {
+            player.CmdSetSubmitted(true);
+            player.CmdSetText(TextCanvasInput.text);
+            ShowWaitingCanvas();
+        }
+    }
+
+    private void SubmitDrawingToServer()
+    {
+        if (hasSubmitted) return;
+        hasSubmitted = true;
+        if (NetworkClient.connection?.identity?.GetComponent<NetworkPlayer>() is NetworkPlayer player)
+        {
+            byte[] pngData = texturePainter.GetPNG();
+            player.CmdSubmitDrawing(pngData);
+            ShowWaitingCanvas();
+        }
+    }
+
+    private void SubmitGuessToServer()
+    {
+        if (hasSubmitted) return;
+        hasSubmitted = true;
+        if (NetworkClient.connection?.identity?.GetComponent<NetworkPlayer>() is NetworkPlayer player)
+        {
+            player.CmdSetGuess(GuessCanvasInput.text);
+            ShowWaitingCanvas();
+        }
     }
 
     private void SubmitToServer()
@@ -163,32 +156,58 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void SubmitTextToServer()
+    private void StartTimer()
     {
-        if (hasSubmitted) return;
-        hasSubmitted = true;
-        var player = NetworkClient.connection.identity.GetComponent<NetworkPlayer>();
-        player.CmdSetSubmitted(true);
-        player.CmdSetText(TextCanvasInput.text);
-        ShowWaitingCanvas();
+        isTiming = true;
+        timeElapsed = 0f;
+        if (Timer_Image_filled) Timer_Image_filled.fillAmount = 1f;
+        hasSubmitted = false;
     }
 
-    private void SubmitDrawingToServer()
+    private void ShowWaitingCanvas()
     {
-        if (hasSubmitted) return;
-        hasSubmitted = true;
-        var player = NetworkClient.connection.identity.GetComponent<NetworkPlayer>();
-        player.CmdSubmitDrawing(texturePainter.GetPNG());
-        ShowWaitingCanvas();
+        TextCanvas.SetActive(false);
+        DrawCanvas.SetActive(false);
+        GuessCanvas.SetActive(false);
+        WaitingCanvas.SetActive(true);
+        isTiming = false;
     }
 
-    private void SubmitGuessToServer()
+    public void ProceedToNextPhase()
     {
-        if (hasSubmitted) return;
-        hasSubmitted = true;
-        var player = NetworkClient.connection.identity.GetComponent<NetworkPlayer>();
-        player.CmdSetGuess(GuessCanvasInput.text);
-        ShowWaitingCanvas();
+        TextCanvas.SetActive(false);
+        DrawCanvas.SetActive(false);
+        GuessCanvas.SetActive(false);
+        WaitingCanvas.SetActive(false);
+
+        currentPhaseIndex++;
+
+        if (currentPhaseIndex >= maxPhases)
+        {
+            ResultCanvas.SetActive(true);
+            GoToResultScene();
+            return;
+        }
+
+        if (currentPhaseIndex == 0)
+        {
+            type = CanvasType.Text;
+            TextCanvas.SetActive(true);
+        }
+        else if (currentPhaseIndex == 1 || currentPhaseIndex == 3)
+        {
+            type = CanvasType.Draw;
+            DrawCanvas.SetActive(true);
+            if (texturePainter != null) texturePainter.EraseAll();
+        }
+        else if (currentPhaseIndex == 2)
+        {
+            type = CanvasType.Guess;
+            GuessCanvas.SetActive(true);
+            GuessCanvasInput.text = "";
+        }
+
+        StartTimer();
     }
 
     public void ShowReceivedSentence(string message, int playerIndex)
@@ -199,26 +218,17 @@ public class GameManager : MonoBehaviour
 
     public void ShowReceivedDrawing(byte[] pngData, int playerIndex)
     {
-        Texture2D tex = new Texture2D(2, 2);
-        tex.LoadImage(pngData);
+        Texture2D receivedDrawing = new Texture2D(2, 2);
+        receivedDrawing.LoadImage(pngData);
         if (guessRawImage != null)
-            guessRawImage.texture = tex;
+            guessRawImage.texture = receivedDrawing;
         text.text = $"My Network Index: {playerIndex + 1}\nReceived Drawing!";
     }
 
     public void ShowReceivedGuess(string guess, int playerIndex)
     {
-        if (guessText != null)
-            guessText.text = $"My Network Index: {playerIndex + 1}\nReceived Guess: {guess}";
-    }
-
-    private void ShowWaitingCanvas()
-    {
-        TextCanvas.SetActive(false);
-        DrawCanvas.SetActive(false);
-        GuessCanvas.SetActive(false);
-        WaitingCanvas.SetActive(true);
-        isTiming = false;
+        text.text = $"My Network Index: {playerIndex + 1}\nReceived Guess: {guess}";
+        lastReceivedGuess = guess;
     }
 
     private void OnReceiveResultFromServer(GameResultMsg msg)
@@ -239,12 +249,20 @@ public class GameManager : MonoBehaviour
             }
         }
         ShowAllResults(receivedResults);
+        if (ResultCanvas != null) ResultCanvas.SetActive(true);
     }
 
+    // 서버가 결과 메시지를 안보내는 경우 (백업)
     private void GoToResultScene()
     {
-        if (receivedResults.Count > 0) ShowAllResults(receivedResults);
-        else ShowNoResultMessage();
+        if (receivedResults != null && receivedResults.Count > 0)
+        {
+            ShowAllResults(receivedResults);
+        }
+        else
+        {
+            ShowNoResultMessage();
+        }
     }
 
     private void ShowNoResultMessage()
@@ -254,9 +272,13 @@ public class GameManager : MonoBehaviour
         drawingImage.gameObject.SetActive(false);
         guessText.text = "";
         guessDrawingImage.gameObject.SetActive(false);
-        prevButton.interactable = nextButton.interactable = false;
+
+        prevButton.interactable = false;
+        nextButton.interactable = false;
         closeButton.onClick.RemoveAllListeners();
-        closeButton.onClick.AddListener(() => ResultCanvas.SetActive(false));
+        closeButton.onClick.AddListener(() => {
+            ResultCanvas.SetActive(false);
+        });
         ResultCanvas.SetActive(true);
     }
 
@@ -265,6 +287,12 @@ public class GameManager : MonoBehaviour
         allResults = results;
         playerResultIndex = 0;
         ResultCanvas.SetActive(true);
+
+        if (allResults == null || allResults.Count == 0)
+        {
+            ShowNoResultMessage();
+            return;
+        }
         ShowSinglePlayerResult(playerResultIndex);
 
         prevButton.onClick.RemoveAllListeners();
@@ -272,42 +300,67 @@ public class GameManager : MonoBehaviour
         closeButton.onClick.RemoveAllListeners();
 
         prevButton.onClick.AddListener(() => {
-            if (playerResultIndex > 0) ShowSinglePlayerResult(--playerResultIndex);
+            if (playerResultIndex > 0)
+            {
+                playerResultIndex--;
+                ShowSinglePlayerResult(playerResultIndex);
+            }
         });
         nextButton.onClick.AddListener(() => {
-            if (playerResultIndex < allResults.Count - 1) ShowSinglePlayerResult(++playerResultIndex);
-            else EndGame();
+            if (playerResultIndex < allResults.Count - 1)
+            {
+                playerResultIndex++;
+                ShowSinglePlayerResult(playerResultIndex);
+            }
+            else
+            {
+                EndGame();
+            }
         });
-        closeButton.onClick.AddListener(() => ResultCanvas.SetActive(false));
+        closeButton.onClick.AddListener(() => {
+            ResultCanvas.SetActive(false);
+        });
     }
 
     private void ShowSinglePlayerResult(int index)
     {
-        if (index < 0 || index >= allResults.Count) return;
+        if (allResults == null || index < 0 || index >= allResults.Count) return;
 
         var res = allResults[index];
-        playerNameText.text = $"Player: {res.playerName}";
-        sentenceText.text = $"문장: {res.sentence}";
-        drawingImage.texture = res.drawing1 != null ? LoadTexture(res.drawing1) : null;
-        drawingImage.gameObject.SetActive(res.drawing1 != null);
-        guessText.text = $"추측: {res.guess}";
-        guessDrawingImage.texture = res.drawing2 != null ? LoadTexture(res.drawing2) : null;
-        guessDrawingImage.gameObject.SetActive(res.drawing2 != null);
+        playerNameText.text = !string.IsNullOrEmpty(res.playerName) ? $"Player: {res.playerName}" : "";
+        sentenceText.text = !string.IsNullOrEmpty(res.sentence) ? $"문장: {res.sentence}" : "";
+        if (res.drawing1 != null && res.drawing1.Length > 0)
+        {
+            Texture2D tex1 = new Texture2D(2, 2);
+            tex1.LoadImage(res.drawing1);
+            drawingImage.texture = tex1;
+            drawingImage.gameObject.SetActive(true);
+        }
+        else
+        {
+            drawingImage.gameObject.SetActive(false);
+        }
 
-        prevButton.interactable = index > 0;
-        nextButton.interactable = index < allResults.Count - 1;
-    }
+        guessText.text = !string.IsNullOrEmpty(res.guess) ? $"추측: {res.guess}" : "";
+        if (res.drawing2 != null && res.drawing2.Length > 0)
+        {
+            Texture2D tex2 = new Texture2D(2, 2);
+            tex2.LoadImage(res.drawing2);
+            guessDrawingImage.texture = tex2;
+            guessDrawingImage.gameObject.SetActive(true);
+        }
+        else
+        {
+            guessDrawingImage.gameObject.SetActive(false);
+        }
 
-    private Texture2D LoadTexture(byte[] data)
-    {
-        var tex = new Texture2D(2, 2);
-        tex.LoadImage(data);
-        return tex;
+        prevButton.interactable = (index > 0);
+        nextButton.interactable = (index < allResults.Count - 1);
     }
 
     private void EndGame()
     {
         ResultCanvas.SetActive(false);
-        // 추가 종료 처리 가능
+        // 게임 종료 추가 처리
     }
 }

@@ -1,12 +1,17 @@
 using Mirror;
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 using LitJson;
 using System.IO;
 using kcp2k;
 using System;
 
-public enum LicenseType { Empty = 0, Client, Server }
+public enum LicenseType
+{
+    Empty = 0,
+    Client,
+    Server
+}
 
 public class LicenseItem
 {
@@ -30,15 +35,18 @@ public class PlayerResult
     public byte[] drawing2;
 }
 
+// ★ NetworkPlayer는 따로 존재! (여기 포함하지 않음)
+
 public class ServerChecker1 : MonoBehaviour
 {
     public LicenseType type;
     private NetworkManager manager;
     private KcpTransport kcp;
-    private string path;
+
+    [SerializeField] private string path;
     public string ServerIP { get; private set; }
     public string Port { get; private set; }
-    private List<NetworkConnectionToClient> players = new();
+    private List<NetworkConnectionToClient> players = new List<NetworkConnectionToClient>();
 
     public class GameTurn
     {
@@ -48,18 +56,17 @@ public class ServerChecker1 : MonoBehaviour
         public string guess;
         public string ownerName;
     }
+    public List<GameTurn> gameLog = new List<GameTurn>();
 
-    public List<GameTurn> gameLog = new();
+    private List<NetworkPlayer> submittedPlayers = new List<NetworkPlayer>();
+    private List<string> submittedSentences = new List<string>();
+    private List<NetworkPlayer> drawingPlayers = new List<NetworkPlayer>();
+    private List<byte[]> submittedDrawings = new List<byte[]>();
+    private List<NetworkPlayer> guessPlayers = new List<NetworkPlayer>();
+    private List<string> submittedGuesses = new List<string>();
+    private List<string> sentenceOwners = new List<string>();
 
-    private List<NetworkPlayer> submittedPlayers = new();
-    private List<string> submittedSentences = new();
-    private List<NetworkPlayer> drawingPlayers = new();
-    private List<byte[]> submittedDrawings = new();
-    private List<NetworkPlayer> guessPlayers = new();
-    private List<string> submittedGuesses = new();
-    private List<string> sentenceOwners = new();
-
-    private int playerCount = 4;
+    private int playerCount = 2;
 
     private void OnEnable()
     {
@@ -79,9 +86,12 @@ public class ServerChecker1 : MonoBehaviour
 
     private void CreateDefaultLicenseFile(string dirPath)
     {
-        List<LicenseItem> items = new() { new("0", "127.0.0.1", "7777") };
-        string json = JsonMapper.ToJson(items);
-        File.WriteAllText(dirPath + "/License.json", json);
+        List<LicenseItem> items = new List<LicenseItem>
+        {
+            new LicenseItem("0", "127.0.0.1", "7777")
+        };
+        JsonData data = JsonMapper.ToJson(items);
+        File.WriteAllText(dirPath + "/License.json", data.ToString());
     }
 
     private LicenseType LoadLicenseType()
@@ -89,15 +99,20 @@ public class ServerChecker1 : MonoBehaviour
         try
         {
             string jsonString = File.ReadAllText(path + "/License.json");
-            JsonData data = JsonMapper.ToObject(jsonString);
-            ServerIP = data[0]["ServerIP"].ToString();
-            Port = data[0]["Port"].ToString();
-            int typeVal = int.Parse(data[0]["License"].ToString());
+            JsonData itemdata = JsonMapper.ToObject(jsonString);
+
+            string type_s = itemdata[0]["License"].ToString();
+            string ip_s = itemdata[0]["ServerIP"].ToString();
+            string port_s = itemdata[0]["Port"].ToString();
+
+            ServerIP = ip_s;
+            Port = port_s;
+            var parsedType = (LicenseType)int.Parse(type_s);
 
             manager.networkAddress = ServerIP;
             kcp.port = ushort.Parse(Port);
 
-            return (LicenseType)typeVal;
+            return parsedType;
         }
         catch (Exception e)
         {
@@ -113,20 +128,25 @@ public class ServerChecker1 : MonoBehaviour
             Debug.Log("WebGL cannot be Server");
             return;
         }
-
         manager.StartServer();
+        Debug.Log($"{manager.networkAddress} Start Server");
 
-        NetworkServer.OnConnectedEvent += conn =>
+        NetworkServer.OnConnectedEvent += (conn) =>
         {
-            if (players.Count >= playerCount) { conn.Disconnect(); return; }
+            if (players.Count >= playerCount)
+            {
+                conn.Disconnect();
+                return;
+            }
             if (!players.Contains(conn)) players.Add(conn);
 
             if (players.Count == playerCount)
+            {
                 foreach (var c in players)
                     c.Send(new GameStartMsg());
+            }
         };
-
-        NetworkServer.OnDisconnectedEvent += conn =>
+        NetworkServer.OnDisconnectedEvent += (conn) =>
         {
             if (players.Contains(conn)) players.Remove(conn);
         };
@@ -135,9 +155,10 @@ public class ServerChecker1 : MonoBehaviour
     public void Start_Client()
     {
         manager.StartClient();
-        Debug.Log("Start Client...");
+        Debug.Log($"{manager.networkAddress} : Start Client...");
     }
 
+    // 갈틱폰 게임 데이터 관리 함수들
     public void AddSentence(NetworkPlayer player, string sentence)
     {
         if (!submittedPlayers.Contains(player))
@@ -219,55 +240,59 @@ public class ServerChecker1 : MonoBehaviour
         }
     }
 
-    private void ShowSentencesToEachPlayer()
+    public void ShowSentencesToEachPlayer()
     {
-        for (int i = 0; i < submittedPlayers.Count; i++)
+        int count = submittedPlayers.Count;
+        for (int i = 0; i < count; i++)
         {
-            int targetIndex = (i + 1) % submittedPlayers.Count;
-            submittedPlayers[targetIndex].TargetShowSentence(
-                submittedPlayers[targetIndex].connectionToClient,
-                submittedSentences[i]
-            );
+            int targetIndex = (i + 1) % count;
+            NetworkPlayer receiver = submittedPlayers[targetIndex];
+            string sentence = submittedSentences[i];
+            receiver.TargetShowSentence(receiver.connectionToClient, sentence);
         }
     }
 
-    private void DistributeDrawings()
+    public void DistributeDrawings()
     {
-        for (int i = 0; i < drawingPlayers.Count; i++)
+        int count = drawingPlayers.Count;
+        for (int i = 0; i < count; i++)
         {
-            int targetIndex = (i + 1) % drawingPlayers.Count;
-            drawingPlayers[targetIndex].TargetReceiveDrawing(
-                drawingPlayers[targetIndex].connectionToClient,
-                submittedDrawings[i]
-            );
+            int targetIndex = (i + 1) % count;
+            NetworkPlayer receiver = drawingPlayers[targetIndex];
+            byte[] pngData = submittedDrawings[i];
+            receiver.TargetReceiveDrawing(receiver.connectionToClient, pngData);
         }
     }
 
-    private void ShowGuessesToEachPlayer()
+    public void ShowGuessesToEachPlayer()
     {
-        for (int i = 0; i < guessPlayers.Count; i++)
+        int count = guessPlayers.Count;
+        for (int i = 0; i < count; i++)
         {
-            int targetIndex = (i + 1) % guessPlayers.Count;
-            guessPlayers[targetIndex].TargetShowGuess(
-                guessPlayers[targetIndex].connectionToClient,
-                submittedGuesses[i]
-            );
+            int targetIndex = (i + 1) % count;
+            NetworkPlayer receiver = guessPlayers[targetIndex];
+            string guess = submittedGuesses[i];
+            receiver.TargetShowGuess(receiver.connectionToClient, guess);
         }
     }
 
     private void NextPhaseToAll()
     {
         foreach (var conn in NetworkServer.connections.Values)
+        {
             conn.Send(new ProceedToNextPhaseMsg());
+        }
     }
 
     public List<PlayerResult> ConvertGameLogToPlayerResults()
     {
-        List<PlayerResult> result = new();
-        HashSet<string> ownerNames = new();
-
+        var result = new List<PlayerResult>();
+        HashSet<string> ownerNames = new HashSet<string>();
         foreach (var log in gameLog)
-            if (!string.IsNullOrEmpty(log.ownerName)) ownerNames.Add(log.ownerName);
+        {
+            if (!string.IsNullOrEmpty(log.ownerName))
+                ownerNames.Add(log.ownerName);
+        }
 
         foreach (var owner in ownerNames)
         {
@@ -285,7 +310,6 @@ public class ServerChecker1 : MonoBehaviour
                 drawing2 = drawing2Obj?.drawing
             });
         }
-
         return result;
     }
 
