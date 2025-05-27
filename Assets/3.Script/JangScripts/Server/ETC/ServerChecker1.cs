@@ -5,7 +5,6 @@ using LitJson;
 using System.IO;
 using kcp2k;
 using System;
-using System.Collections;
 
 public enum LicenseType { Empty = 0, Client, Server }
 
@@ -95,26 +94,22 @@ public class ServerChecker1 : MonoBehaviour
 
     private void OnPlayerConnected(NetworkConnectionToClient conn)
     {
-        if (players.Contains(conn)) return;
         if (players.Count >= playerCount)
         {
+            Debug.LogWarning($"접속 인원 초과: {players.Count} / {playerCount}. {conn.connectionId} 튕김.");
             conn.Disconnect();
             return;
         }
-        players.Add(conn);
+        if (!players.Contains(conn)) players.Add(conn);
+
+        Debug.Log($"플레이어 접속: {players.Count} / {playerCount}");
 
         if (players.Count == playerCount)
         {
-            NetworkManager.singleton.ServerChangeScene("GameScene");
-            StartCoroutine(WaitAndSendGameStart());
+            foreach (var c in players)
+                c.Send(new GameStartMsg());
+            Debug.Log("4명 모두 접속. 게임 시작 메시지 전송.");
         }
-    }
-
-    private IEnumerator WaitAndSendGameStart()
-    {
-        yield return new WaitForSeconds(1.0f);
-        foreach (var c in players)
-            c.Send(new GameStartMsg());
     }
 
     private void OnPlayerDisconnected(NetworkConnectionToClient conn)

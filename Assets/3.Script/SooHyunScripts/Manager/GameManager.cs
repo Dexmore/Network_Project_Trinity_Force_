@@ -36,12 +36,17 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private TexturePainter texturePainter;
 
+    private List<PlayerResult> allResults = new List<PlayerResult>();
     private List<PlayerResult> receivedResults = new List<PlayerResult>();
+    private int playerResultIndex = 0;
     private float timeElapsed = 0f;
     private bool isTiming = false;
     private bool hasSubmitted = false;
     private int currentPhaseIndex = 0;
     private int maxPhases = 4;
+
+    private string lastReceivedSentence = "";
+    private string lastReceivedGuess = "";
 
     private void Start()
     {
@@ -79,7 +84,6 @@ public class GameManager : MonoBehaviour
         if (timeElapsed >= TimeLimit)
             SubmitToServer();
     }
-
 
     public void BeginGame()
     {
@@ -191,6 +195,7 @@ public class GameManager : MonoBehaviour
     public void ShowReceivedSentence(string message, int playerIndex)
     {
         text.text = $"My Network Index: {playerIndex + 1}\nReceived Message: {message}";
+        lastReceivedSentence = message;
     }
 
     public void ShowReceivedDrawing(byte[] pngData, int playerIndex)
@@ -205,6 +210,7 @@ public class GameManager : MonoBehaviour
     public void ShowReceivedGuess(string guess, int playerIndex)
     {
         text.text = $"My Network Index: {playerIndex + 1}\nReceived Guess: {guess}";
+        lastReceivedGuess = guess;
     }
 
     private void OnReceiveResultFromServer(GameResultMsg msg)
