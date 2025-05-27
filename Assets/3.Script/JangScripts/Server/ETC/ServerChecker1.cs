@@ -31,7 +31,7 @@ public class PlayerResult
     public byte[] drawing2;
 }
 
-// NetworkPlayer´Â µû·Î Á¸Àç
+// NetworkPlayerï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
 public class ServerChecker1 : MonoBehaviour
 {
@@ -62,10 +62,10 @@ public class ServerChecker1 : MonoBehaviour
     private List<string> submittedGuesses = new List<string>();
     private List<string> sentenceOwners = new List<string>();
 
-    // <<<<<<<<<<<< ¿©±â¸¦ 4·Î ¹Ýµå½Ã °íÁ¤ >>>>>>>>>>
+    // <<<<<<<<<<<< ï¿½ï¿½ï¿½â¸¦ 4ï¿½ï¿½ ï¿½Ýµï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ >>>>>>>>>>
     private int playerCount = 4;
 
-    private bool eventsRegistered = false; // ÀÌº¥Æ® Áßº¹ µî·Ï ¹æÁö¿ë
+    private bool eventsRegistered = false; // ï¿½Ìºï¿½Æ® ï¿½ßºï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     private void OnEnable()
     {
         path = Application.dataPath + "/License";
@@ -120,9 +120,9 @@ public class ServerChecker1 : MonoBehaviour
     private void OnPlayerDisconnected(NetworkConnectionToClient conn)
     {
         if (players.Contains(conn)) players.Remove(conn);
-        Debug.Log($"ÇÃ·¹ÀÌ¾î ÀÌÅ»: {players.Count} / {playerCount}");
+        Debug.Log($"ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½Å»: {players.Count} / {playerCount}");
 
-        // ÇÊ¿äÇÏ´Ù¸é, ¸ðµç Å¬¶óÀÌ¾ðÆ®¿¡°Ô °á°ú³ª Á¾·á ¸Þ½ÃÁö
+        // ï¿½Ê¿ï¿½ï¿½Ï´Ù¸ï¿½, ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ®ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Þ½ï¿½ï¿½ï¿½
         if (players.Count < playerCount)
         {
             foreach (var c in players)
@@ -183,21 +183,22 @@ public class ServerChecker1 : MonoBehaviour
         manager.StartServer();
         Debug.Log($"{manager.networkAddress} Start Server");
 
-        //NetworkServer.OnConnectedEvent += (conn) =>
-        //{
-        //    if (players.Count > playerCount)
-        //    {
-        //        conn.Disconnect();
-        //        return;
-        //    }
-        //    if (!players.Contains(conn)) players.Add(conn);
+        NetworkServer.OnConnectedEvent += (conn) =>
+        {
+            if (players.Count > playerCount)
+            {
+                conn.Disconnect();
+                return;
+            }
+            if (!players.Contains(conn)) players.Add(conn);
 
-        //    if (players.Count == playerCount)
-        //    {
-        //        foreach (var c in players)
-        //            c.Send(new GameStartMsg());
-        //    }
-        //};
+            if (players.Count == playerCount)
+            {
+                Debug.Log("ðŸŸ¢ [Server] All players connected. Sending GameStartMsg");
+                foreach (var c in players)
+                    c.Send(new GameStartMsg());
+            }
+        };
         //NetworkServer.OnDisconnectedEvent += (conn) =>
         //{
         //    if (players.Contains(conn)) players.Remove(conn);
@@ -218,7 +219,7 @@ public class ServerChecker1 : MonoBehaviour
         Debug.Log($"{manager.networkAddress} : Start Client...");
     }
 
-    // --- °ÔÀÓ µ¥ÀÌÅÍ °ü¸® (playerCount=4 Àû¿ë) ---
+    // --- ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (playerCount=4 ï¿½ï¿½ï¿½ï¿½) ---
 
     public void AddSentence(NetworkPlayer player, string sentence)
     {
