@@ -21,14 +21,14 @@ public class LicenseItem
     }
 }
 
-public class PlayerResult
-{
-    public string playerName;
-    public string sentence;
-    public byte[] drawing1;
-    public string guess;
-    public byte[] drawing2;
-}
+//public class PlayerResult
+//{
+//    public string playerName;
+//    public string sentence;
+//    public byte[] drawing1;
+//    public string guess;
+//    public byte[] drawing2;
+//}
 
 // NetworkPlayer�� ���� ����
 
@@ -61,10 +61,10 @@ public class ServerChecker1 : MonoBehaviour
     private List<string> submittedGuesses = new List<string>();
     private List<string> sentenceOwners = new List<string>();
 
-    // <<<<<<<<<<<< ���⸦ 4�� �ݵ�� ���� >>>>>>>>>>
+    // <<<<<<<<<<<< ���⸦ 4�� �ݵ��?���� >>>>>>>>>>
     private int playerCount = 4;
 
-    private bool eventsRegistered = false; // �̺�Ʈ �ߺ� ��� ������
+    private bool eventsRegistered = false; // �̺�Ʈ �ߺ� ���?������
     private void OnEnable()
     {
         path = Application.dataPath + "/License";
@@ -117,7 +117,6 @@ public class ServerChecker1 : MonoBehaviour
         if (players.Contains(conn)) players.Remove(conn);
         Debug.Log($"�÷��̾� ��Ż: {players.Count} / {playerCount}");
 
-        // �ʿ��ϴٸ�, ��� Ŭ���̾�Ʈ���� ����� ���� �޽���
         if (players.Count < playerCount)
         {
             foreach (var c in players)
@@ -189,7 +188,7 @@ public class ServerChecker1 : MonoBehaviour
 
             if (players.Count == playerCount)
             {
-                Debug.Log("🟢 [Server] All players connected. Sending GameStartMsg");
+                Debug.Log("?�� [Server] All players connected. Sending GameStartMsg");
                 foreach (var c in players)
                     c.Send(new GameStartMsg());
             }
