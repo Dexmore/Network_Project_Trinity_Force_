@@ -7,7 +7,6 @@ public struct GameResultMsg : NetworkMessage
 {
     public List<PlayerResultData> results;
 }
-public struct ReadyForGameMsg : NetworkMessage { }
 
 [System.Serializable]
 public struct PlayerResultData

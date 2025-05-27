@@ -3,18 +3,16 @@ using UnityEngine.UI;
 using TMPro;
 using Mirror;
 using System.Collections.Generic;
-using System.Collections;
-
 public enum CanvasType { Text, Draw, Guess }
-
 public class GameTurn
 {
     public string playerName;
     public string sentence;
     public byte[] drawing;
     public string guess;
-    public string ownerName;
+    public string ownerName; // 추가
 }
+
 
 public class GameManager : MonoBehaviour
 {
@@ -27,6 +25,15 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI text;
     public RawImage guessRawImage;
 
+    //public TextMeshProUGUI playerNameText;
+    //public TextMeshProUGUI sentenceText;
+    //public RawImage drawingImage;
+    //public TextMeshProUGUI guessText;
+    //public RawImage guessDrawingImage;
+    //public Button prevButton;
+    //public Button nextButton;
+    //public Button closeButton;
+
     [SerializeField] private TexturePainter texturePainter;
 
     private List<PlayerResult> receivedResults = new List<PlayerResult>();
@@ -38,7 +45,9 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        RegisterMessageHandlers();
+        NetworkClient.RegisterHandler<GameStartMsg>(OnGameStart);
+        NetworkClient.RegisterHandler<ProceedToNextPhaseMsg>(OnProceedToNextPhase);
+        NetworkClient.RegisterHandler<GameResultMsg>(OnReceiveResultFromServer);
 
         TextCanvas.SetActive(false);
         DrawCanvas.SetActive(false);
@@ -54,59 +63,9 @@ public class GameManager : MonoBehaviour
 
         if (ResultCanvas != null)
             ResultCanvas.SetActive(false);
-
-        SetAllCanvasOffExceptWaiting();
-
-        // 무조건 Ready 신호는 Player 생성될 때까지 기다려서 보냄!
-        StartCoroutine(WaitForNetworkPlayerAndReady());
-    }
-    void SetAllCanvasOffExceptWaiting()
-    {
-        if (TextCanvas) TextCanvas.SetActive(false);
-        if (DrawCanvas) DrawCanvas.SetActive(false);
-        if (GuessCanvas) GuessCanvas.SetActive(false);
-        if (ResultCanvas) ResultCanvas.SetActive(false);
-        if (WaitingCanvas) WaitingCanvas.SetActive(true);
     }
 
-    private IEnumerator WaitForNetworkPlayerAndReady()
-    {
-        NetworkPlayer player = null;
-        int retry = 0;
-        while (player == null && retry < 60)
-        {
-            if (NetworkClient.connection != null && NetworkClient.connection.identity != null)
-                player = NetworkClient.connection.identity.GetComponent<NetworkPlayer>();
-            if (player == null)
-            {
-                yield return null;
-                retry++;
-            }
-        }
-        if (player != null)
-        {
-            player.CmdReadyForGame();
-        }
-        else
-        {
-            Debug.LogError("NetworkPlayer 못찾아서 Ready 호출 불가");
-        }
-    }
-
-    public void RegisterMessageHandlers()
-    {
-        NetworkClient.UnregisterHandler<GameStartMsg>();
-        NetworkClient.RegisterHandler<GameStartMsg>(OnGameStart);
-        // 필요하면 나머지도 여기에 등록
-    }
-
-    void OnGameStart(GameStartMsg msg)
-    {
-        // 본게임 시작 시 UI 등 보여주기
-        WaitingCanvas.SetActive(false);
-        if (TextCanvas) TextCanvas.SetActive(true); // 예시
-        BeginGame();
-    }
+    void OnGameStart(GameStartMsg msg) { BeginGame(); }
     void OnProceedToNextPhase(ProceedToNextPhaseMsg msg) { ProceedToNextPhase(); }
 
     private void Update()
@@ -120,6 +79,7 @@ public class GameManager : MonoBehaviour
         if (timeElapsed >= TimeLimit)
             SubmitToServer();
     }
+
 
     public void BeginGame()
     {
@@ -267,11 +227,112 @@ public class GameManager : MonoBehaviour
         if (ResultCanvas != null) ResultCanvas.SetActive(true);
     }
 
+    // 서버가 결과 메시지를 안보내는 경우 (백업)
     private void GoToResultScene()
     {
+        //if (receivedResults != null && receivedResults.Count > 0)
+        //{
+        //    ShowAllResults(receivedResults);
+        //}
+        //else
+        //{
+        //    ShowNoResultMessage();
+        //}
         ResultCanvas.SetActive(true);
     }
 
+    //private void ShowNoResultMessage()
+    //{
+    //    playerNameText.text = "";
+    //    sentenceText.text = "<b>저장된 결과 데이터가 없습니다.</b>";
+    //    drawingImage.gameObject.SetActive(false);
+    //    guessText.text = "";
+    //    guessDrawingImage.gameObject.SetActive(false);
+
+    //    prevButton.interactable = false;
+    //    nextButton.interactable = false;
+    //    closeButton.onClick.RemoveAllListeners();
+    //    closeButton.onClick.AddListener(() => {
+    //        ResultCanvas.SetActive(false);
+    //    });
+    //    ResultCanvas.SetActive(true);
+    //}
+
+    //public void ShowAllResults(List<PlayerResult> results)
+    //{
+    //    allResults = results;
+    //    playerResultIndex = 0;
+    //    ResultCanvas.SetActive(true);
+
+    //    if (allResults == null || allResults.Count == 0)
+    //    {
+    //        ShowNoResultMessage();
+    //        return;
+    //    }
+    //    ShowSinglePlayerResult(playerResultIndex);
+
+    //    prevButton.onClick.RemoveAllListeners();
+    //    nextButton.onClick.RemoveAllListeners();
+    //    closeButton.onClick.RemoveAllListeners();
+
+    //    prevButton.onClick.AddListener(() => {
+    //        if (playerResultIndex > 0)
+    //        {
+    //            playerResultIndex--;
+    //            ShowSinglePlayerResult(playerResultIndex);
+    //        }
+    //    });
+    //    nextButton.onClick.AddListener(() => {
+    //        if (playerResultIndex < allResults.Count - 1)
+    //        {
+    //            playerResultIndex++;
+    //            ShowSinglePlayerResult(playerResultIndex);
+    //        }
+    //        else
+    //        {
+    //            EndGame();
+    //        }
+    //    });
+    //    closeButton.onClick.AddListener(() => {
+    //        ResultCanvas.SetActive(false);
+    //    });
+    //}
+
+    //private void ShowSinglePlayerResult(int index)
+    //{
+    //    if (allResults == null || index < 0 || index >= allResults.Count) return;
+
+    //    var res = allResults[index];
+    //    playerNameText.text = !string.IsNullOrEmpty(res.playerName) ? $"Player: {res.playerName}" : "";
+    //    sentenceText.text = !string.IsNullOrEmpty(res.sentence) ? $"문장: {res.sentence}" : "";
+    //    if (res.drawing1 != null && res.drawing1.Length > 0)
+    //    {
+    //        Texture2D tex1 = new Texture2D(2, 2);
+    //        tex1.LoadImage(res.drawing1);
+    //        drawingImage.texture = tex1;
+    //        drawingImage.gameObject.SetActive(true);
+    //    }
+    //    else
+    //    {
+    //        drawingImage.gameObject.SetActive(false);
+    //    }
+
+    //    guessText.text = !string.IsNullOrEmpty(res.guess) ? $"추측: {res.guess}" : "";
+    //    if (res.drawing2 != null && res.drawing2.Length > 0)
+    //    {
+    //        Texture2D tex2 = new Texture2D(2, 2);
+    //        tex2.LoadImage(res.drawing2);
+    //        guessDrawingImage.texture = tex2;
+    //        guessDrawingImage.gameObject.SetActive(true);
+    //    }
+    //    else
+    //    {
+    //        guessDrawingImage.gameObject.SetActive(false);
+    //    }
+
+    //    prevButton.interactable = (index > 0);
+    //    nextButton.interactable = (index < allResults.Count - 1);
+    //}
     private void EndGame()
     {
         ResultCanvas.SetActive(false);
